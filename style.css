@@ -6,13 +6,28 @@
 }
 
 /* ---------- Global ölçekleme ----------
-   Masaüstünde içerik %100 zoom'da tam sığsın diye global ölçek %85.
-   Oranlar korunur, responsive kırılımlar etkilenmez. */
-html {
+   Sadece normal akıştaki içerik küçültülür (navbar, main, footer).
+   position:fixed öğeler (reklam bannerlari, modal katmanlari, arka plan)
+   ZOOM'DAN HARİÇTİR — zoom fixed öğelerin koordinatlarını kaydırıp
+   ekran dışına atmaktadır. */
+body > * {
+  zoom: 0.85;
+}
+body > .geometric-bg,
+body > .bottom-ad-banner,
+body > .top-ad-banner,
+body > .modal-overlay,
+body > svg,
+body > script {
+  zoom: 1; /* fixed/katman öğeleri orijinal boyutta kalır */
+}
+/* Modal kutusu da içeriğiyle birlikte küçülsün (katman kendisi tam ekran kalır) */
+.modal-overlay > .modal-box {
   zoom: 0.85;
 }
 @media (max-width: 860px) {
-  html { zoom: 1; } /* mobilde zaten kompakt, küçültmeye gerek yok */
+  body > * { zoom: 1; } /* mobilde zaten kompakt */
+  .modal-overlay > .modal-box { zoom: 1; }
 }
 
 body {
