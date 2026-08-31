@@ -1,0 +1,5 @@
+HTML eksik id: #lang-select
+HTML eksik class: .mannequin-meta
+HTML <div> dengesiz: acik=48 kapanis=47
+---
+HTML satir: 183 | JS satir: 979 | CSS satir: 927

@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Mockup Studio İletişim. Bize ulaşın, sorularınızı yanıtlayalım.">
+  <title>İletişim | Mockup Studio</title>
+  <link rel="stylesheet" href="style.css?v=63">
+</head>
+<body>
+  <div class="geometric-bg" id="geometric-bg"></div>
+
+  <!-- Navbar -->
+  <header class="navbar">
+    <div class="logo" id="logo-text">
+      <span class="logo-icon" aria-hidden="true">
+        <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="teeGrad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#38bdf8"/>
+              <stop offset="45%" stop-color="#818cf8"/>
+              <stop offset="100%" stop-color="#e879f9"/>
+            </linearGradient>
+          </defs>
+          <path class="tee-body" fill="url(#teeGrad)"
+            d="M20 8 L26 5 C28 10 36 10 38 5 L44 8 L58 16 L52 27 L46 24 L46 56 C46 58 44 60 42 60 L22 60 C20 60 18 58 18 56 L18 24 L12 27 L6 16 Z"/>
+        </svg>
+      </span>
+      <span>MOCKUP</span>
+      <span class="logo-accent">STUDYO</span>
+    </div>
+    <div class="header-badges">
+      <a href="index.html" class="back-home-btn">← Ana Sayfaya Dön</a>
+    </div>
+  </header>
+
+  <!-- Legal Content -->
+  <main class="legal-page">
+    <div class="legal-container">
+            <h1 class="legal-title">İletişim (Contact)</h1>
+      <p class="legal-date">Mockup Studio - Sorularınız için buradayız.</p>
+
+      <div class="legal-section">
+        <h2>İletişim Bilgileri</h2>
+        <p>
+          Mockup Studio takımıyla aşağıdaki kanallardan iletişime geçebilirsiniz:
+        </p>
+        <ul class="contact-list">
+          <li><strong>E-posta:</strong> <a href="mailto:contact@mockupstudio.com">contact@mockupstudio.com</a></li>
+          <li><strong>Site:</strong> <a href="https://mockupstudio.com" target="_blank" rel="noopener">mockupstudio.com</a></li>
+        </ul>
+      </div>
+
+      <div class="legal-section">
+        <h2>Bizimle İletişime Geçin</h2>
+        <p>Aşağıdaki formu doldurarak bize mesaj gönderin:</p>
+        <form id="contact-form" class="contact-form" action="mailto:contact@mockupstudio.com" method="post" enctype="text/plain">
+          <div class="form-group">
+            <label for="name">Adınız Soyadınız *</label>
+            <input type="text" id="name" name="name" required placeholder="Adınızı giriniz...">
+          </div>
+          <div class="form-group">
+            <label for="email">E-posta Adresiniz *</label>
+            <input type="email" id="email" name="email" required placeholder="E-posta adresiniz...">
+          </div>
+          <div class="form-group">
+            <label for="subject">Konu *</label>
+            <input type="text" id="subject" name="subject" required placeholder="Konu başlığı...">
+          </div>
+          <div class="form-group">
+            <label for="message">Mesajınız *</label>
+            <textarea id="message" name="message" rows="6" required placeholder="Mesajınızı buraya yazın..."></textarea>
+          </div>
+          <button type="submit" class="primary-btn">Gönder</button>
+        </form>
+      </div>
+
+      <div class="legal-section">
+        <h2>Soru ve Destek</h2>
+        <p>
+          Siteyle ilgili teknik sorunlarınız, reklamla ilgili sorularınız veya
+          iş birliği önerileriniz için bizimle iletişime geçebilirsiniz.
+        </p>
+        <p>
+          En kısa sürede geri dönüş yapacağız. Destek talepleriniz
+          <strong>contact@mockupstudio.com</strong> adresine yönlendirilir.
+        </p>
+      </div>
+
+      <div class="legal-section">
+        <h2>Reklam ve Sponsörler</h2>
+        <p>
+          Bu site, Google AdSense ve diğer reklam ağları ile desteklenir.
+          Reklam vermek veya iş birliği yapmak isterseniz, lütfen
+          <strong>contact@mockupstudio.com</strong> adresine yazın.
+        </p>
+      </div>
+    </div>
+  </main>
+
+  <!-- Legal Footer -->
+  <footer class="legal-footer">
+    <div class="legal-content">
+      <div class="legal-copy">© 2026 Mockup Studio. Tüm hakları saklıdır.</div>
+      <div class="legal-links">
+        <a href="privacy-policy.html">Gizlilik Politikası</a>
+        <a href="terms-of-service.html">Kullanım Şartları</a>
+        <a href="disclaimer.html">Feragatname</a>
+        <a href="contact.html" class="active">İletişim</a>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>

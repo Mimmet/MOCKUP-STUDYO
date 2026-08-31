@@ -1,0 +1,8 @@
+son derinlik: 0
+BLOK DISI BILDIRIM satir 651: html:has(body.night-mode) { background: #05070d !important; }
+BLOK DISI BILDIRIM satir 1406: body::before {
+BLOK DISI BILDIRIM satir 1424: body::after {
+BLOK DISI BILDIRIM satir 1991: input:checked + .slider.round {
+BLOK DISI BILDIRIM satir 1995: input:checked + .slider.round:before {
+BLOK DISI BILDIRIM satir 2039: body::before,
+BLOK DISI BILDIRIM satir 2040: body::after {

@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://mockupstudio.com/sitemap.xml
+
+# Google AdSense onayı için gerekli
+# Bu dosya, web sitenizin tarama ve dizinleme ayarlarını kontrol eder.
+# Tüm dosyalar taramaya açıktır.
