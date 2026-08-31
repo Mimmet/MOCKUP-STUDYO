@@ -28,7 +28,6 @@ const TRANSLATIONS = {
     galleryTitle: 'Manken Galerisi',
     addMannequin: '+ Manken Ekle',
     emptyState: 'Henüz manken görseli yok.',
-    adPlaceholder: '[ Reklam Alanı - 728x90 Banner ]',
     reviewBtn: '💬 Yorum Yap',
     reviewsTitle: '💬 Kullanıcı Yorumları',
     reviewTitle: 'Değerlendirmeniz',
@@ -39,15 +38,7 @@ const TRANSLATIONS = {
     reviewNeedStars: 'En az 1 yıldız vermelisiniz.',
     reviewNeedText: 'Lütfen düşüncelerinizi yazın.',
     reviewConfirmDelete: 'Bu yorumu silmek istediğine emin misin?',
-    adblockTitle: 'Reklam Engelleyici Tespit Edildi',
-    adblockMsg: 'Sitemizdeki tüm mockup araçları <b>reklam gelirleriyle</b> ücretsiz sunuluyor.<br>Devam edebilmek için lütfen reklam engelleyicinizi bu sitede kapatın.',
-    adblockRetry: 'Kapatmayı Yenile',
-    adblockDismiss: 'Kapat',
     loadingText: 'Mockup hazırlanıyor…',
-    adLabel: 'REKLAM',
-    adVideoPlaceholder: '[ Reklam Video Alanı ]',
-    adVideoMsg: 'İndirmek için 15 saniyeliğe katılın',
-    modalAdPlaceholder: '[ Reklam Alanı - 468x60 Banner ]',
     closeTitle: 'Kapat',
     themeTitle: 'Gece / Gündüz Modu',
     editTitle: 'Maketi Düzenle',
@@ -106,7 +97,6 @@ const TRANSLATIONS = {
     galleryTitle: 'Mannequin Gallery',
     addMannequin: '+ Add Mannequin',
     emptyState: 'No mannequin images yet.',
-    adPlaceholder: '[ Ad Space - 728x90 Banner ]',
     reviewBtn: '💬 Write a Review',
     reviewsTitle: '💬 User Reviews',
     reviewTitle: 'Your Rating',
@@ -117,15 +107,7 @@ const TRANSLATIONS = {
     reviewNeedStars: 'Please give at least 1 star.',
     reviewNeedText: 'Please write your thoughts.',
     reviewConfirmDelete: 'Are you sure you want to delete this review?',
-    adblockTitle: 'Ad Blocker Detected',
-    adblockMsg: 'All the mockup tools on this site are offered <b>free thanks to ad revenue</b>.<br>To continue, please disable your ad blocker on this site.',
-    adblockRetry: 'Retry Check',
-    adblockDismiss: 'Dismiss',
     loadingText: 'Preparing mockup…',
-    adLabel: 'AD',
-    adVideoPlaceholder: '[ Ad Video Area ]',
-    adVideoMsg: 'Join for 15 seconds to download',
-    modalAdPlaceholder: '[ Ad Space - 468x60 Banner ]',
     closeTitle: 'Close',
     themeTitle: 'Night / Day Mode',
     editTitle: 'Edit Mockup',
@@ -319,9 +301,6 @@ function setLang(lang) {
   if (code) code.textContent = currentLang.toUpperCase();
   // Dil değişince dinamik listeler de yeni dille yeniden çizilsin
   if (typeof renderReviews === 'function') renderReviews();
-  // Reklam engelleyici uyarısı açıksa yeni dile göre yenile
-  const abOverlay = $('#adblock-overlay');
-  if (abOverlay) { abOverlay.remove(); showAdBlockWarning(); }
   try { localStorage.setItem('mockup_lang', currentLang); } catch (e) { /* sessiz */ }
 }
 
@@ -1597,40 +1576,15 @@ function startDownloadFlow() {
     applyBtn.classList.add('loading');
   }
 
-  const dm = $('#download-modal');
-  dm.classList.remove('hidden');
-  const COUNT = 15;
-  let left = COUNT;
-  const bar = $('#dl-bar');
-  const ct = $('#dl-countdown');
-  const adBox = $('#dl-ad-box');
-  const msg = $('#dl-msg');
-  const sub = $('#dl-subtitle');
-  if (bar) bar.style.width = '0%';
-  if (ct) ct.textContent = left;
-  if (adBox) adBox.classList.remove('hidden');
-  if (msg) msg.textContent = 'Reklamı izleyin…';
-  if (sub) sub.textContent = 'Mockup hazırlanıyor';
-
-  if (dlTimer) clearInterval(dlTimer);
-  dlTimer = setInterval(() => {
-    left--;
-    if (ct) ct.textContent = left;
-    if (bar) bar.style.width = ((COUNT - left) / COUNT) * 100 + '%';
-    if (left <= 0) {
-      clearInterval(dlTimer);
-      dlTimer = null;
-      if (adBox) adBox.classList.add('hidden');
-      if (msg) msg.textContent = 'İndiriliyor…';
-      setTimeout(() => {
-        if (dlCancelPending) { finishDownloadFlow(applyBtn); return; } // iptal edildiyse dışa aktarma
-        exportMockup();
-        closeDownloadModal();
-        closeModal(); // indirme bitti, artık edit canvas'ı kapat
-        finishDownloadFlow(applyBtn);
-      }, 350);
-    }
-  }, 1000);
+  // Reklamsız indirme: video/sayaç/onay beklemeden doğrudan dışa aktar.
+  try {
+    exportMockup();
+    closeDownloadModal();
+    closeModal(); // indirme bitti, edit canvas'ı kapat
+  } catch (e) {
+    console.error('[Download] dışa aktarma hatası:', e);
+  }
+  finishDownloadFlow(applyBtn);
 }
 
 // İndirme akışını sonlandırıp butonları tekrar etkinleştirir.
@@ -1919,8 +1873,6 @@ function bindReviewEvents() {
 
   openBtn.addEventListener('click', () => {
     resetReviewModal();
-    const topAd = $('#review-top-ad');
-    if (topAd) topAd.classList.remove('hidden'); // banner yorum akışı boyunca görünür
     modal.classList.remove('hidden');
   });
 
@@ -1950,8 +1902,6 @@ function bindReviewEvents() {
       reviews.push({ r: reviewRating, t: text, d: Date.now() });
       try { localStorage.setItem(REVIEWS_KEY, JSON.stringify(reviews)); } catch (e) {}
       renderReviews();
-      const topAd = $('#review-top-ad');
-      if (topAd) topAd.classList.add('hidden'); // yorum onaylanınca banner gider
       close();
     });
   }
@@ -1984,61 +1934,40 @@ function protectAssets() {
   });
 }
 
-/* ---------------- Reklam Engelleyici Tespiti ---------------- */
-function detectAdBlock() {
-  // Yem (bait) yöntemi: reklam gibi görünen gizli öğe oluşturup görünürlüğünü ölç.
-  // Not: Sahte istek yöntemi kullanılmıyor — sitenin kendisinde olmayan dosyalara
-  // yapılan istekler 404 verdiği için yanlış pozitif üretiyordu.
-  // Tespit asla ana uygulamayı bozmamalı (fallback: hata olursa sessiz geç).
+// Kayıtlı olabilecek eski üçüncü taraf (Monetag gibi) servis worker'ı devre dışı bırak.
+// Reklam servis worker'ları tıklama başına yönlendirme yapabilir; dosya silinse bile
+// tarayıcı önbelleğinde kalan kayıt önbellekten eski sayfayı sunmaya devam eder.
+// Bu yüzden yalnızca kaydı değil, önbelleğe alınmış cache verilerini de temizliyoruz.
+function purgeLegacyServiceWorkers() {
   try {
-    const bait = document.createElement('div');
-    bait.className = 'ad ads adsbox ad-banner banner-ad text-ad pub_300x250';
-    bait.style.cssText = 'position:absolute;left:-9999px;top:-9999px;height:90px;width:728px;';
-    bait.innerHTML = '&nbsp;';
-    document.body.appendChild(bait);
-
-    setTimeout(() => {
-      try {
-        const baitHidden = bait.offsetHeight === 0 ||
-                           bait.offsetParent === null ||
-                           getComputedStyle(bait).display === 'none';
-        if (baitHidden) showAdBlockWarning();
-      } catch (e) { /* sessiz */ }
-      bait.remove();
-    }, 600);
+    // 1) Yönlendirme yapan servis worker kayıtlarını kaldır
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then((regs) => {
+        regs.forEach((reg) => {
+          if (reg.active) reg.active.postMessage({ type: 'SKIP_WAITING' });
+          try { reg.unregister(); } catch (e) { /* sessiz */ }
+        });
+      });
+      // Bekleyen/çoğalan worker'ı da atla
+      if (navigator.serviceWorker.controller && navigator.serviceWorker.controller.postMessage) {
+        try { navigator.serviceWorker.controller.postMessage({ type: 'SKIP_WAITING' }); } catch (e) { /* sessiz */ }
+      }
+    }
+    // 2) Reklam servis worker'larının önbelleğe aldığı cache verilerini temizle.
+    //    Fav/görsel verileri localStorage'da saklanır, cache'e dokunmaz; burada sadece
+    //    servis worker önbellekleri sıfırlanır.
+    if ('caches' in window) {
+      caches.keys().then((keys) => keys.forEach((k) => caches.delete(k)));
+    }
   } catch (e) { /* sessiz */ }
-}
-
-function showAdBlockWarning() {
-  if ($('#adblock-overlay')) return;
-  const t = TRANSLATIONS[currentLang] || TRANSLATIONS.tr;
-  const ov = document.createElement('div');
-  ov.id = 'adblock-overlay';
-  // Not: Bu uyarı yalnızca bilgilendirici bir şerittir — reklam engelleyici
-  // açıkken bile araç ve indirme akışı engellenmez (fallback/güvenli yaklaşım).
-  ov.innerHTML =
-    '<div class="adblock-box" role="dialog" aria-label="' + (t.adblockTitle || 'Reklam engelleyici') + '">' +
-    '<button id="adblock-dismiss" class="adblock-dismiss" title="' + (t.adblockDismiss || 'Dismiss') + '">✕</button>' +
-    '<div class="adblock-icon">🚫</div>' +
-    '<h3>' + t.adblockTitle + '</h3>' +
-    '<p>' + t.adblockMsg + '</p>' +
-    '<button id="adblock-recheck">' + t.adblockRetry + '</button>' +
-    '</div>';
-  document.body.appendChild(ov);
-  const btn = $('#adblock-recheck');
-  if (btn) {
-    btn.addEventListener('click', () => { ov.remove(); detectAdBlock(); });
-  }
-  const dismiss = $('#adblock-dismiss');
-  if (dismiss) dismiss.addEventListener('click', () => ov.remove()); // şeridi kapat, araç kullanılabilir
 }
 
 function init() {
   // Her adım ayrı try/catch içinde: biri patlarsa diğerleri yine çalışsın.
   const steps = [
+    ['purgeLegacyServiceWorkers', purgeLegacyServiceWorkers],
     ['applyStoredTheme', applyStoredTheme],
     ['protectAssets', protectAssets],
-    ['detectAdBlock', detectAdBlock],
     ['bindThemeToggle', bindThemeToggle],
     ['bindReviewEvents', bindReviewEvents],
     ['renderReviews', renderReviews],

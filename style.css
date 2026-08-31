@@ -756,10 +756,6 @@ body.night-mode .fav-panel {
   border-color: #24334f !important;
 }
 body.night-mode .fav-panel-header { color: #f1f5f9 !important; }
-
-body.night-mode .bottom-ad-banner {
-  border-top: 1px solid rgba(51, 65, 85, 0.6) !important;
-}
 body.night-mode .ad-placeholder {
   border-color: rgba(71, 85, 105, 0.7) !important;
   background: rgba(30, 41, 59, 0.4) !important;
@@ -782,32 +778,6 @@ body.night-mode .ad-placeholder {
 .review-open-btn:hover { background: #ffffff; transform: translateY(-1px); }
 
 .review-box { max-width: 440px; width: calc(100% - 32px); }
-.review-top-ad {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 10000; /* modalın da üstünde, ekranın en tepesinde */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  background: rgba(2, 132, 199, 0.14);
-  border-bottom: 1px dashed rgba(56, 189, 248, 0.55);
-  padding: 10px 12px;
-  color: #64748b;
-  font-size: 0.8rem;
-}
-.review-ad-tag {
-  background: #f59e0b;
-  color: #fff;
-  font-size: 0.62rem;
-  font-weight: 800;
-  letter-spacing: 1px;
-  padding: 3px 7px;
-  border-radius: 5px;
-}
-.review-top-ad.hidden { display: none; }
 .review-stars {
   display: flex;
   justify-content: center;
@@ -953,94 +923,6 @@ body.night-mode .content-title { color: #f8fafc; }
 body.night-mode .content-subtitle { color: #f8fafc; border-left-color: #818cf8; }
 body.night-mode .content-paragraph { color: #cbd5e1; }
 
-/* ---------- Reklam Engelleyici Uyarısı ---------- */
-/*
- * Reklam engelleyici uyarısı: BİLGİLENDİRİCİ bir şerittir — kullanıcıyı
- * engellemez; AdBlock devredeyken bile araç ve indirme akışı çalışmaya devam
- * eder (gereksinim: fallback / güvenli entegrasyon).
- */
-#adblock-overlay {
-  position: fixed;
-  top: 12px;
-  left: 0;
-  right: 0;
-  margin: 0 auto;
-  max-width: 520px;
-  width: calc(100% - 24px);
-  z-index: 99999;
-  /* Dış alan tıklamalara açıktır — yalnızca kutunun içi etkileşimlidir. */
-  pointer-events: none;
-}
-.adblock-box {
-  background: #ffffff;
-  border-radius: 18px;
-  padding: 22px 28px 26px;
-  max-width: 440px;
-  width: 100%;
-  text-align: center;
-  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.4);
-  position: relative;
-  pointer-events: auto; /* yalnızca kutu etkileşimli — arka plan tıklanabilir */
-}
-.adblock-dismiss {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  width: 28px;
-  height: 28px;
-  border: none;
-  border-radius: 50%;
-  background: rgba(15, 23, 42, 0.1);
-  color: #0f172a;
-  font-size: 1rem;
-  font-weight: 700;
-  line-height: 1;
-  cursor: pointer;
-}
-.adblock-dismiss:hover { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
-.adblock-icon { font-size: 3rem; margin-bottom: 10px; }
-.adblock-box h3 { color: #0f172a; font-size: 1.25rem; font-weight: 800; margin: 0 0 12px; }
-.adblock-box p { color: #475569; font-size: 0.95rem; line-height: 1.6; margin: 0 0 20px; }
-#adblock-recheck {
-  padding: 11px 26px;
-  border: none;
-  border-radius: 10px;
-  background: linear-gradient(135deg, #0284c7, #2563eb);
-  color: #fff;
-  font-weight: 700;
-  font-size: 0.95rem;
-  cursor: pointer;
-}
-#adblock-recheck:hover { transform: translateY(-1px); }
-
-.bottom-ad-banner {
-  position: fixed;
-  bottom: 0; /* Ekranı takip eden tek şerit: reklam banner'ı */
-  left: 0;
-  right: 0;
-  z-index: 1000;
-  height: 90px;
-  background-color: transparent; /* şerit şeffaf, arka plan görünsün */
-  border-top: 1px solid rgba(148, 163, 184, 0.25);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.ad-placeholder {
-  width: 728px;
-  height: 70px;
-  border: 1px dashed rgba(148, 163, 184, 0.6);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #64748b;
-  font-size: 0.85rem;
-  background: rgba(255, 255, 255, 0.35); /* hafif beyazlı yarı saydam kutu */
-  border-radius: 10px;
-}
-
 /* Canvas artık kullanılmıyor - sadece img gösteriliyor */
 
 .mannequin-clickable {
@@ -1081,97 +963,6 @@ body.night-mode .content-paragraph { color: #cbd5e1; }
   overflow: auto;
   box-shadow: 0 24px 70px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(56, 189, 248, 0.06);
   animation: slideUp 0.22s ease-out;
-}
-
-.modal-top-ad {
-  padding: 6px 10px;
-  border-bottom: 1px solid #334155;
-  flex-shrink: 0;
-}
-
-.modal-ad-placeholder {
-  width: 468px;
-  height: 50px;
-  max-width: 100%;
-  margin: 0 auto;
-  border: 1px dashed #334155;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #64748b;
-  font-size: 0.75rem;
-  background: #0b0f19;
-}
-
-/* Video Reklam Overlay */
-.modal-video-ad {
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.95);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 100;
-  border-radius: 16px;
-}
-
-.video-ad-content {
-  text-align: center;
-  padding: 20px;
-  width: 100%;
-}
-
-.video-ad-countdown {
-  font-size: 3rem;
-  font-weight: 800;
-  color: #38bdf8;
-  margin-bottom: 10px;
-}
-
-.video-ad-label {
-  font-size: 0.75rem;
-  color: #64748b;
-  letter-spacing: 2px;
-  margin-bottom: 15px;
-}
-
-.video-ad-placeholder {
-  width: 100%;
-  max-width: 480px;
-  height: 200px;
-  margin: 0 auto 15px;
-  background: #0b0f19;
-  border: 1px solid #1e293b;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #64748b;
-  font-size: 0.9rem;
-}
-
-.video-ad-progress {
-  width: 100%;
-  max-width: 480px;
-  height: 6px;
-  background: #1e293b;
-  border-radius: 3px;
-  margin: 0 auto 10px;
-  overflow: hidden;
-}
-
-.video-ad-bar {
-  height: 100%;
-  width: 0%;
-  background: linear-gradient(90deg, #38bdf8, #6366f1);
-  border-radius: 3px;
-  transition: width 1s linear;
-}
-
-.video-ad-msg {
-  font-size: 0.85rem;
-  color: #94a3b8;
 }
 
 .modal-header {
@@ -1339,81 +1130,6 @@ body.night-mode .content-paragraph { color: #cbd5e1; }
 /* ---------- Ücretsiz İndirme Ekranı ---------- */
 .download-box {
   width: min(560px, 100%);
-}
-
-.dl-video-area {
-  aspect-ratio: 16 / 9;
-  background: #000;
-  border-radius: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  overflow: hidden;
-}
-
-.dl-countdown {
-  font-size: 4.5rem;
-  font-weight: 800;
-  color: #38bdf8;
-  font-variant-numeric: tabular-nums;
-  text-shadow: 0 0 30px rgba(56, 189, 248, 0.4);
-}
-
-.dl-ad-box {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  background: linear-gradient(135deg, #0b1120, #1e293b);
-  animation: fadeIn 0.3s ease-out;
-}
-
-.dl-ad-label {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background: rgba(248, 250, 252, 0.9);
-  color: #0f172a;
-  font-size: 0.65rem;
-  font-weight: 800;
-  letter-spacing: 1px;
-  padding: 2px 8px;
-  border-radius: 4px;
-}
-
-.dl-ad-placeholder {
-  color: #475569;
-  font-size: 0.95rem;
-  border: 2px dashed #334155;
-  padding: 18px 28px;
-  border-radius: 10px;
-}
-
-.dl-msg {
-  padding: 16px 20px 0;
-  color: #94a3b8;
-  font-size: 0.9rem;
-  text-align: center;
-}
-
-.dl-progress {
-  height: 6px;
-  background: #0f172a;
-  border-radius: 999px;
-  margin: 14px 20px 0;
-  overflow: hidden;
-}
-
-.dl-bar {
-  height: 100%;
-  width: 0%;
-  background: linear-gradient(90deg, #0284c7, #38bdf8);
-  border-radius: 999px;
-  transition: width 1s linear;
 }
 
 .dl-actions {
