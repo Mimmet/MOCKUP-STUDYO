@@ -1445,6 +1445,10 @@ function openModal(card, m) {
   activeCardIndex = mannequins.findIndex((x) => x.id === m.id);
   modalCardId = m.id;
   $('#modal').classList.remove('hidden');
+  // Edit ekranı açıkken üst reklam banneri görünsün
+  const topAd = $('#top-ad-banner');
+  if (topAd) topAd.classList.remove('hidden');
+  document.body.classList.add('top-ad-visible');
   initModalCanvas(m);
 }
 
@@ -1453,6 +1457,10 @@ function closeModal() {
     modalCanvas.dispose();
     modalCanvas = null;
   }
+  // Edit ekranı kapanınca üst reklam bannerini gizle
+  const topAd = $('#top-ad-banner');
+  if (topAd) topAd.classList.add('hidden');
+  document.body.classList.remove('top-ad-visible');
   // Motor singleton'ının eski görsel/tasarım referanslarını bırak (bellek temizliği).
   if (window.MockupEngine && typeof window.MockupEngine.detach === 'function') {
     window.MockupEngine.detach();

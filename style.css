@@ -1270,24 +1270,96 @@ body.night-mode .content-paragraph { color: #cbd5e1; }
   color: #94a3b8;
 }
 
-/* ---------- Sabit Alt Reklam Banneri ---------- */
+/* ---------- Edit Modalı Açıkken Görünen Üst Reklam Banneri (300x250 uyumlu) ---------- */
+.top-ad-banner {
+  position: fixed;
+  left: 50%;
+  top: 12px;
+  transform: translateX(-50%);
+  z-index: 210; /* edit modalının (200) üstünde görünür */
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: min(350px, calc(100% - 20px)); /* 300px banner + AD rozeti + padding */
+  min-height: 268px; /* 250px banner + dikey padding */
+  padding: 8px 10px;
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.97), rgba(30, 41, 59, 0.97));
+  border: 1px solid #334155;
+  border-radius: 14px;
+  box-shadow: 0 10px 30px rgba(2, 8, 23, 0.5);
+  backdrop-filter: blur(8px);
+  transition: opacity 0.18s ease;
+}
+
+.top-ad-banner.hidden {
+  display: none;
+}
+
+.top-ad-label {
+  flex: 0 0 auto;
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: #f8fafc;
+  background: rgba(239, 68, 68, 0.9);
+  border-radius: 4px;
+  padding: 3px 6px;
+  writing-mode: vertical-rl;
+}
+
+.top-ad-slot {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  min-height: 250px; /* Adsterra 300x250 tam oturur */
+  overflow: hidden;
+}
+
+.top-ad-slot iframe {
+  max-width: 100%;
+}
+
+.top-ad-text {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+/* Üst banner görünürken edit modalı bannerın altına insin */
+body.top-ad-visible .modal-box {
+  margin-top: 282px;
+}
+
+@media (max-height: 760px), (max-width: 600px) {
+  .top-ad-banner {
+    top: 8px;
+    width: min(330px, calc(100% - 16px));
+    min-height: 258px;
+  }
+  body.top-ad-visible .modal-box { margin-top: 272px; }
+}
+
+/* ---------- Sabit Reklam Banneri (sol kenarda dikey, Adsterra 728x90) ---------- */
 body {
-  /* Banner yüksekliği kadar alt boşluk: içerik/footer bannerın altında kalmaz */
-  padding-bottom: 78px;
+  /* Sol dikey banner genişliği kadar yan boşluk: içerik bannerın altında kalmaz */
+  padding-left: 130px;
+  padding-bottom: 20px;
 }
 
 .bottom-ad-banner {
   position: fixed;
-  left: 50%;
-  bottom: 14px;
-  transform: translateX(-50%);
+  left: -341px;           /* döndürme sonrası kutunun ekranın soluna oturması için */
+  top: 50%;
+  transform: translateY(-50%) rotate(-90deg); /* banner dikey şerit gibi durur */
   z-index: 150; /* içerik üstünde (header:100) ama modalların (200) altında */
   display: flex;
   align-items: center;
-  gap: 12px;
-  width: min(480px, calc(100% - 24px)); /* boydan boya değil: ortada kısa banner */
-  min-height: 58px;
-  padding: 10px 18px;
+  gap: 10px;
+  /* 728px banner + AD rozeti + padding */
+  width: min(790px, calc(100vh - 130px)); /* ekran yüksekliğini taşmasın */
+  min-height: 108px; /* 90px banner + dikey padding */
+  padding: 8px 12px;
   background: linear-gradient(90deg, rgba(15, 23, 42, 0.97), rgba(30, 41, 59, 0.97));
   border: 1px solid #334155;
   border-radius: 14px;
@@ -1297,28 +1369,33 @@ body {
 
 .bottom-ad-label {
   flex: 0 0 auto;
-  font-size: 0.6rem;
+  font-size: 0.55rem;
   font-weight: 700;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.1em;
   color: #f8fafc;
   background: rgba(239, 68, 68, 0.9);
   border-radius: 4px;
-  padding: 3px 7px;
+  padding: 3px 6px;
+  writing-mode: vertical-rl; /* rozet dikey: yatayda banner'a yer bırakır */
 }
 
 .bottom-ad-slot {
   flex: 1;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  justify-content: center;
+  gap: 10px;
   min-width: 0;
-  min-height: 44px; /* AdSense 468x60 / responsive banner uyumu */
+  min-height: 90px; /* Adsterra 728x90 tam oturur */
   overflow: hidden;
 }
 
+.bottom-ad-slot iframe {
+  max-width: 100%;
+}
+
 .bottom-ad-text {
-  font-size: 0.82rem;
+  font-size: 0.78rem;
   color: #cbd5e1;
   white-space: nowrap;
   overflow: hidden;
@@ -1327,13 +1404,13 @@ body {
 
 .bottom-ad-link {
   flex: 0 0 auto;
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 600;
   color: #38bdf8;
   text-decoration: none;
   border: 1px solid rgba(56, 189, 248, 0.4);
   border-radius: 6px;
-  padding: 4px 10px;
+  padding: 3px 9px;
   transition: background 0.15s ease, color 0.15s ease;
 }
 
@@ -1341,10 +1418,24 @@ body {
   background: rgba(56, 189, 248, 0.12);
 }
 
-@media (max-width: 600px) {
-  body { padding-bottom: 78px; }
-  .bottom-ad-banner { bottom: 10px; padding: 8px 12px; min-height: 52px; }
+/* Mobil/küçük ekran: dikey yer sığmadığı için banner alta döner (yatay) */
+@media (max-width: 860px), (max-height: 700px) {
+  body { padding-left: 0; padding-bottom: 84px; }
+  .bottom-ad-banner {
+    left: 50%;
+    top: auto;
+    bottom: 14px;
+    transform: translateX(-50%) rotate(0deg);
+    width: min(380px, calc(100% - 20px));
+    min-height: 68px;
+  }
+  .bottom-ad-slot { min-height: 50px; } /* Adsterra 320x50 */
+  .bottom-ad-label { display: none; }
   .bottom-ad-link { display: none; }
+}
+
+@media (max-width: 600px) {
+  .bottom-ad-banner { bottom: 10px; padding: 8px 10px; }
 }
 
 /* ---------- Animasyonlu Profesyonel Arka Plan ---------- */
