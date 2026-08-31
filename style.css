@@ -34,6 +34,17 @@ body > .navbar {
 @media (max-width: 860px) {
   body > .navbar { margin-left: 0; width: 100%; } /* mobilde padding yok */
 }
+/* İçerik alanı ve footer da sol kenara kadar uzasın:
+   arka plan/şerit bannerın olduğu sütunu kapsar, sayfa tek bütün görünür.
+   (main/footer zoom 0.85 olduğundan kaydırma /0.85 ile telafi edilir) */
+@media (min-width: 861px) {
+  body > main,
+  body > footer {
+    margin-left: calc(-130px / 0.85);
+    width: calc(100% + 130px / 0.85);
+    padding-left: calc(130px / 0.85);
+  }
+}
 /* Tıklama animasyonu (flash) JS ile eklenir, sınıfsızdır: JS tarafında zoom:1 verilir */
 /* Modal kutusu da içeriğiyle birlikte küçülsün (katman kendisi tam ekran kalır) */
 .modal-overlay > .modal-box {
