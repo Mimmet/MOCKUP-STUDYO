@@ -1396,7 +1396,9 @@ body {
 
 .bottom-ad-banner {
   position: fixed;
-  left: -341px;           /* döndürme sonrası kutunun ekranın soluna oturması için */
+  /* Dikey döndürme sonrası kutunun merkezi her zaman ekranın sol kenarına
+     otursun diye left, genişlikle birlikte hesaplanıyor (ekran dışına taşmaz) */
+  left: calc(min(790px, 100vh - 130px) / -2 + 56px);
   top: 50%;
   transform: translateY(-50%) rotate(-90deg); /* banner dikey şerit gibi durur */
   z-index: 150; /* içerik üstünde (header:100) ama modalların (200) altında */
