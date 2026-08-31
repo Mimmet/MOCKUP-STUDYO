@@ -350,14 +350,22 @@ function makeCard(m) {
   const img = document.createElement('img');
   img.className = 'mannequin-img';
   img.alt = m.name || 'Manken';
-  // Performans: ekranın altındaki görselleri ertele, çözümlemeyi async yap, kritik yüklemeleri önceliklendir
+  // Performans: galeride önce küçük thumbnail'i göster; kullanıcı maketi seçince
+  // tam çözünürlüklü orijinal render'da yüklenir. Yüklenemezse orijinale düş.
   img.loading = 'lazy';
   img.decoding = 'async';
   img.fetchPriority = 'low';
-  img.src = m.src;
+  img.src = m.thumbSrc || m.src;
 
-  // Görsel yüklenemezse konsola yaz ve kartı gizleme (kırık ikon yerine mesaj göster)
+  // Görsel yüklenemezse: önce thumbnail yüklenememişse tam çözünürlük dene (bir kez),
+  // o da yüklenemezse konsola yaz ve kartı gizleme (kırık ikon yerine mesaj göster).
   img.addEventListener('error', () => {
+    const full = m.src;
+    if (img.src !== full && full && !img.dataset.fellback) {
+      img.dataset.fellback = '1';
+      img.src = full;
+      return;
+    }
     console.warn('[Manken] Görsel yüklenemedi:', m.src);
     holder.textContent = '⚠ Görsel yüklenemedi';
     holder.style.cssText = 'color:#f87171;font-size:.8rem;text-align:center;padding:20px;';
@@ -867,6 +875,14 @@ function mannequinPath(file) {
   return 'görsel/' + encodeURIComponent(file);
 }
 
+// Küçük galeri önizlemesi (thumbnail) yolunu hazırla.
+// Orijinal PNG'ler birkaç MB iken thumb ('görsel/thumbs') ~30-60KB'dır;
+// galeri bunları gösterir, tam çözünürlük yalnızca render sırasında yüklenir.
+function thumbPath(file) {
+  const base = String(file).replace(/\.[^.]+$/, '');
+  return 'görsel/thumbs/' + encodeURIComponent(base + '.jpg');
+}
+
 // Görsel parmak izi: küçük 8x8 tuvale indirip gri ton dizisi üretir.
 // Aynı görselin farklı isimli kopyaları aynı parmak izini üretir.
 function computeFingerprint(img) {
@@ -889,16 +905,18 @@ const seenSrcs = new Set();
 
 // Yolları sırayla dener; yüklenen görsel daha önce eklendiyse (aynı görünümlü
 // kopya veya aynı URL) galeriye eklemeden atlar.
-function tryLoadMannequin(paths, name, idx) {
+function tryLoadMannequin(paths, name, idx, opts) {
   if (idx >= paths.length) return;
   const img = new Image();
   img.onload = () => {
-    if (seenSrcs.has(img.src)) {
-      console.info('[Manken] Aynı URL kopyası atlandı:', name, '->', img.src);
+    // Kanonik kimlik = tam çözünürlüklü dosya (favoriler & render bunu kullanır).
+    const canonSrc = (opts && opts.fullSrc) || img.src;
+    if (seenSrcs.has(canonSrc)) {
+      console.info('[Manken] Aynı URL kopyası atlandı:', name, '->', canonSrc);
       updateGalleryState();
       return;
     }
-    seenSrcs.add(img.src);
+    seenSrcs.add(canonSrc);
 
     let fp = '';
     try { fp = computeFingerprint(img); } catch (e) { /* CORS vb. → kontrol yok */ }
@@ -909,19 +927,32 @@ function tryLoadMannequin(paths, name, idx) {
     }
     if (fp) seenFingerprints.add(fp);
 
-    const m = { id: uid(), name, src: img.src, cardEl: null, fav: isFavorite({ src: img.src }) };
+    // İlk yol thumbnail ise galeride onu kullan; yüklenemezse (idx>0) tam çözünürlük.
+    const isThumb = !!(opts && opts.thumbSrc && idx === 0);
+    const m = {
+      id: uid(),
+      name,
+      src: canonSrc,                                // tam çözünürlük (render/favori)
+      thumbSrc: isThumb ? opts.thumbSrc : canonSrc, // galeri kartı önizlemesi
+      cardEl: null,
+      fav: isFavorite({ src: canonSrc })
+    };
     mannequins.push(m);
     renderCard(m);
     updateGalleryState();
   };
-  img.onerror = () => tryLoadMannequin(paths, name, idx + 1);
+  img.onerror = () => tryLoadMannequin(paths, name, idx + 1, opts);
   img.src = paths[idx];
 }
 
-// Varsayılan mankenler: görsel klasöründeki tüm dosyalar galeriye kart olarak eklenir.
+// Varsayılan mankenler: önce küçük thumbnail'leri yüklenir (parmak izi + hızlı galeri),
+// tam PNG yalnızca mockup render edilirken getirilir.
 function seedDefaultMannequins() {
   DEFAULT_MANNEQUINS.forEach((file) => {
-    tryLoadMannequin([mannequinPath(file), 'görsel/' + file], file.replace(/\.[^.]+$/, ''), 0);
+    const fullAbs = new URL(mannequinPath(file), location.href).href;
+    const thumbAbs = new URL(thumbPath(file), location.href).href;
+    const paths = [thumbPath(file), mannequinPath(file), 'görsel/' + file];
+    tryLoadMannequin(paths, file.replace(/\.[^.]+$/, ''), 0, { fullSrc: fullAbs, thumbSrc: thumbAbs });
   });
   setTimeout(() => {
     console.info('[Manken] Galeride', mannequins.length, 'kart oluşturuldu (kopyalar atlandı).');
