@@ -5,6 +5,16 @@
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
+/* ---------- Global ölçekleme ----------
+   Masaüstünde içerik %100 zoom'da tam sığsın diye global ölçek %85.
+   Oranlar korunur, responsive kırılımlar etkilenmez. */
+html {
+  zoom: 0.85;
+}
+@media (max-width: 860px) {
+  html { zoom: 1; } /* mobilde zaten kompakt, küçültmeye gerek yok */
+}
+
 body {
   background-color: transparent; /* animasyonlu arka plan katmanları görünsün diye */
   color: #f8fafc;
