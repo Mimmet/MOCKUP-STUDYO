@@ -1302,12 +1302,13 @@ body.night-mode .content-paragraph { color: #cbd5e1; }
   color: #94a3b8;
 }
 
-/* ---------- Edit Modalı Açıkken Görünen Üst Reklam Banneri (300x250 uyumlu) ---------- */
+/* ---------- Edit Modalı Açıkken Görünen Reklam Kutusu (300x250, sağ kenar) ---------- */
 .top-ad-banner {
   position: fixed;
-  left: 50%;
-  top: 12px;
-  transform: translateX(-50%);
+  right: 14px;              /* edit modalından uzak: ekranın sağ kenarı */
+  left: auto;
+  top: 50%;
+  transform: translateY(-50%); /* sağ kenarda dikey ortalı */
   z-index: 210; /* edit modalının (200) üstünde görünür */
   display: flex;
   align-items: flex-start;
@@ -1358,26 +1359,19 @@ body.night-mode .content-paragraph { color: #cbd5e1; }
   color: #64748b;
 }
 
-/* Üst banner görünürken edit modalı bannerın altına insin */
+/* Reklam kutusu artık üstte değil: modal yukarı itilmez */
 body.top-ad-visible .modal-box {
-  margin-top: 282px;
+  margin-top: 0;
 }
 
-@media (max-height: 760px), (max-width: 600px) {
-  .top-ad-banner {
-    top: 8px;
-    width: min(330px, calc(100% - 16px));
-    min-height: 258px;
-  }
-  body.top-ad-visible .modal-box { margin-top: 272px; }
-}
-
-/* Küçük ekran (telefon) optimizasyonu: 300x250 üst banner modalın üstünü
-   kapattığı için telefonda gizlenir, modal normale döner */
-@media (max-width: 700px) {
+/* Ekran darsa (modal + reklam yan yana sığmazsa) reklam kutusu gizlenir,
+   modalın üstüne binmesin */
+@media (max-width: 1180px) {
   .top-ad-banner { display: none; }
-  body.top-ad-visible .modal-box,
-  body.top-ad-visible .modal-box { margin-top: 0; }
+}
+
+/* Küçük ekran (telefon) optimizasyonu */
+@media (max-width: 700px) {
   .modal-box { max-height: 90vh; }
   .navbar, main, footer { max-width: 100%; overflow-x: hidden; }
 }
