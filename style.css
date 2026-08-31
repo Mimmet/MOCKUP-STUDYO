@@ -1110,6 +1110,13 @@ body.night-mode .content-paragraph { color: #cbd5e1; }
   display: flex;
   gap: 8px;
   margin-top: auto;
+  /* Edit modalı ekrana sığmadığında (zoomlu/küçük ekran) Uygula butonları
+     her zaman görünür kalsın: modal kaydırılırken altta sabit kalır */
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  padding-top: 8px;
+  background: linear-gradient(180deg, rgba(30, 41, 59, 0) 0%, #1e293b 30%);
 }
 
 .modal-actions .primary-btn,
@@ -1338,6 +1345,21 @@ body.top-ad-visible .modal-box {
     min-height: 258px;
   }
   body.top-ad-visible .modal-box { margin-top: 272px; }
+}
+
+/* Küçük ekran (telefon) optimizasyonu: 300x250 üst banner modalın üstünü
+   kapattığı için telefonda gizlenir, modal normale döner */
+@media (max-width: 700px) {
+  .top-ad-banner { display: none; }
+  body.top-ad-visible .modal-box,
+  body.top-ad-visible .modal-box { margin-top: 0; }
+  .modal-box { max-height: 90vh; }
+  .navbar, main, footer { max-width: 100%; overflow-x: hidden; }
+}
+
+/* Yatay taşma koruması: sabit/reklam öğeleri asla yatay scrollbar çıkarmasın */
+html, body {
+  overflow-x: clip;
 }
 
 /* ---------- Sabit Reklam Banneri (sol kenarda dikey, Adsterra 728x90) ---------- */
@@ -2205,6 +2227,10 @@ select {
 .modal-box {
   background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%) !important;
   border-color: #e2e8f0 !important;
+}
+/* Sticky Uygula çubuğu açık temada beyaz geçişli olsun */
+.modal-actions {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, #f8fafc 30%) !important;
 }
 .modal-title-wrap h3 {
   color: #0f172a !important;
