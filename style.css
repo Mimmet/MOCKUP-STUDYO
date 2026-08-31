@@ -24,6 +24,16 @@ body > svg,
 body > script {
   zoom: 1; /* fixed/katman öğeleri orijinal boyutta kalır */
 }
+/* Navbar zoomdan hariç ve sol dikey bannerın olduğu alanı da kaplasın:
+   şerit ekranın sol kenarına kadar uzanır, bannerla bütünleşik durur */
+body > .navbar {
+  zoom: 1;
+  margin-left: -130px; /* body padding-left'i yok say: kenara kadar uzat */
+  width: calc(100% + 130px);
+}
+@media (max-width: 860px) {
+  body > .navbar { margin-left: 0; width: 100%; } /* mobilde padding yok */
+}
 /* Tıklama animasyonu (flash) JS ile eklenir, sınıfsızdır: JS tarafında zoom:1 verilir */
 /* Modal kutusu da içeriğiyle birlikte küçülsün (katman kendisi tam ekran kalır) */
 .modal-overlay > .modal-box {
