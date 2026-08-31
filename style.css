@@ -17,10 +17,14 @@ body > .geometric-bg,
 body > .bottom-ad-banner,
 body > .top-ad-banner,
 body > .modal-overlay,
+body > .click-ripple,
+body > .click-particle,
+body > .review-modal-overlay,
 body > svg,
 body > script {
   zoom: 1; /* fixed/katman öğeleri orijinal boyutta kalır */
 }
+/* Tıklama animasyonu (flash) JS ile eklenir, sınıfsızdır: JS tarafında zoom:1 verilir */
 /* Modal kutusu da içeriğiyle birlikte küçülsün (katman kendisi tam ekran kalır) */
 .modal-overlay > .modal-box {
   zoom: 0.85;
@@ -1362,6 +1366,13 @@ body.night-mode .content-paragraph { color: #cbd5e1; }
 /* Reklam kutusu artık üstte değil: modal yukarı itilmez */
 body.top-ad-visible .modal-box {
   margin-top: 0;
+}
+/* Reklam kutusu sağda görünürken edit modalı biraz sola çekilir:
+   reklamla arasında boşluk kalır (yalnızca kutunun göründüğü genişlikte) */
+@media (min-width: 1181px) {
+  body.top-ad-visible .modal-overlay {
+    padding-right: 370px;
+  }
 }
 
 /* Ekran darsa (modal + reklam yan yana sığmazsa) reklam kutusu gizlenir,

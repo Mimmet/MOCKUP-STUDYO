@@ -2124,7 +2124,7 @@ document.addEventListener('click', (e) => {
   const flash = document.createElement('div');
   flash.style.cssText =
     'position:fixed;left:' + e.clientX + 'px;top:' + e.clientY + 'px;' +
-    'width:70px;height:70px;border-radius:50%;pointer-events:none;z-index:9998;' +
+    'width:70px;height:70px;border-radius:50%;pointer-events:none;z-index:9998;zoom:1;' +
     'transform:translate(-50%,-50%);' +
     'background:radial-gradient(circle, rgba(255,255,255,0.5) 0%, rgba(56,189,248,0.25) 40%, transparent 70%);' +
     'animation:clickRipple 0.4s ease-out forwards;';
