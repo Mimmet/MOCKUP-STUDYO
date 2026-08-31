@@ -350,6 +350,10 @@ function makeCard(m) {
   const img = document.createElement('img');
   img.className = 'mannequin-img';
   img.alt = m.name || 'Manken';
+  // Performans: ekranın altındaki görselleri ertele, çözümlemeyi async yap, kritik yüklemeleri önceliklendir
+  img.loading = 'lazy';
+  img.decoding = 'async';
+  img.fetchPriority = 'low';
   img.src = m.src;
 
   // Görsel yüklenemezse konsola yaz ve kartı gizleme (kırık ikon yerine mesaj göster)
@@ -497,6 +501,9 @@ function renderFavPanel() {
     const thumbWrap = document.createElement('div');
     thumbWrap.className = 'fav-thumb';
     const img = document.createElement('img');
+    img.loading = 'lazy';
+    img.decoding = 'async';
+    img.fetchPriority = 'low';
     img.src = src;
     img.alt = m.name || 'Favori maket';
     thumbWrap.appendChild(img);

@@ -98,7 +98,7 @@
             <div class="drop-hint" data-i18n="dropHint">PNG / JPEG dosyanızı buraya sürükleyin</div>
             <button type="button" class="primary-btn" data-i18n="selectDesign">Tasarım Seç</button>
           </div>
-          <img id="design-preview" class="design-preview hidden" alt="">
+          <img id="design-preview" class="design-preview hidden" alt="" decoding="async">
           <div class="replace-hint" id="replace-hint" data-i18n="replaceHint">Tasarımı değiştirmek için tıklayın</div>
         </div>
         <input type="file" id="design-upload" class="hidden-input" accept="image/png, image/jpeg, image/webp">
@@ -122,7 +122,7 @@
         </div>
         <!-- Statik kart şablonu (JS tarafından klonlanır, sadece görsel gösterilir) -->
         <div class="mannequin-card mannequin-clickable hidden" data-template="mannequin-card">
-          <div class="mannequin-holder"><img class="mannequin-img" src="" alt=""></div>
+          <div class="mannequin-holder"><img class="mannequin-img" src="" alt="" loading="lazy" decoding="async"></div>
         </div>
       </div>
     </section>

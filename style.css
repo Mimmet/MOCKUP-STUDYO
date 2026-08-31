@@ -455,6 +455,11 @@ select {
   overflow: hidden;
   align-self: start;
   line-height: 0;
+  /* Performans: ekran dışındaki kartların render edilmesini ertele,
+     böylece sayfa ilk açıldığında kritik içerik daha hızlı boyanır.
+     contain-intrinsic-size ile yüklenmemiş görsel için yer ayrılır (CLS önlenir). */
+  content-visibility: auto;
+  contain-intrinsic-size: auto 420px;
 }
 
 .mannequin-card:hover {
