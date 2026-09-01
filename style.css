@@ -753,7 +753,6 @@ body.night-mode .upload-title { color: #f8fafc !important; }
 body.night-mode .upload-sub { color: #94a3b8 !important; }
 body.night-mode .replace-hint { color: #64748b !important; }
 body.night-mode .upload-toolbar { color: #cbd5e1 !important; }
-body.night-mode .toolbar-info { color: #cbd5e1 !important; }
 
 body.night-mode .upload-info {
   background: linear-gradient(160deg, #16203a 0%, #101a2e 100%) !important;
@@ -2335,9 +2334,6 @@ body.night-mode .logo-icon svg {
   color: #7b8794 !important;
 }
 .upload-toolbar {
-  color: #334155 !important;
-}
-.toolbar-info {
   color: #334155 !important;
 }
 
