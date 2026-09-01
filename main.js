@@ -1700,11 +1700,27 @@ function finishDownloadFlow(applyBtn) {
 }
 
 /* --- Yeni nesil arka plan: büyük, zarif, canlı parçalar --- */
+/* --- Mobil algılama: telefonda ağır efektleri kısarak performans sağlar.
+   Masaüstü deneyimi hiç değişmez. --- */
+const IS_MOBILE_DEVICE =
+  (typeof window !== 'undefined' &&
+    (window.matchMedia('(max-width: 860px)').matches ||
+      (navigator.maxTouchPoints > 1 && Math.min(window.innerWidth, window.innerHeight) < 820)));
+
+
 function spawnGeometricShapeLayers(container) {
   const rand = (a, b) => a + Math.random() * (b - a);
   container.innerHTML = '';
 
-  const pieces = [
+  const pieces = IS_MOBILE_DEVICE ? [
+    // Mobilde: yalnızca birkaç küçük küre (animasyonsuz, CSS'te de kısıtlı)
+    ['bg-piece bg-piece--orb c-blue',   [220, 300]],
+    ['bg-piece bg-piece--orb c-violet', [200, 280]],
+    ['bg-piece bg-piece--orb c-teal',   [180, 260]],
+    ['bg-piece bg-piece--orb c-pink',   [170, 240]],
+    ['bg-piece bg-piece--orb c-amber',  [160, 220]],
+    ['bg-piece bg-piece--orb c-green',  [150, 210]]
+  ] : [
     // Dev renk küreleri — HER BİRİ FARKLI RENK
     ['bg-piece bg-piece--orb c-blue',   [440, 780]],
     ['bg-piece bg-piece--orb c-violet', [400, 720]],
@@ -2094,6 +2110,8 @@ function init() {
 // Tıklama animasyonu: halka + renkli parçacık patlaması
 const CLICK_PALETTE = ['#38bdf8', '#818cf8', '#e879f9', '#2dd4bf', '#fb923c', '#ffffff'];
 document.addEventListener('click', (e) => {
+  // Mobilde tıklama animasyonları kapatılır (performans) — masaüstünde aynen devam
+  if (IS_MOBILE_DEVICE) return;
   // 1) Genişleyen halka
   const ripple = document.createElement('div');
   ripple.className = 'click-ripple';

@@ -2128,10 +2128,114 @@ input:checked + .slider.round:before {
 
 @media (max-width: 480px) {
   .mannequin-grid {
-    grid-template-columns: 1fr;
-    gap: 12px;
-    padding: 16px 8px;
+    grid-template-columns: repeat(2, minmax(0, 1fr)); /* 1 kolon yerine 2: telefonda kaydırma azalır */
+    gap: 10px;
+    padding: 14px 8px;
   }
+}
+
+/* ============================================================
+   MOBİL UYARLAMA KATMANI (yalnızca ≤860px)
+   Masaüstü kurallarına DOKUNULMAZ; buradakiler sadece
+   dar ekranlarda geçerlidir. Amaç: performans + oran/uyum.
+   ============================================================ */
+@media (max-width: 860px) {
+
+  /* --- 1) PERFORMANS: ağır arka plan animasyonları kapatılır,
+         şekiller statik degrade olarak kalır --- */
+  .bg-piece {
+    animation: none !important;
+    will-change: auto !important;
+    filter: none !important; /* blur filtreleri mobil GPU'yu yorar */
+  }
+  .bg-piece--ribbon,
+  .bg-piece--panel {
+    display: none; /* şerit/panel dekoru mobilde gereksiz yük */
+  }
+  .bg-piece--orb {
+    opacity: 0.35;
+  }
+
+  /* backdrop-filter mobilde pahalı: düz yarı saydam zemine çevrilir */
+  .navbar,
+  footer,
+  .modal-box,
+  .top-ad-banner,
+  .bottom-ad-banner {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  /* Tıklama/dokunma animasyonları JS'te zaten kapalı; garantisi olarak CSS de gizler */
+  .click-ripple,
+  .click-particle {
+    display: none !important;
+  }
+
+  /* --- 2) ORAN / YERLEŞİM UYUMU --- */
+
+  /* Sol dikey banner payı ve zoom telafisi mobilde iptal */
+  body {
+    padding-left: 0 !important;
+    padding-bottom: 84px; /* alt reklam banneri yeri */
+    zoom: 1;
+  }
+  body > * { zoom: 1; }
+  body > .navbar { margin-left: 0; width: 100%; }
+
+  /* Yükleme bölgesi alt alta sıkışır */
+  .upload-zone {
+    flex-direction: column;
+    padding: 16px 12px;
+    gap: 14px;
+  }
+  .upload-info { flex: 0 0 auto; max-width: 100%; }
+  .upload-main { width: 100%; max-width: 100%; }
+
+  /* Navbar linkleri taşmasın */
+  .nav-links { flex-wrap: wrap; gap: 8px; }
+
+  /* --- 3) EDİT MODALİ telefonda tam ekran hissi verir --- */
+  #modal > .modal-box {
+    width: 100vw;
+    max-width: 100vw;
+    max-height: 94vh;
+    border-radius: 12px;
+  }
+  body.top-ad-visible #modal > .modal-box { margin-top: 84px; }
+  .modal-body {
+    flex-direction: column;
+    padding: 10px;
+    gap: 10px;
+  }
+  .modal-canvas-wrap {
+    flex: 0 0 auto;
+    width: 100%;
+  }
+  .modal-controls {
+    flex: 1 1 auto;
+    width: 100%;
+  }
+  .modal-actions {
+    position: static; /* sticky taban mobilde kayma yapabilir */
+  }
+
+  /* Dokunmatikte hover yok: favori kalbi her zaman görünür */
+  .mannequin-card .fav-btn {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  /* Galeri kartı dokunma hedefleri büyüsün */
+  .mannequin-card { border-radius: 10px; }
+}
+
+/* Çok küçük telefonlar (≤480px) için ek sadeleştirme */
+@media (max-width: 480px) {
+  .modal-header { padding: 10px 12px; }
+  .modal-header h3 { font-size: 0.95rem; }
+  .upload-info { padding: 14px; }
+  .design-preview { max-width: 100%; max-height: 50vh; }
 }
 
 /* ============================================================
