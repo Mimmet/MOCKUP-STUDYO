@@ -1248,17 +1248,22 @@ body.night-mode .content-paragraph { color: #cbd5e1; }
   padding: 16px;
 }
 
-/* Adsterra banner yerleşimi: 16:9 alanın ortasında */
+/* Adsterra 160x300 banner yerleşimi: video alanının altında ortalanmış */
 .adsterra-slot {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 62px;
-  margin: 6px 0 10px;
+  min-height: 302px; /* 300px dikey banner + nefes payı */
+  margin: 10px 0 4px;
 }
 
 .adsterra-slot iframe {
   max-width: 100%;
+}
+
+.adsterra-placeholder {
+  font-size: 0.75rem;
+  color: #64748b;
 }
 
 .ad-badge {
