@@ -62,8 +62,8 @@ const TRANSLATIONS = {
     modalHint: '💡 Tasarımı sürükleyerek manken üzerinde istediğiniz yere yerleştirin.',
     dlTitle: 'Ücretsiz İndirme',
     dlSub: 'Mockup hazırlanıyor',
-    dlMsg: 'Ücretsiz indirmek için kısa videoyu izleyin',
-    adStatus: 'Lütfen bekleyin…',
+    dlMsg: 'Reklamı izleyin, biraz bekleyin; tasarımınız hazırlanıyor',
+    adStatus: 'Biraz bekleyin, tasarımınız hazırlanıyor…',
     dlDone: 'Mockup indiriliyor…',
     bottomAdText: 'Reklamınız burada görünebilir — bize ulaşın',
     dlCancel: 'Vazgeç',
@@ -140,8 +140,8 @@ const TRANSLATIONS = {
     modalHint: '💡 Drag the design onto the mannequin.',
     dlTitle: 'Free Download',
     dlSub: 'Preparing mockup',
-    dlMsg: 'Watch a short video to download for free',
-    adStatus: 'Please wait…',
+    dlMsg: 'Watch the ad and wait a moment — your design is being prepared',
+    adStatus: 'Please wait a moment, preparing your design…',
     dlDone: 'Downloading mockup…',
     bottomAdText: 'Your ad could be here — contact us to advertise',
     dlCancel: 'Cancel',
@@ -1712,14 +1712,9 @@ function closeDownloadModal() {
   $('#download-modal').classList.add('hidden');
 }
 
-// Reklam videosunu/geri sayımı durdurur (modal kapanırken çağrılır).
+// Reklam geri sayımını durdurur (modal kapanırken çağrılır).
 function stopAdPlayback() {
   if (dlTimer) { clearInterval(dlTimer); dlTimer = null; }
-  const video = $('#ad-video');
-  if (video) {
-    try { video.pause(); } catch (e) { /* yoksay */ }
-    video.onended = video.ontimeupdate = video.onerror = null;
-  }
 }
 
 function setAdProgress(ratio) {
@@ -1732,8 +1727,8 @@ function setAdCountdown(text) {
   if (el) el.textContent = text;
 }
 
-// Reklam akışı: Uygula → reklam videosu oynatılır → video bitince indirme başlar.
-// assets/reklam.mp4 yoksa/oynatılamazsa 15 sn'lik geri sayım yedeği kullanılır.
+// Reklam akışı: Uygula → normal reklam paneli gösterilir → 15 sn'lik reklam
+// süresi boyunca beklenir (tasarım indirmeye hazırlanıyor) → geri sayım bitince indirir.
 function startDownloadFlow() {
   if (!design || !modalCard()) return; // sessiz: akış yoksa başlatma
   if (downloading) return;             // buton spam koruması: akış zaten sürüyor
@@ -1752,16 +1747,12 @@ function startDownloadFlow() {
   const status = $('#ad-status');
   if (status) status.textContent = t.adStatus || status.textContent;
 
-  // Modalı göster, ilerlemeyi sıfırla
+  // Normal reklam paneli her zaman görünür (video yok), ilerlemeyi sıfırla
   setAdProgress(0);
   setAdCountdown('15s');
-  const vidEl = $('#ad-video');
-  const phEl = $('#ad-video-placeholder');
-  if (vidEl) vidEl.classList.remove('hidden');
-  if (phEl) phEl.classList.add('hidden');
   $('#download-modal').classList.remove('hidden');
 
-  // Video bitince (veya yedek geri sayım bitince) çağrılır: indir + kapat.
+  // Geri sayım bitince çağrılır: indir + kapat.
   const finishAndDownload = async () => {
     if (dlCancelPending) return;
     stopAdPlayback();
@@ -1777,49 +1768,17 @@ function startDownloadFlow() {
     finishDownloadFlow(applyBtn);
   };
 
-  // Geri sayım yedeği: video oynatılamazsa 15 sn bekletip indirir.
-  const startCountdownFallback = () => {
-    const video = $('#ad-video');
-    if (video) video.classList.add('hidden');
-    const ph = $('#ad-video-placeholder');
-    if (ph) ph.classList.remove('hidden');
-
-    const DURATION = 15;
-    let left = DURATION;
-    setAdCountdown(left + 's');
-    dlTimer = setInterval(() => {
-      if (dlCancelPending) { stopAdPlayback(); return; }
-      left -= 1;
-      setAdProgress(1 - left / DURATION);
-      setAdCountdown(Math.max(0, left) + 's');
-      if (left <= 0) finishAndDownload();
-    }, 1000);
-  };
-
-  const video = $('#ad-video');
-  if (!video) { startCountdownFallback(); return; }
-
-  video.onerror = () => { if (!dlCancelPending) startCountdownFallback(); };
-  video.onended = () => finishAndDownload();
-  video.ontimeupdate = () => {
-    if (video.duration && isFinite(video.duration) && video.duration > 0) {
-      const remaining = Math.max(0, Math.ceil(video.duration - video.currentTime));
-      setAdProgress(video.currentTime / video.duration);
-      setAdCountdown(remaining + 's');
-    }
-  };
-
-  video.currentTime = 0;
-  const p = video.play();
-  if (p && typeof p.catch === 'function') {
-    // Otomatik oynatma engellenirse (muted değilse) kullanıcı etkileşimi
-    // zaten var (buton tıklaması) ama garanti olsun diye sessiz başlat.
-    p.catch(() => {
-      video.muted = true;
-      const retry = video.play();
-      if (retry && typeof retry.catch === 'function') retry.catch(() => startCountdownFallback());
-    });
-  }
+  // 15 saniyelik reklam süresi: kullanıcı reklama bakar, indirme bekler.
+  const DURATION = 15;
+  let left = DURATION;
+  setAdCountdown(left + 's');
+  dlTimer = setInterval(() => {
+    if (dlCancelPending) { stopAdPlayback(); return; }
+    left -= 1;
+    setAdProgress(1 - left / DURATION);
+    setAdCountdown(Math.max(0, left) + 's');
+    if (left <= 0) finishAndDownload();
+  }, 1000);
 }
 
 // İndirme akışını sonlandırıp butonları tekrar etkinleştirir.
