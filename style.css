@@ -177,22 +177,22 @@ select {
 
 /* Sol bilgi kartı — şık, bilgilendirici */
 .upload-info {
-  flex: 0 0 320px;
-  max-width: 340px;
+  flex: 0 0 400px;
+  max-width: 440px;
   align-self: center;
   background: linear-gradient(160deg, #f8fbff 0%, #eef4fb 100%);
   border: 1px solid #e2e8f0;
   border-left: 4px solid #2563eb;
   border-radius: 16px;
   box-shadow: 0 12px 32px rgba(37, 61, 103, 0.10);
-  padding: 22px 20px;
+  padding: 28px 26px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 16px;
 }
 
 .upload-info-title {
-  font-size: 1.05rem;
+  font-size: 1.2rem;
   font-weight: 700;
   color: #0f172a;
   letter-spacing: -0.2px;
@@ -204,14 +204,14 @@ select {
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 11px;
+  gap: 13px;
 }
 
 .upload-info-list li {
   position: relative;
-  padding-left: 26px;
-  font-size: 0.86rem;
-  line-height: 1.45;
+  padding-left: 30px;
+  font-size: 0.95rem;
+  line-height: 1.5;
   color: #334155;
 }
 
@@ -221,8 +221,8 @@ select {
   position: absolute;
   left: 0;
   top: 6px;
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
   border-radius: 50%;
   background: #2563eb;
   clip-path: polygon(41% 58%, 28% 46%, 20% 54%, 41% 75%, 82% 35%, 73% 27%);
@@ -230,12 +230,12 @@ select {
 
 .upload-info-note {
   margin-top: 4px;
-  padding: 10px 12px;
+  padding: 12px 14px;
   background: #e7f0ff;
   border: 1px dashed #93c5fd;
   border-radius: 10px;
-  font-size: 0.82rem;
-  line-height: 1.45;
+  font-size: 0.9rem;
+  line-height: 1.5;
   color: #1d4ed8;
 }
 
@@ -252,9 +252,9 @@ select {
 }
 
 .drop-zone {
-  width: min(86%, 760px);
-  height: 58vh;
-  min-height: 340px;
+  width: min(88%, 860px);
+  height: 62vh;
+  min-height: 380px;
   border: 3px dashed #334155;
   border-radius: 16px;
   display: flex;
@@ -295,20 +295,20 @@ select {
 .drop-hint::before { content: '↳'; color: #38bdf8; font-weight: 700; }
 
 .upload-icon {
-  font-size: 52px;
+  font-size: 60px;
   color: #38bdf8;
   line-height: 1;
 }
 
 .upload-title {
-  font-size: 1.7rem;
+  font-size: 1.9rem;
   font-weight: 700;
   color: #f8fafc;
 }
 
 .upload-sub {
-  font-size: 0.95rem;
-  max-width: 440px;
+  font-size: 1.05rem;
+  max-width: 460px;
   line-height: 1.5;
 }
 
@@ -1209,14 +1209,18 @@ body.night-mode .content-paragraph { color: #cbd5e1; }
   padding: 8px 22px;
 }
 
-/* ---------- Reklam Videosu Alanı ---------- */
+/* ---------- Reklam Alanı ---------- */
 .ad-container {
   padding: 0 20px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 12px;
 }
 
 .ad-player {
   position: relative;
-  width: 100%;
+  flex: 1 1 auto;
   aspect-ratio: 16 / 9;
   background: #0f172a;
   border-radius: 12px;
@@ -1258,17 +1262,26 @@ body.night-mode .content-paragraph { color: #cbd5e1; }
   padding: 16px;
 }
 
-/* Adsterra 160x300 banner yerleşimi: video alanının altında ortalanmış */
+/* Adsterra 160x300 dikey banner: video alanının sağında kompakt durur */
 .adsterra-slot {
+  flex: 0 0 160px;
+  width: 160px;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 302px; /* 300px dikey banner + nefes payı */
-  margin: 10px 0 4px;
+  align-self: center;
+  min-height: 300px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #0f172a;
 }
 
 .adsterra-slot iframe {
-  max-width: 100%;
+  width: 100%;
+  height: 100%;
+  min-height: 300px;
+  border: 0;
+  display: block;
 }
 
 .adsterra-placeholder {
@@ -1304,6 +1317,7 @@ body.night-mode .content-paragraph { color: #cbd5e1; }
 
 /* İlerleme çubuğu ve geri sayım */
 .ad-timer-section {
+  flex: 0 0 100%;
   padding: 14px 2px 0;
 }
 
@@ -1340,6 +1354,22 @@ body.night-mode .content-paragraph { color: #cbd5e1; }
 .ad-status {
   font-size: 0.75rem;
   color: #94a3b8;
+}
+
+/* Dar ekranda video ve dikey reklam üst üste; video tam genişlik */
+@media (max-width: 520px) {
+  .ad-container {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .ad-player {
+    width: 100%;
+  }
+  .adsterra-slot {
+    flex: 0 0 auto;
+    width: 160px;
+    margin: 0 auto;
+  }
 }
 
 /* ---------- Edit Modalı Açıkken Görünen Üst Reklam Kutusu (Adsterra 320x50, üstte) ---------- */
@@ -2960,5 +2990,98 @@ body.night-mode .legal-links a:hover {
 
   .legal-title {
     font-size: 1.4rem;
+  }
+}
+
+/* ============================================================
+   EDIT PANELİ — Sayısal girişler + İnce Ton Paneli
+   ============================================================ */
+.num-input {
+  width: 72px;
+  padding: 4px 6px;
+  margin-top: 6px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #0f172a;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+}
+.num-input:focus {
+  outline: none;
+  border-color: #38bdf8;
+  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
+}
+body.night-mode .num-input {
+  background: #1e293b !important;
+  color: #e2e8f0 !important;
+  border-color: #334155 !important;
+}
+
+.tone-panel {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 8px 16px;
+  border-top: 1px solid #e2e8f0;
+  background: rgba(248, 250, 252, 0.7);
+  overflow-x: auto;
+  flex: 0 0 auto;
+}
+.tone-panel::-webkit-scrollbar {
+  height: 6px;
+}
+.tone-panel::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 999px;
+}
+.tone-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+.tone-item label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #334155;
+  white-space: nowrap;
+  cursor: default;
+}
+.tone-item input[type="range"] {
+  width: 92px;
+}
+.tone-item .tone-num {
+  width: 56px;
+  margin-top: 0;
+  padding: 3px 4px;
+  font-size: 12px;
+}
+.tone-item .range-val {
+  font-size: 11px;
+  min-width: 40px;
+  text-align: center;
+}
+.tone-reset {
+  flex: 0 0 auto;
+  padding: 6px 12px;
+  font-size: 0.8rem;
+}
+body.night-mode .tone-panel {
+  background: rgba(15, 23, 42, 0.55) !important;
+  border-top-color: #334155 !important;
+}
+body.night-mode .tone-item label {
+  color: #cbd5e1 !important;
+}
+
+@media (max-width: 768px) {
+  .tone-panel {
+    gap: 10px;
+    padding: 8px 10px;
+  }
+  .tone-item input[type="range"] {
+    width: 70px;
   }
 }

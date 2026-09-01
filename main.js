@@ -14,6 +14,13 @@ const TRANSLATIONS = {
     uploadSub: 'Tasarımınızı (PNG / JPEG) buraya sürükleyin veya tıklayıp seçin',
     selectDesign: 'Tasarım Seç',
     replaceHint: 'Tasarımı değiştirmek için tıklayın',
+    brightnessLabel: 'Işık',
+    saturationLabel: 'Doygunluk',
+    sharpnessLabel: 'Keskinlik',
+    contrastLabel: 'Kontrast',
+    warmthLabel: 'Sıcaklık',
+    hueLabel: 'Ton',
+    toneReset: '⟲ Sıfırla',
     removeDesign: 'Tasarımı Kaldır',
     favBtn: 'Favori Maketler',
     favPanelTitle: '♥ Favori Maketler',
@@ -85,6 +92,13 @@ const TRANSLATIONS = {
     uploadSub: 'Drag your design (PNG / JPEG) here or click to select',
     selectDesign: 'Select Design',
     replaceHint: 'Click to change the design',
+    brightnessLabel: 'Brightness',
+    saturationLabel: 'Saturation',
+    sharpnessLabel: 'Sharpness',
+    contrastLabel: 'Contrast',
+    warmthLabel: 'Warmth',
+    hueLabel: 'Hue',
+    toneReset: '⟲ Reset',
     removeDesign: 'Remove Design',
     favBtn: 'Favorite Mockups',
     favPanelTitle: '♥ Favorite Mockups',
@@ -1131,6 +1145,72 @@ function printArea() {
   autoState();
 }
 
+/* ---------------- Ton Paneli (ışık/doygunluk/keskinlik/kontrast/sıcaklık/ton) ---------------- */
+const TONE_DEFAULTS = { brightness: 100, saturation: 100, sharpness: 0, contrast: 100, warmth: 0, hue: 0 };
+let toneState = { ...TONE_DEFAULTS };
+
+function toneFilterString() {
+  const t = toneState;
+  let f = 'brightness(' + t.brightness + '%) saturate(' + t.saturation + '%) contrast(' + t.contrast + '%)';
+  if (t.warmth > 0) f += ' sepia(' + Math.round(t.warmth * 0.6) + '%)';
+  if (t.hue !== 0) f += ' hue-rotate(' + t.hue + 'deg)';
+  return f;
+}
+
+// Canlı önizleme: filtre zincirini canvas kapsayıcısına uygular.
+// Keskinlik, CSS tarafında SVG konvolüsyon filtresi (mockup-sharpen) ile verilir.
+function applyTonePreview() {
+  const wrap = $('#modal-canvas-wrap');
+  if (!wrap) return;
+  const target = wrap.querySelector('.canvas-container') || $('#modal-canvas');
+  if (!target) return;
+  let f = toneFilterString();
+  if (toneState.sharpness > 0) f += ' url(#mockup-sharpen)';
+  target.style.filter = f;
+}
+
+function resetToneState() {
+  toneState = { ...TONE_DEFAULTS };
+  const keys = ['brightness', 'saturation', 'sharpness', 'contrast', 'warmth', 'hue'];
+  keys.forEach((k) => {
+    const r = $('#tone-' + k);
+    const n = $('#tone-' + k + '-num');
+    if (r) r.value = TONE_DEFAULTS[k];
+    if (n) n.value = TONE_DEFAULTS[k];
+  });
+  applyTonePreview();
+}
+
+// Keskinliği dışa aktarma görüntüsüne uygular (basit unsharp konvolüsyonu).
+function applySharpnessToCanvas(canvas, amount) {
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width, h = canvas.height;
+  const src = ctx.getImageData(0, 0, w, h);
+  const out = ctx.createImageData(w, h);
+  const d = src.data, o = out.data;
+  const k = [0, -1, 0, -1, 5, -1, 0, -1, 0];
+  const a = Math.min(1, amount / 100) * 0.9;
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const i = (y * w + x) * 4;
+      for (let c = 0; c < 3; c++) {
+        let sum = 0, ki = 0;
+        for (let dy = -1; dy <= 1; dy++) {
+          const yy = Math.min(h - 1, Math.max(0, y + dy));
+          for (let dx = -1; dx <= 1; dx++) {
+            const xx = Math.min(w - 1, Math.max(0, x + dx));
+            sum += d[(yy * w + xx) * 4 + c] * k[ki++];
+          }
+        }
+        const base = d[i + c];
+        o[i + c] = Math.max(0, Math.min(255, base * (1 - a) + sum * a));
+      }
+      o[i + 3] = d[i + 3];
+    }
+  }
+  ctx.putImageData(out, 0, 0);
+}
+
 function syncModalControls() {
   if (!activeDesignObj) return;
   const sc = $('#modal-scale');
@@ -1139,25 +1219,33 @@ function syncModalControls() {
   const sv = $('#modal-scale-val');
   const rv = $('#modal-rotate-val');
   const yv = $('#modal-yaw-val');
+  const scNum = $('#modal-scale-num');
+  const rtNum = $('#modal-rotate-num');
+  const ywNum = $('#modal-yaw-num');
+  const pchNum = $('#modal-pitch-num');
   if (sc && sv) {
     // Slider görevidir: açılıştaki ölçeğe oranla yüzde
     const base = designBaseScale || 1;
     const pct = Math.max(10, Math.min(300, Math.round((activeDesignObj.scaleX / base) * 100)));
     sc.value = pct; sv.textContent = pct + '%';
+    if (scNum) scNum.value = pct;
   }
   if (rt && rv) {
     const r = Math.round((activeDesignObj.angle || 0) % 360);
     rt.value = r; rv.textContent = r + '°';
+    if (rtNum) rtNum.value = r;
   }
   if (yw && yv) {
     const y = activeDesignObj.yaw || 0;
     yw.value = y; yv.textContent = y + '°';
+    if (ywNum) ywNum.value = y;
   }
   const pch = $('#modal-pitch');
   const pv = $('#modal-pitch-val');
   if (pch && pv) {
     const p = activeDesignObj.pitch || 0;
     pch.value = p; pv.textContent = p + '°';
+    if (pchNum) pchNum.value = p;
   }
 }
 
@@ -1357,47 +1445,76 @@ function initModalCanvas(m) {
   };
 }
 
+// Slider + sayısal giriş çiftini çift yönlü senkronize bağlar.
+function bindNumericPair(rangeId, numId, apply) {
+  const r = $(rangeId);
+  const n = $(numId);
+  if (!r) return;
+  const clamp = (v) => Math.max(Number(r.min), Math.min(Number(r.max), v));
+  const setFrom = (v) => {
+    v = clamp(v);
+    r.value = v;
+    if (n) n.value = v;
+    apply(v);
+  };
+  r.oninput = () => setFrom(Number(r.value));
+  if (n) {
+    n.oninput = () => {
+      if (n.value === '' || n.value === '-') return;
+      setFrom(Number(n.value));
+    };
+    n.onblur = () => {
+      if (n.value === '') { n.value = r.value; return; }
+      setFrom(Number(n.value));
+    };
+  }
+}
+
 function bindModalControls() {
-  const sc = $('#modal-scale');
-  if (sc) sc.oninput = () => {
+  bindNumericPair('#modal-scale', '#modal-scale-num', (v) => {
     if (!activeDesignObj) return;
-    const v = Number(sc.value) / 100;
     const base = designBaseScale || 1;
-    activeDesignObj.scaleX = base * v;
-    activeDesignObj.scaleY = base * v;
-    syncModalScale();
+    activeDesignObj.scaleX = base * (v / 100);
+    activeDesignObj.scaleY = base * (v / 100);
+    const sv = $('#modal-scale-val');
+    if (sv) sv.textContent = v + '%';
     if (modalCanvas) modalCanvas.requestRenderAll();
-  };
-  const rt = $('#modal-rotate');
-  if (rt) rt.oninput = () => {
+  });
+  bindNumericPair('#modal-rotate', '#modal-rotate-num', (v) => {
     if (!activeDesignObj) return;
-    activeDesignObj.angle = Number(rt.value);
+    activeDesignObj.angle = v;
     const rv = $('#modal-rotate-val');
-    if (rv) rv.textContent = Number(rt.value) + '°';
+    if (rv) rv.textContent = v + '°';
     if (modalCanvas) modalCanvas.requestRenderAll();
-  };
-  const yw = $('#modal-yaw');
-  if (yw) yw.oninput = () => {
+  });
+  bindNumericPair('#modal-yaw', '#modal-yaw-num', (v) => {
     if (!activeDesignObj) return;
-    const deg = Number(yw.value);
-    activeDesignObj.yaw = deg;
+    activeDesignObj.yaw = v;
     // Canlı önizlemede dikey eksen eğmesi (skewX) ile görünür olsun.
-    activeDesignObj.set({ skewX: deg });
+    activeDesignObj.set({ skewX: v });
     const yv = $('#modal-yaw-val');
-    if (yv) yv.textContent = deg + '°';
+    if (yv) yv.textContent = v + '°';
     if (modalCanvas) modalCanvas.requestRenderAll();
-  };
-const pch = $('#modal-pitch');
-  if (pch) pch.oninput = () => {
+  });
+  bindNumericPair('#modal-pitch', '#modal-pitch-num', (v) => {
     if (!activeDesignObj) return;
-    const deg = Number(pch.value);
-    activeDesignObj.pitch = deg;
+    activeDesignObj.pitch = v;
     // Canlı önizlemede yatay eksen eğmesi (skewY) ile görünür olsun.
-    activeDesignObj.set({ skewY: deg });
+    activeDesignObj.set({ skewY: v });
     const pv = $('#modal-pitch-val');
-    if (pv) pv.textContent = deg + '°';
+    if (pv) pv.textContent = v + '°';
     if (modalCanvas) modalCanvas.requestRenderAll();
-  };
+  });
+  // Ton paneli: slider + sayısal giriş çifti senkronize
+  const toneKeys = ['brightness', 'saturation', 'sharpness', 'contrast', 'warmth', 'hue'];
+  toneKeys.forEach((k) => {
+    bindNumericPair('#tone-' + k, '#tone-' + k + '-num', (v) => {
+      toneState[k] = v;
+      applyTonePreview();
+    });
+  });
+  const toneResetBtn = $('#tone-reset');
+  if (toneResetBtn) toneResetBtn.addEventListener('click', resetToneState);
   // modal-blend HTML'de olmayabilir; varsa bağla
   const blend = $('#modal-blend');
   if (blend) blend.onchange = setBlend;
@@ -1440,6 +1557,8 @@ const pch = $('#modal-pitch');
 function openModal(card, m) {
   if (!fabricReady()) return;
   if (!design) return; // tasarım yokken edit sessizce açılmaz
+  // Her edit açılışında ton ayarlarını sıfırla.
+  resetToneState();
   activeCardIndex = mannequins.findIndex((x) => x.id === m.id);
   modalCardId = m.id;
   $('#modal').classList.remove('hidden');
@@ -1448,12 +1567,20 @@ function openModal(card, m) {
   if (topAd) topAd.classList.remove('hidden');
   document.body.classList.add('top-ad-visible');
   initModalCanvas(m);
+  // Canvas init (fabric .canvas-container oluşturur) bittikten sonra ton filtresini uygula.
+  setTimeout(applyTonePreview, 60);
+  setTimeout(applyTonePreview, 1200);
 }
 
 function closeModal() {
   if (modalCanvas) {
     modalCanvas.dispose();
     modalCanvas = null;
+  }
+  // Kalan canvas öğelerinden ton filtresi stilini temizle.
+  const mwrap = $('#modal-canvas-wrap');
+  if (mwrap) {
+    mwrap.querySelectorAll('.canvas-container, canvas').forEach((el) => { el.style.filter = ''; });
   }
   // Edit ekranı kapanınca üst reklam bannerini gizle
   const topAd = $('#top-ad-banner');
@@ -1536,7 +1663,15 @@ async function exportMockup() {
   const fit = Math.min(outW / full.width, outH / full.height);
   const drawW = full.width * fit;
   const drawH = full.height * fit;
+  // Ton paneli ayarlarını dışa aktarmada da uygula (ışık/doygunluk/kontrast/sıcaklık/ton).
+  ctx.filter = toneFilterString();
   ctx.drawImage(full, (outW - drawW) / 2, (outH - drawH) / 2, drawW, drawH);
+  ctx.filter = 'none';
+  // Keskinlik: konvolüsyon ile uygula (ctx.filter url() her tarayıcıda desteklenmez).
+  if (toneState.sharpness > 0) {
+    try { applySharpnessToCanvas(out, toneState.sharpness); }
+    catch (e) { console.error('[Export] keskinlik uygulanamadı:', e); }
+  }
 
   // 3) İndir: tercihen toBlob + object URL (bellek dostu, revoke edilir).
   //    toBlob desteklenmiyorsa eski toDataURL yedek olarak kullanılır.

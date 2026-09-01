@@ -7,7 +7,7 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title data-i18n="pageTitle">MOCKUP STUDYO</title>
-    <link rel="stylesheet" href="style.css?v=75">
+    <link rel="stylesheet" href="style.css?v=76">
     <!-- Fabric.js CDN -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
   <!-- Google AdSense (onay sonrası publisher ID ekleyin) -->
@@ -17,7 +17,7 @@
   -->
   <!-- Mockup motoru -->
   <script src="mockup-engine.js?v=4" defer></script>
-  <script src="main.js?v=63" defer></script>
+  <script src="main.js?v=64" defer></script>
 </head>
 <body>
   <!-- Hareketli geometrik şekil katmanı -->
@@ -223,6 +223,7 @@
               <span class="range-val" id="modal-scale-val">%100</span>
             </div>
             <input type="range" id="modal-scale" min="10" max="300" value="100">
+            <input type="number" class="num-input" id="modal-scale-num" min="10" max="300" step="1" value="100">
           </div>
           <div class="control-group">
             <div class="control-label">
@@ -230,6 +231,7 @@
               <span class="range-val" id="modal-rotate-val">0°</span>
             </div>
             <input type="range" id="modal-rotate" min="-180" max="180" value="0">
+            <input type="number" class="num-input" id="modal-rotate-num" min="-180" max="180" step="1" value="0">
           </div>
           <div class="control-group">
             <div class="control-label">
@@ -237,6 +239,7 @@
               <span class="range-val" id="modal-yaw-val">0°</span>
             </div>
             <input type="range" id="modal-yaw" min="-60" max="60" value="0">
+            <input type="number" class="num-input" id="modal-yaw-num" min="-60" max="60" step="1" value="0">
           </div>
 <div class="control-group">
             <div class="control-label">
@@ -244,6 +247,7 @@
               <span class="range-val" id="modal-pitch-val">0°</span>
             </div>
             <input type="range" id="modal-pitch" min="-60" max="60" value="0">
+            <input type="number" class="num-input" id="modal-pitch-num" min="-60" max="60" step="1" value="0">
           </div>
           <div class="control-group">
             <div class="control-label">
@@ -261,6 +265,40 @@
             <button id="modal-apply" class="primary-btn" data-i18n="applyBtn">Apply</button>
           </div>
         </div>
+      </div>
+      <!-- İnce Ton Paneli: ışık / doygunluk / keskinlik / kontrast / sıcaklık / ton -->
+      <div id="tone-panel" class="tone-panel">
+        <div class="tone-item">
+          <label data-i18n="brightnessLabel">Işık</label>
+          <input type="range" id="tone-brightness" min="0" max="200" value="100">
+          <input type="number" class="num-input tone-num" id="tone-brightness-num" min="0" max="200" step="1" value="100">
+        </div>
+        <div class="tone-item">
+          <label data-i18n="saturationLabel">Doygunluk</label>
+          <input type="range" id="tone-saturation" min="0" max="200" value="100">
+          <input type="number" class="num-input tone-num" id="tone-saturation-num" min="0" max="200" step="1" value="100">
+        </div>
+        <div class="tone-item">
+          <label data-i18n="sharpnessLabel">Keskinlik</label>
+          <input type="range" id="tone-sharpness" min="0" max="100" value="0">
+          <input type="number" class="num-input tone-num" id="tone-sharpness-num" min="0" max="100" step="1" value="0">
+        </div>
+        <div class="tone-item">
+          <label data-i18n="contrastLabel">Kontrast</label>
+          <input type="range" id="tone-contrast" min="0" max="200" value="100">
+          <input type="number" class="num-input tone-num" id="tone-contrast-num" min="0" max="200" step="1" value="100">
+        </div>
+        <div class="tone-item">
+          <label data-i18n="warmthLabel">Sıcaklık</label>
+          <input type="range" id="tone-warmth" min="0" max="100" value="0">
+          <input type="number" class="num-input tone-num" id="tone-warmth-num" min="0" max="100" step="1" value="0">
+        </div>
+        <div class="tone-item">
+          <label data-i18n="hueLabel">Ton</label>
+          <input type="range" id="tone-hue" min="-180" max="180" value="0">
+          <input type="number" class="num-input tone-num" id="tone-hue-num" min="-180" max="180" step="1" value="0">
+        </div>
+        <button id="tone-reset" class="secondary-btn tone-reset" data-i18n="toneReset">⟲ Sıfırla</button>
       </div>
     </div>
   </div>
@@ -385,6 +423,11 @@
         <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="2" result="noise" />
         <!-- Tasarımı dalgalandırarak pürüzlü kumaş kenarları ve yüzey hissi verir -->
         <feDisplacementMap in="SourceGraphic" in2="noise" scale="3.5" xChannelSelector="R" yChannelSelector="G" />
+      </filter>
+      <!-- Keskinlik önizleme filtresi (ton paneli) -->
+      <filter id="mockup-sharpen">
+        <feConvolveMatrix order="3" preserveAlpha="true"
+          kernelMatrix="0 -1 0 -1 5 -1 0 -1 0"/>
       </filter>
     </defs>
   </svg>
