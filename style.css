@@ -1015,6 +1015,17 @@ body.night-mode .content-paragraph { color: #cbd5e1; }
   animation: slideUp 0.22s ease-out;
 }
 
+/* Edit modalı (model düzenleme) daha büyük açılsın:
+   hem kutu boyutu büyütüldü hem genel zoom küçültmesinden hariç tutuldu */
+#modal > .modal-box {
+  width: min(1240px, 96vw);
+  max-height: 94vh;
+  zoom: 1;
+}
+@media (max-width: 860px) {
+  #modal > .modal-box { width: min(1240px, 96vw); }
+}
+
 .modal-header {
   display: flex;
   align-items: center;
@@ -1332,23 +1343,22 @@ body.night-mode .content-paragraph { color: #cbd5e1; }
   color: #94a3b8;
 }
 
-/* ---------- Edit Modalı Açıkken Görünen Reklam Kutusu (300x250, sağ kenar) ---------- */
+/* ---------- Edit Modalı Açıkken Görünen Üst Reklam Kutusu (Adsterra 320x50, üstte) ---------- */
 .top-ad-banner {
   position: fixed;
-  right: 14px;              /* edit modalından uzak: ekranın sağ kenarı */
-  left: auto;
-  top: 50%;
-  transform: translateY(-50%); /* sağ kenarda dikey ortalı */
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
   z-index: 210; /* edit modalının (200) üstünde görünür */
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 10px;
-  width: min(350px, calc(100% - 20px)); /* 300px banner + AD rozeti + padding */
-  min-height: 268px; /* 250px banner + dikey padding */
-  padding: 8px 10px;
+  height: 66px; /* 50px banner + dikey padding */
+  width: auto;
+  padding: 8px 12px;
   background: linear-gradient(180deg, rgba(15, 23, 42, 0.97), rgba(30, 41, 59, 0.97));
   border: 1px solid #334155;
-  border-radius: 14px;
+  border-radius: 12px;
   box-shadow: 0 10px 30px rgba(2, 8, 23, 0.5);
   backdrop-filter: blur(8px);
   transition: opacity 0.18s ease;
@@ -1367,44 +1377,31 @@ body.night-mode .content-paragraph { color: #cbd5e1; }
   background: rgba(239, 68, 68, 0.9);
   border-radius: 4px;
   padding: 3px 6px;
-  writing-mode: vertical-rl;
 }
 
 .top-ad-slot {
-  flex: 1;
+  width: 320px;  /* Adsterra 320x50 tam oturur */
+  height: 50px;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 0;
-  min-height: 250px; /* Adsterra 300x250 tam oturur */
   overflow: hidden;
 }
 
 .top-ad-slot iframe {
   max-width: 100%;
+  max-height: 100%;
 }
 
-.top-ad-text {
-  font-size: 0.75rem;
-  color: #64748b;
+/* Reklam üstte görünürken edit modalı aşağı itilir:
+   reklamla arasında boşluk kalır */
+body.top-ad-visible #modal > .modal-box {
+  margin-top: 96px;
+  max-height: calc(94vh - 106px);
 }
-
-/* Reklam kutusu artık üstte değil: modal yukarı itilmez */
-body.top-ad-visible .modal-box {
-  margin-top: 0;
-}
-/* Reklam kutusu sağda görünürken edit modalı biraz sola çekilir:
-   reklamla arasında boşluk kalır (yalnızca kutunun göründüğü genişlikte) */
-@media (min-width: 1181px) {
-  body.top-ad-visible .modal-overlay {
-    padding-right: 370px;
-  }
-}
-
-/* Ekran darsa (modal + reklam yan yana sığmazsa) reklam kutusu gizlenir,
-   modalın üstüne binmesin */
-@media (max-width: 1180px) {
-  .top-ad-banner { display: none; }
+@media (max-width: 700px) {
+  .top-ad-banner { transform: translateX(-50%) scale(0.85); transform-origin: top center; }
+  body.top-ad-visible #modal > .modal-box { margin-top: 84px; }
 }
 
 /* Küçük ekran (telefon) optimizasyonu */
