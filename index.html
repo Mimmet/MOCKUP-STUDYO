@@ -302,6 +302,26 @@
     </div>
   </div>
 
+  <script>
+    /* Mobilde alt banner: 728x90 telefona sığmaz, yerine 320x50 birim kullanılır.
+       Masaüstünde hiçbir değişiklik olmaz. (script'ler innerHTML ile eklenirse
+       tarayıcı çalıştırmadığı için DOM API ile oluşturulur) */
+    (function () {
+      var isMobile = window.matchMedia('(max-width: 860px)').matches ||
+        (navigator.maxTouchPoints > 1 && Math.min(window.innerWidth, window.innerHeight) < 820);
+      if (!isMobile) return;
+      var slot = document.querySelector('#bottom-ad-banner .bottom-ad-slot');
+      if (!slot) return;
+      slot.innerHTML = '';
+      var s1 = document.createElement('script');
+      s1.textContent = "atOptions = { 'key' : '044f30439f115a11e74fe34141f4f862', 'format' : 'iframe', 'height' : 50, 'width' : 320, 'params' : {} };";
+      slot.appendChild(s1);
+      var s2 = document.createElement('script');
+      s2.src = 'https://www.highrevenueformat.com/044f30439f115a11e74fe34141f4f862/invoke.js';
+      slot.appendChild(s2);
+    })();
+  </script>
+
   <!-- Ücretsiz İndirme (Reklam Videosu) Ekranı -->
   <div id="download-modal" class="modal-overlay hidden">
     <div class="modal-box download-box">
