@@ -1,13 +1,18 @@
 /* ============================================================
-   AVCI STÜDYO — Dinamik Tişört Mockup Motoru
-   - 4 noktalı perspektif warp (homography + üçgen alt bölme)
-   - Dinamik gölge/ışık: fotoğrafın baskı alanı grayscale
-     normalize edilir; tasarım üzerine multiply (gölge) +
-     screen (parlama) çift katman
-   - Kumaş mikro-kıvrımı: SVG feTurbulence/feDisplacementMap
-   - Admin: sürüklenebilir 4 köşe anchor + JSON dışa aktarma
-   - Tam çözünürlük (orijinal fotoğraf) render
+   AVCI STÜDYO — WebGL (GPU) Tişört Mockup Motoru
+   - Fragment shader: kumaş luminance'ından Gaussian blur +
+     Sobel gradyanı ile DONANIM hızlandırmalı displacement
+     (pikselleşme/tırtıklanma yok — GPU linear interpolasyon)
+   - Shader içi ışık/gölge compositing: multiply (gölge) +
+     soft-light (parlama)
+   - Tasarım: fabric objesinden serbest konum/boyut/açı/skew
+     alınır; sınır yok, kullanıcı istediği yere sürükler
+   - Eski public API korunmuştur: attach / render / canRender /
+     enableCorners / getQuadJSON / downloadQuadJSON / detach
+   - Yeni: mountPreview() + renderPreview() → edit modalinde
+     canlı GPU önizleme katmanı
    ============================================================ */
+console.log('[STUDYO] mockup-engine.js v5 yüklendi — WebGL GPU motoru');
 (function () {
   'use strict';
 
@@ -16,272 +21,325 @@
   function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
   function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* sessiz */ } }
 
-  // 4 noktadan homography (3x3) çöz
-  function solveHomography(src, dst) {
-    const A = [], b = [];
-    for (let i = 0; i < 4; i++) {
-      const sx = src[i][0], sy = src[i][1], dx = dst[i].x, dy = dst[i].y;
-      A.push([sx, sy, 1, 0, 0, 0, -dx * sx, -dx * sy]); b.push(dx);
-      A.push([0, 0, 0, sx, sy, 1, -dy * sx, -dy * sy]); b.push(dy);
-    }
-    const n = 8;
-    for (let col = 0; col < n; col++) {
-      let piv = col;
-      for (let r = col + 1; r < n; r++) if (Math.abs(A[r][col]) > Math.abs(A[piv][col])) piv = r;
-      const tA = A[col]; A[col] = A[piv]; A[piv] = tA;
-      const tb = b[col]; b[col] = b[piv]; b[piv] = tb;
-      if (Math.abs(A[col][col]) < 1e-10) return null;
-      for (let r = col + 1; r < n; r++) {
-        const f = A[r][col] / A[col][col];
-        for (let c = col; c < n; c++) A[r][c] -= f * A[col][c];
-        b[r] -= f * b[col];
+  /* ================= SHADER KAYNAKLARI ================= */
+  var VS_SRC = [
+    'attribute vec2 a_pos;',
+    'varying vec2 v_uv;',
+    'void main() {',
+    '  v_uv = vec2(a_pos.x * 0.5 + 0.5, 0.5 - a_pos.y * 0.5);',
+    '  gl_Position = vec4(a_pos, 0.0, 1.0);',
+    '}'
+  ].join('\n');
+
+  var FS_SRC = [
+    'precision highp float;',
+    'varying vec2 v_uv;',
+    'uniform sampler2D u_shirt;',
+    'uniform sampler2D u_design;',
+    'uniform vec2  u_texel;     // 1 / tişört doku boyutu',
+    'uniform float u_A;         // genislik / yukseklik',
+    'uniform vec2  u_dcenter;   // tasarım merkezi',
+    'uniform vec2  u_dhalf;     // tasarım yarı boyutu',
+    'uniform vec2  u_rot;       // cos(a), sin(a)',
+    'uniform vec2  u_skew;      // tan(skewX), tan(skewY)',
+    'uniform float u_intensity;',
+    'uniform float u_blur;',
+    'uniform float u_shading;',
+    'uniform float u_mode;      // 0 düz, 1 multiply+softlight, 2 sadece multiply',
+    '',
+    'float lumAt(vec2 uv) {',
+    '  vec3 c = texture2D(u_shirt, uv).rgb;',
+    '  return dot(c, vec3(0.299, 0.587, 0.114));',
+    '}',
+    '/* Gaussian (1-2-1 x 1-2-1) luminance: mikro iplik parazitini eler,',
+    '   sadece ana kumaş dalgalarını/kıvrımlarını referans alır */',
+    'float lumBlur(vec2 uv, float r) {',
+    '  vec2 o = u_texel * r;',
+    '  float s = 0.0;',
+    '  s += lumAt(uv + vec2(-o.x, -o.y)) * 1.0;',
+    '  s += lumAt(uv + vec2( 0.0, -o.y)) * 2.0;',
+    '  s += lumAt(uv + vec2( o.x, -o.y)) * 1.0;',
+    '  s += lumAt(uv + vec2(-o.x,  0.0)) * 2.0;',
+    '  s += lumAt(uv)                    * 4.0;',
+    '  s += lumAt(uv + vec2( o.x,  0.0)) * 2.0;',
+    '  s += lumAt(uv + vec2(-o.x,  o.y)) * 1.0;',
+    '  s += lumAt(uv + vec2( 0.0,  o.y)) * 2.0;',
+    '  s += lumAt(uv + vec2( o.x,  o.y)) * 1.0;',
+    '  return s / 16.0;',
+    '}',
+    '',
+    'void main() {',
+    '  vec4 shirt = texture2D(u_shirt, v_uv);',
+    '',
+    '  /* 1) BLUR LU LUMINANCE + SOBEL GRADYAN (GPU da) */',
+    '  float r = max(u_blur, 0.5);',
+    '  float gStep = r * 2.0;',
+    '  vec2 o = u_texel * gStep;',
+    '  float lL = lumBlur(v_uv - vec2(o.x, 0.0), r);',
+    '  float lR = lumBlur(v_uv + vec2(o.x, 0.0), r);',
+    '  float lT = lumBlur(v_uv - vec2(0.0, o.y), r);',
+    '  float lB = lumBlur(v_uv + vec2(0.0, o.y), r);',
+    '  vec2 grad = vec2(lR - lL, lB - lT);',
+    '  float lum = lumBlur(v_uv, r);',
+    '',
+    '  /* 2) PURUZSUZ DISPLACEMENT (donanim linear interpolasyonu) */',
+    '  vec2 disp = grad * u_intensity * u_texel * 32.0;',
+    '  float dLen = length(disp);',
+    '  float dCap = u_intensity * 2.0 * u_texel.x;',
+    '  disp /= 1.0 + dLen / max(dCap, 0.000001); // yumuşak tavan',
+    '',
+    '  /* 3) TASARIM KOORDINAT DONUSUMU (serbest konum + açı + skew) */',
+    '  vec2 pA = vec2(v_uv.x * u_A, v_uv.y) + vec2(disp.x * u_A, disp.y);',
+    '  vec2 q = pA - u_dcenter;',
+    '  q.x -= q.y * u_skew.x;',
+    '  q.y -= q.x * u_skew.y;',
+    '  vec2 rq = vec2(u_rot.x * q.x + u_rot.y * q.y, -u_rot.y * q.x + u_rot.x * q.y);',
+    '  vec2 local = rq / u_dhalf + 0.5;',
+    '',
+    '  /* 4) kenarda yumuşak sönümleme (testere/kırılma yok) */',
+    '  vec2 ef = smoothstep(0.0, 0.01, local) * (1.0 - smoothstep(0.99, 1.0, local));',
+    '  float edge = ef.x * ef.y;',
+    '',
+    '  vec2 duv = clamp(local, 0.0, 1.0);',
+    '  vec4 design = texture2D(u_design, duv);',
+    '  float da = design.a * edge;',
+    '  if (da < 0.003) { gl_FragColor = shirt; return; }',
+    '',
+    '  /* 5) ISIK / GOLGE COMPOSITING (shader ici) */',
+    '  vec3 dc = design.rgb;',
+    '  float shadeMul = 1.0 - u_shading * (1.0 - clamp(lum * 1.15, 0.0, 1.0));',
+    '  vec3 shaded = dc * shadeMul;',
+    '  float hi = clamp((lum - 0.62) / 0.38, 0.0, 1.0);',
+    '  shaded += shaded * hi * u_shading * 0.5;',
+    '  if (u_mode > 1.5)      shaded = dc * shadeMul;',
+    '  else if (u_mode < 0.5) shaded = dc;',
+    '',
+    '  /* 6) TASARIMI KUMASA GOM */',
+    '  gl_FragColor = vec4(mix(shirt.rgb, shaded, da), shirt.a);',
+    '}'
+  ].join('\n');
+
+  /* ================= GPU BAGLAMI (tekil, yeniden kullanilir) ================= */
+  var E = null; // { canvas, gl, U, shirtTex, designTex, designKey }
+
+  function buildEngine() {
+    if (E) return E;
+    var canvas = document.createElement('canvas');
+    var gl = canvas.getContext('webgl', { preserveDrawingBuffer: true, antialias: true })
+          || canvas.getContext('experimental-webgl', { preserveDrawingBuffer: true });
+    if (!gl) return null;
+    function shader(type, src) {
+      var s = gl.createShader(type);
+      gl.shaderSource(s, src);
+      gl.compileShader(s);
+      if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
+        console.error('[MockupEngine] Shader derlenemedi:', gl.getShaderInfoLog(s));
+        return null;
       }
+      return s;
     }
-    const x = new Array(n).fill(0);
-    for (let r = n - 1; r >= 0; r--) {
-      let s = b[r];
-      for (let c = r + 1; c < n; c++) s -= A[r][c] * x[c];
-      x[r] = s / A[r][r];
+    var vs = shader(gl.VERTEX_SHADER, VS_SRC);
+    var fs = shader(gl.FRAGMENT_SHADER, FS_SRC);
+    if (!vs || !fs) return null;
+    var prog = gl.createProgram();
+    gl.attachShader(prog, vs); gl.attachShader(prog, fs);
+    gl.linkProgram(prog);
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
+      console.error('[MockupEngine] Program link hatası:', gl.getProgramInfoLog(prog));
+      return null;
     }
-    return [x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7], 1];
+    gl.useProgram(prog);
+    var buf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+    var aPos = gl.getAttribLocation(prog, 'a_pos');
+    gl.enableVertexAttribArray(aPos);
+    gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
+    var U = {};
+    ['u_shirt', 'u_design', 'u_texel', 'u_A', 'u_dcenter', 'u_dhalf', 'u_rot',
+     'u_skew', 'u_intensity', 'u_blur', 'u_shading', 'u_mode'].forEach(function (n) {
+      U[n] = gl.getUniformLocation(prog, n);
+    });
+    E = { canvas: canvas, gl: gl, U: U, shirtTex: null, designTex: null, designEl: null };
+    return E;
   }
-  function hApply(H, x, y) {
-    const w = H[6] * x + H[7] * y + H[8];
-    return [(H[0] * x + H[1] * y + H[2]) / w, (H[3] * x + H[4] * y + H[5]) / w];
+
+  function destroyTextures() {
+    if (!E) return;
+    if (E.shirtTex) { E.gl.deleteTexture(E.shirtTex); E.shirtTex = null; }
+    if (E.designTex) { E.gl.deleteTexture(E.designTex); E.designTex = null; }
+    E.designEl = null;
   }
-  // Tex görselini hedef quad'a perspektif ile ger
-  function warpQuad(ctx, tex, dst, grid) {
-    const tw = tex.width || tex.naturalWidth, th = tex.height || tex.naturalHeight;
-    const H = solveHomography(
-      [[0, 0], [tw, 0], [tw, th], [0, th]],
-      [[dst[0].x, dst[0].y], [dst[1].x, dst[1].y], [dst[2].x, dst[2].y], [dst[3].x, dst[3].y]]
-    );
-    if (!H) return;
-    const g = grid || 18;
-    const P = [];
-    for (let j = 0; j <= g; j++) {
-      const row = [];
-      for (let i = 0; i <= g; i++) row.push(hApply(H, (i / g) * tw, (j / g) * th));
-      P.push(row);
+
+  // Büyük fotoğrafları GPU'ya göndermeden önce kaliteli biçimde küçült
+  // (sessiz texImage2D hatalarını ve pikselliği engeller)
+  function prepare(src, maxSide) {
+    var w = src.naturalWidth || src.width, h = src.naturalHeight || src.height;
+    var k = Math.min(1, maxSide / Math.max(w, h));
+    var c = document.createElement('canvas');
+    c.width = Math.max(2, Math.round(w * k));
+    c.height = Math.max(2, Math.round(h * k));
+    var cx = c.getContext('2d');
+    cx.imageSmoothingEnabled = true;
+    cx.imageSmoothingQuality = 'high';
+    cx.drawImage(src, 0, 0, c.width, c.height);
+    return c;
+  }
+
+  function makeTex(unit, src) {
+    var gl = E.gl;
+    var t = gl.createTexture();
+    gl.activeTexture(gl.TEXTURE0 + unit);
+    gl.bindTexture(gl.TEXTURE_2D, t);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, src);
+    return t;
+  }
+
+  /* ================= RENDER ================= */
+  // Sabit motor ayarları (kullanıcıya ayar yükü yok — otomatik optimum)
+  var ENGINE_SETTINGS = { intensity: 12, blur: 3, shading: 0.70, mode: 1 };
+
+  // w,h: hedef çıktı piksel boyutu. Tasarım getDesign() üzerinden ekran
+  // koordinatlarında gelir; tam çözünürlükte oransal olarak ölçeklenir.
+  function drawToGL(w, h) {
+    if (!S || !S.shirtPrepared || !buildEngine()) return false;
+    var gl = E.gl, U = E.U;
+    if (E.canvas.width !== Math.round(w) || E.canvas.height !== Math.round(h)) {
+      E.canvas.width = Math.max(2, Math.round(w));
+      E.canvas.height = Math.max(2, Math.round(h));
     }
-    for (let j = 0; j < g; j++) {
-      for (let i = 0; i < g; i++) {
-        const a = P[j][i], bq = P[j][i + 1], c = P[j + 1][i + 1], d = P[j + 1][i];
-        const su = (i / g) * tw, sv = (j / g) * th;
-        const du = tw / g, dv = th / g;
-        drawTexTri(ctx, tex, [su, sv], [su + du, sv], [su + du, sv + dv], a, bq, c);
-        drawTexTri(ctx, tex, [su, sv], [su + du, sv + dv], [su, sv + dv], a, c, d);
-      }
+    gl.viewport(0, 0, E.canvas.width, E.canvas.height);
+
+    if (!E.shirtTex) E.shirtTex = makeTex(0, S.shirtPrepared);
+
+    var d = S.getDesign ? S.getDesign() : null;
+    var hasDesign = !!(d && d.el && d.w > 0 && d.h > 0);
+    if (hasDesign && E.designEl !== d.el) {
+      if (E.designTex) E.gl.deleteTexture(E.designTex);
+      E.designTex = makeTex(1, prepare(d.el, 2048));
+      E.designEl = d.el;
     }
-  }
-  // Tek üçgen: kaynak (tex) üçgenini hedef üçgene affine ile çiz
-  function drawTexTri(ctx, tex, s0, s1, s2, d0, d1, d2) {
-    const den = (s1[0] - s2[0]) * (s0[1] - s2[1]) - (s0[0] - s2[0]) * (s1[1] - s2[1]);
-    if (Math.abs(den) < 1e-8) return;
-    const a = ((d1.x - d2.x) * (s0[1] - s2[1]) - (d0.x - d2.x) * (s1[1] - s2[1])) / den;
-    const c = ((s1[0] - s2[0]) * (d0.x - d2.x) - (s0[0] - s2[0]) * (d1.x - d2.x)) / den;
-    const e = d0.x - a * s0[0] - c * s0[1];
-    const b = ((d1.y - d2.y) * (s0[1] - s2[1]) - (d0.y - d2.y) * (s1[1] - s2[1])) / den;
-    const dd = ((s1[0] - s2[0]) * (d0.y - d2.y) - (s0[0] - s2[0]) * (d1.y - d2.y)) / den;
-    const f = d0.y - b * s0[0] - dd * s0[1];
-    // hedef üçgeni hafif büyüterek dikiş çizgilerini önle
-    const cx = (d0.x + d1.x + d2.x) / 3, cy = (d0.y + d1.y + d2.y) / 3, k = 1.015;
-    ctx.save();
-    ctx.beginPath();
-    ctx.moveTo(cx + (d0.x - cx) * k, cy + (d0.y - cy) * k);
-    ctx.lineTo(cx + (d1.x - cx) * k, cy + (d1.y - cy) * k);
-    ctx.lineTo(cx + (d2.x - cx) * k, cy + (d2.y - cy) * k);
-    ctx.closePath();
-    ctx.clip();
-    ctx.transform(a, b, c, dd, e, f);
-    ctx.drawImage(tex, 0, 0);
-    ctx.restore();
-  }
-  function quadPath(ctx, q) {
-    ctx.beginPath();
-    ctx.moveTo(q[0].x, q[0].y);
-    ctx.lineTo(q[1].x, q[1].y);
-    ctx.lineTo(q[2].x, q[2].y);
-    ctx.lineTo(q[3].x, q[3].y);
-    ctx.closePath();
-  }
-  // Fotoğrafın quad bölgesini grayscale + kontrast normalize et
-  function makeShading(photo, natW, natH) {
-    const canFilter = typeof document.createElement('canvas').getContext('2d').filter === 'string';
-    const c2 = document.createElement('canvas');
-    c2.width = natW; c2.height = natH;
-    const x2 = c2.getContext('2d');
-    const c3 = document.createElement('canvas');
-    c3.width = natW; c3.height = natH;
-    const x3 = c3.getContext('2d');
-    try {
-      // normalize: küçük örnekten min/max luminance al
-      const sw = 160, sh = Math.max(1, Math.round(natH / natW * 160));
-      const s = document.createElement('canvas');
-      s.width = sw; s.height = sh;
-      const sx = s.getContext('2d');
-      sx.drawImage(photo, 0, 0, sw, sh);
-      const d = sx.getImageData(0, 0, sw, sh).data;
-      let mn = 255, mx = 0;
-      for (let i = 0; i < d.length; i += 40) {
-        const l = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
-        if (l < mn) mn = l; if (l > mx) mx = l;
-      }
-      const contrast = Math.min(3, 190 / Math.max(20, mx - mn));
-      x2.filter = 'grayscale(1) contrast(' + contrast.toFixed(2) + ') brightness(1.05)';
-      x2.drawImage(photo, 0, 0, natW, natH);
-      x3.filter = 'grayscale(1) invert(1)';
-      x3.drawImage(photo, 0, 0, natW, natH);
-    } catch (e) {
-      x2.filter = 'none'; x3.filter = 'none';
-      x2.drawImage(photo, 0, 0, natW, natH);
-      x3.drawImage(photo, 0, 0, natW, natH);
+
+    gl.uniform1i(U.u_shirt, 0);
+    gl.uniform1i(U.u_design, 1);
+    gl.uniform2f(U.u_texel, 1 / S.shirtPrepared.width, 1 / S.shirtPrepared.height);
+    gl.uniform1f(U.u_A, w / h);
+
+    // Tasarım yerleşimi: ekran pikseli (px,py) -> (px/h, py/h).
+    // getDesign() ekran (dispW x dispH) koordinatı verir; s = çözünürlük ölçeği.
+    var s = w / S.dispW;
+    if (hasDesign) {
+      var ang = ((d.angle || 0) * Math.PI) / 180;
+      gl.uniform2f(U.u_dcenter, (d.cx * s) / h, (d.cy * s) / h);
+      gl.uniform2f(U.u_dhalf, (d.w * s) / (2 * h), (d.h * s) / (2 * h));
+      gl.uniform2f(U.u_rot, Math.cos(ang), Math.sin(ang));
+      gl.uniform2f(U.u_skew, Math.tan(((d.yaw || 0) * Math.PI) / 180),
+                            Math.tan(((d.pitch || 0) * Math.PI) / 180));
+    } else {
+      // tasarım yok: görünmez yerleşim
+      gl.uniform2f(U.u_dcenter, -10, -10);
+      gl.uniform2f(U.u_dhalf, 0.0001, 0.0001);
+      gl.uniform2f(U.u_rot, 1, 0);
+      gl.uniform2f(U.u_skew, 0, 0);
     }
-    return { gray: c2, inv: c3 };
+
+    gl.uniform1f(U.u_intensity, ENGINE_SETTINGS.intensity);
+    gl.uniform1f(U.u_blur, ENGINE_SETTINGS.blur);
+    gl.uniform1f(U.u_shading, ENGINE_SETTINGS.shading);
+    // fabric "multiply" harmanı seçiliyse shader multiply-only moduna geçer
+    gl.uniform1f(U.u_mode, hasDesign && d.blend === 1 ? 2 : ENGINE_SETTINGS.mode);
+
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    return true;
   }
-  /* ---------- render: tam çözünürlük ---------- */
+
+  function copyTo2D(w, h) {
+    var c = document.createElement('canvas');
+    c.width = Math.max(2, Math.round(w));
+    c.height = Math.max(2, Math.round(h));
+    c.getContext('2d').drawImage(E.canvas, 0, 0, c.width, c.height);
+    return c;
+  }
+
+  /* ================= DURUM / attach ================= */
+  function attach(opts) {
+    if (!opts || !opts.img || !opts.wrap) return;
+    let quad = null;
+    // forceQuad: çağıran taraf her açılışta taze algılama uygular; kayıtlı
+    // quad yok sayılır ve algılanan quad ile üzerine yazılır.
+    if (!opts.forceQuad) {
+      try {
+        const saved = lsGet('avci_quad_' + opts.id);
+        if (saved) {
+          const arr = JSON.parse(saved);
+          if (Array.isArray(arr) && arr.length === 4) quad = arr;
+        }
+      } catch (e) { /* sessiz */ }
+    }
+    if (!quad) {
+      quad = opts.defaultQuad.map(function (p) {
+        return { x: p.x / opts.dispW, y: p.y / opts.dispH };
+      });
+    }
+    destroyTextures(); // yeni tişört: eski GPU dokularını bırak
+    S = {
+      img: opts.img,
+      // GPU'ya göndermeden önce kaliteli küçültme (MAX_TEXTURE_SIZE güvencesi)
+      shirtPrepared: prepare(opts.img, 1800),
+      natW: opts.natW, natH: opts.natH,
+      dispW: opts.dispW, dispH: opts.dispH,
+      id: opts.id || 'model', quad: quad,
+      wrap: opts.wrap, getDesign: opts.getDesign || null,
+      onQuadChange: opts.onQuadChange || null,
+      editing: false
+    };
+    if (opts.forceQuad) lsSet('avci_quad_' + S.id, JSON.stringify(S.quad));
+    if (S.editing || opts.wrap.querySelector('.engine-handles')) buildHandles();
+  }
+
+  /* ---------- tam çözünürlük render (dışa aktarma) ---------- */
+  function canRender() {
+    return !!(S && S.shirtPrepared && buildEngine());
+  }
   function render() {
-    if (!S || !S.img || !S.img.complete || !S.getDesign) return null;
-    const natW = S.natW, natH = S.natH;
-    // Çalışma çözünürlüğünü sınırla: son çıktı 2000px olduğundan dev kaynak
-    // fotoğraflarda bellek şişmesini / mobilde çökme riskini önler (oran korunur).
-    const MAX_RENDER_EDGE = 2048;
-    let sc = 1;
-    if (Math.max(natW, natH) > MAX_RENDER_EDGE) sc = MAX_RENDER_EDGE / Math.max(natW, natH);
-    const outW2 = Math.max(Math.round(natW * sc), 2);
-    const outH2 = Math.max(Math.round(natH * sc), 2);
-    const q = S.quad.map(function (p) { return { x: p.x * outW2, y: p.y * outH2 }; });
-    const D = S.getDesign();
-    const out = document.createElement('canvas');
-    out.width = outW2; out.height = outH2;
-    const ctx = out.getContext('2d');
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, outW2, outH2);
-    ctx.drawImage(S.img, 0, 0, outW2, outH2);
-    if (!D) return out;
-
-    const fx = outW2 / S.dispW, fy = outH2 / S.dispH;
-    const cx = D.cx * fx, cy = D.cy * fy;
-    const w = D.w * fx, h = D.h * fy;
-    const ang = (D.angle || 0) * Math.PI / 180;
-    const cos = Math.cos(ang), sin = Math.sin(ang);
-    const hw = w / 2, hh = h / 2;
-    const dQuad = [
-      { x: cx + (-hw * cos + hh * sin), y: cy + (-hw * sin - hh * cos) },
-      { x: cx + (hw * cos + hh * sin), y: cy + (hw * sin - hh * cos) },
-      { x: cx + (hw * cos - hh * sin), y: cy + (hw * sin + hh * cos) },
-      { x: cx + (-hw * cos - hh * sin), y: cy + (-hw * sin + hh * cos) }
-    ];
-
-    // 3D yanal dönüş (yaw): tasarım dikey eksen etrafında sağa/sola döndürülür.
-    // Model yana dönükken tasarım da aynı yöne bakacak şekilde perspektifle daraltılır.
-    const yawRad = (D.yaw || 0) * Math.PI / 180;
-    if (yawRad) {
-      const cosY = Math.cos(yawRad), sinY = Math.sin(yawRad);
-      // Görüş mesafesi: yarı genişlik baz alınır; arka kenar uzaklaştıkça daralır.
-      const focal = Math.max(hw, 1) * 1.6;
-      for (let i = 0; i < 4; i++) {
-        const dx = dQuad[i].x - cx;
-        const dy = dQuad[i].y - cy;
-        // dikey eksen (Y) etrafında döndür: görsel yatayda perspektif alır
-        const z = dx * sinY;
-        const scale = focal / (focal - z);
-        dQuad[i].x = cx + dx * cosY * scale;
-        dQuad[i].y = cy + dy * scale;
-      }
-    }
-
-    // 3D yukarı/aşağı dönüş (pitch): tasarım yatay eksen (X) etrafında döndürülür.
-    // Model kameraya doğru eğilmişse tasarım da aynı açıyla üstte/altta daralır.
-    const pitchRad = (D.pitch || 0) * Math.PI / 180;
-    if (pitchRad) {
-      const cosP = Math.cos(pitchRad), sinP = Math.sin(pitchRad);
-      const focal = Math.max(hh, 1) * 1.6;
-      for (let i = 0; i < 4; i++) {
-        const dx = dQuad[i].x - cx;
-        const dy = dQuad[i].y - cy;
-        // yatay eksen (X) etrafında döndür: görsel dikeyde perspektif alır
-        const z = dy * sinP;
-        const scale = focal / (focal - z);
-        dQuad[i].x = cx + dx * scale;
-        dQuad[i].y = cy + dy * cosP * scale;
-      }
-    }
-
-    // 1) tasarım katmanı: perspektif warp
-    const layer = document.createElement('canvas');
-    layer.width = outW2; layer.height = outH2;
-    const lx = layer.getContext('2d');
-    lx.save();
-    quadPath(lx, q);
-    lx.clip();
-    warpQuad(lx, D.el, dQuad, 20);
-    lx.restore();
-
-    // 2) kumaş mikro-kıvrımı: SVG displacement
-    try {
-      const tmp = document.createElement('canvas');
-      tmp.width = outW2; tmp.height = outH2;
-      const tx = tmp.getContext('2d');
-      tx.filter = 'url(#fabric-displacement)';
-      tx.drawImage(layer, 0, 0);
-      lx.clearRect(0, 0, outW2, outH2);
-      lx.drawImage(tmp, 0, 0);
-    } catch (e) { /* filter yoksa düz devam */ }
-
-    // 3) dinamik gölge/ışık katmanları
-    const sh = makeShading(S.img, outW2, outH2);
-    lx.save();
-    quadPath(lx, q);
-    lx.clip();
-    lx.globalCompositeOperation = 'multiply';
-    lx.globalAlpha = 0.85;
-    lx.drawImage(sh.gray, 0, 0);
-    lx.globalCompositeOperation = 'screen';
-    lx.globalAlpha = 0.30;
-    lx.drawImage(sh.inv, 0, 0);
-    lx.restore();
-    // alfa maskesi: gölge sadece tasarımın olduğu yerde
-    lx.globalCompositeOperation = 'destination-in';
-    lx.save();
-    quadPath(lx, q);
-    lx.clip();
-    warpQuad(lx, D.el, dQuad, 8);
-    lx.restore();
-    lx.globalCompositeOperation = 'source-over';
-
-    // 4) kompozit
-    ctx.drawImage(layer, 0, 0);
-    return out;
+    if (!canRender()) return null;
+    // tasarım yerleşimi ekran (dispW) koordinatındandır -> natW'ye ölçekle
+    if (!drawToGL(S.natW, S.natH)) return null;
+    return copyTo2D(S.natW, S.natH);
   }
-  function canRender() { return !!(S && S.img && S.img.complete); }
-  /* ---------- köşe (anchor) editörü ---------- */
-  let styleInjected = false;
-  function injectStyles() {
-    if (styleInjected) return;
-    styleInjected = true;
-    const st = document.createElement('style');
-    st.textContent =
-      '.engine-handles{position:absolute;inset:0;pointer-events:none;z-index:6;}' +
-      '.engine-handle{position:absolute;width:18px;height:18px;border-radius:50%;' +
-      'background:#38bdf8;border:2px solid #fff;box-shadow:0 0 10px rgba(56,189,248,.9);' +
-      'transform:translate(-50%,-50%);cursor:move;pointer-events:auto;}' +
-      '.engine-handle:hover{background:#e879f9;box-shadow:0 0 12px rgba(232,121,249,.9);}' +
-      '.engine-handle .idx{position:absolute;top:-20px;left:50%;transform:translateX(-50%);' +
-      'font-size:10px;color:#7dd3fc;font-weight:700;}';
-    document.head.appendChild(st);
+
+  /* ---------- canlı önizleme (edit modaline GPU katmanı) ---------- */
+  // hedef 2D canvas'a GPU çıktısını çizer; her tasarım değişiminde çağır.
+  function renderPreview(targetCanvas, maxW) {
+    if (!S || !S.shirtPrepared || !buildEngine()) return false;
+    var k = Math.min(1, (maxW || 900) / S.natW);
+    var w = Math.round(S.natW * k), h = Math.round(S.natH * k);
+    if (!drawToGL(w, h)) return false;
+    targetCanvas.width = w; targetCanvas.height = h;
+    targetCanvas.getContext('2d').drawImage(E.canvas, 0, 0);
+    return true;
   }
+
+  /* ---------- admin: sürüklenebilir 4 köşe anchor (JSON için) ---------- */
   function buildHandles() {
-    injectStyles();
-    const old = S.wrap.querySelector('.engine-handles');
-    if (old) old.remove();
-    const box = document.createElement('div');
+    if (!S || !S.wrap) return;
+    let box = S.wrap.querySelector('.engine-handles');
+    if (box) box.remove();
+    box = document.createElement('div');
     box.className = 'engine-handles';
+    box.style.cssText = 'position:absolute;inset:0;pointer-events:none;z-index:30;';
     for (let i = 0; i < 4; i++) {
       (function (i) {
         const h = document.createElement('div');
         h.className = 'engine-handle';
-        h.innerHTML = '<span class="idx">' + (i + 1) + '</span>';
+        h.style.cssText = 'position:absolute;width:14px;height:14px;margin:-7px 0 0 -7px;' +
+          'background:rgba(255,80,80,.85);border:2px solid #fff;border-radius:50%;' +
+          'pointer-events:auto;cursor:move;';
         h.style.left = (S.quad[i].x * S.dispW) + 'px';
         h.style.top = (S.quad[i].y * S.dispH) + 'px';
         h.addEventListener('pointerdown', function (e) {
@@ -343,44 +401,14 @@
     a.remove();
   }
 
-  /* ---------- bağlama ---------- */
-  function attach(opts) {
-    if (!opts || !opts.img || !opts.wrap) return;
-    let quad = null;
-    // forceQuad: çağıran taraf her açılışta taze algılama uygular; kayıtlı
-    // quad yok sayılır ve algılanan quad ile üzerine yazılır.
-    if (!opts.forceQuad) {
-      try {
-        const saved = lsGet('avci_quad_' + opts.id);
-        if (saved) {
-          const arr = JSON.parse(saved);
-          if (Array.isArray(arr) && arr.length === 4) quad = arr;
-        }
-      } catch (e) { /* sessiz */ }
-    }
-    if (!quad) {
-      quad = opts.defaultQuad.map(function (p) {
-        return { x: p.x / opts.dispW, y: p.y / opts.dispH };
-      });
-    }
-    S = {
-      img: opts.img, natW: opts.natW, natH: opts.natH,
-      dispW: opts.dispW, dispH: opts.dispH,
-      id: opts.id || 'model', quad: quad,
-      wrap: opts.wrap, getDesign: opts.getDesign || null,
-      onQuadChange: opts.onQuadChange || null,
-      editing: false
-    };
-    if (opts.forceQuad) lsSet('avci_quad_' + S.id, JSON.stringify(S.quad));
-    if (S.editing || opts.wrap.querySelector('.engine-handles')) buildHandles();
-  }
-
   /* ---------- temizlik ---------- */
-  function detach() { S = null; }
+  function detach() { destroyTextures(); S = null; }
 
-  window.MockupEngine = { attach: attach, render: render, canRender: canRender, enableCorners: enableCorners, getQuadJSON: getQuadJSON, downloadQuadJSON: downloadQuadJSON, detach: detach };
+  window.MockupEngine = {
+    attach: attach, render: render, canRender: canRender,
+    enableCorners: enableCorners, getQuadJSON: getQuadJSON,
+    downloadQuadJSON: downloadQuadJSON, detach: detach,
+    mountPreview: renderPreview, renderPreview: renderPreview
+  };
 })();
-
-
-
 

@@ -3,6 +3,18 @@
    Fabric.js ile mockup düzenleme: manken galerisi, tasarım
    bindleme, dil çevirisi (TR/EN) ve görsel dışa aktarma.
    ============================================================ */
+console.log('[STUDYO] main.js v66 yüklendi — canlı GPU önizlemeli sürüm');
+// Görünür sürüm damgası (konsol açmadan doğrulama için)
+window.addEventListener('DOMContentLoaded', function () {
+  try {
+    var b = document.createElement('div');
+    b.textContent = 'v66 · GPU motor';
+    b.style.cssText = 'position:fixed;bottom:6px;right:6px;z-index:99999;' +
+      'background:#7c3aed;color:#fff;font:600 11px sans-serif;padding:3px 8px;' +
+      'border-radius:8px;opacity:.85;pointer-events:none;';
+    document.body.appendChild(b);
+  } catch (e) { /* sessiz */ }
+});
 'use strict';
 
 /* ---------------- Çeviri Sözlüğü ---------------- */
@@ -1316,6 +1328,55 @@ function initModalCanvas(m) {
     modalCanvas.on('object:moving', clampToPrintBound);
     modalCanvas.on('object:scaling', clampToPrintBound);
     modalCanvas.on('object:modified', clampToPrintBound);
+
+    // ---- Canlı GPU önizleme katmanı (WebGL mockup motoru) ----
+    // Fabric'in düz çiziminin ÜSTÜNE GPU (shader) sonucu bindirilir:
+    // bükme + kumaş ışık/gölgesi editte anında görünür.
+    let gpuOverlay = wrap.querySelector('#gpu-overlay');
+    if (!gpuOverlay) {
+      gpuOverlay = document.createElement('canvas');
+      gpuOverlay.id = 'gpu-overlay';
+      gpuOverlay.style.cssText = 'position:absolute;left:0;top:0;pointer-events:none;z-index:20;display:none;';
+    }
+    const gpuContainer = wrap.querySelector('.canvas-container') || wrap;
+    gpuContainer.appendChild(gpuOverlay);
+    gpuOverlay.width = dispW;
+    gpuOverlay.height = dispH;
+
+    const updateGpuPreview = (keepHidden) => {
+      try {
+        if (!window.MockupEngine) { console.warn('[GPU-YOK] MockupEngine tanımlı değil'); gpuOverlay.style.display = 'none'; return; }
+        if (keepHidden) { gpuOverlay.style.display = 'none'; return; }
+        if (!MockupEngine.canRender()) { console.warn('[GPU-YOK] canRender=false (motor bağlı değil)'); gpuOverlay.style.display = 'none'; return; }
+        if (!design || !activeDesignObj) { console.warn('[GPU-YOK] tasarım yok'); gpuOverlay.style.display = 'none'; return; }
+        if (MockupEngine.renderPreview(gpuOverlay, dispW)) {
+          gpuOverlay.style.display = 'block';
+          console.log('[STUDYO] GPU önizleme aktif ✓');
+        } else {
+          console.warn('[GPU-YOK] renderPreview false döndü');
+          gpuOverlay.style.display = 'none';
+        }
+      } catch (e) { console.error('[GPU] önizleme hatası:', e); if (gpuOverlay) gpuOverlay.style.display = 'none'; }
+    };
+    // Tasarım eklenince/değişince GPU katmanını tazele
+    modalCanvas.on('object:added', () => updateGpuPreview());
+    modalCanvas.on('object:modified', () => updateGpuPreview());
+    // Sürüklerken fabric'i göster (tutamaçlar görünsün), bırakınca GPU'ya dön
+    modalCanvas.on('mouse:down', (opt) => {
+      if (opt.target && opt.target === activeDesignObj) updateGpuPreview(true);
+    });
+    modalCanvas.on('mouse:up', () => updateGpuPreview());
+    modalCanvas.on('object:removed', () => updateGpuPreview());
+    // Slider'lar vs. requestRenderAll çağırır: GPU katmanını rAF ile kısıtla ve tazele
+    let gpuPending = false;
+    const origRenderAll = modalCanvas.requestRenderAll.bind(modalCanvas);
+    modalCanvas.requestRenderAll = function () {
+      origRenderAll();
+      if (!gpuPending && gpuOverlay.style.display !== 'none') {
+        gpuPending = true;
+        requestAnimationFrame(() => { gpuPending = false; updateGpuPreview(); });
+      }
+    };
 
     // Mockup Motoru bağlama yardımcısı: algılanan tişört yüzeyini engine quad
     // yapar (export perspektif warp + ışık/gölge burayı kullanır). Kullanıcıya

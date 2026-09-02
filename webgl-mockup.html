@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WebGL Mockup Motoru — GPU Displacement | Mockup Studyo</title>
+<style>
+  body { font-family: system-ui, sans-serif; background: #14161a; color: #e8e8e8; margin: 0; padding: 24px; }
+  h1 { font-size: 20px; } small { color: #999; } h3 { font-size: 14px; margin: 8px 0 0; color: #8cf; }
+  .panel { display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start; }
+  canvas { background: #222; border: 1px solid #333; border-radius: 8px; max-width: 100%; height: auto; display: block; }
+  .controls { display: flex; flex-direction: column; gap: 10px; min-width: 300px; }
+  label.row { font-size: 13px; display: flex; justify-content: space-between; gap: 10px; align-items: center; }
+  input[type=range] { width: 150px; }
+  .btn { display: block; padding: 10px 14px; border-radius: 6px; border: 1px dashed #5a9; background: #1d2a24;
+         color: #aef; font-size: 14px; text-align: center; cursor: pointer; }
+  .btn:hover { background: #24332c; }
+  .btn input { display: none; }
+  .status { font-size: 12px; color: #9f9; min-height: 16px; }
+  select { padding: 6px; border-radius: 6px; border: 1px solid #444; background: #26292f; color: #eee; }
+  button { padding: 10px; border-radius: 6px; border: 1px solid #444; background: #26292f; color: #eee; cursor: pointer; }
+  #log { color: #ff7b7b; font-size: 12px; white-space: pre-wrap; max-height: 150px; overflow: auto; }
+  #ok { color: #9f9; font-size: 12px; }
+</style>
+</head>
+<body>
+<h1>🚀 WebGL Mockup Motoru <small>(GPU shader — pürüzsüz displacement)</small></h1>
+
+<div class="panel">
+  <div>
+    <canvas id="gl" width="900" height="1125"></canvas>
+    <div id="ok"></div>
+    <div id="log"></div>
+  </div>
+
+  <div class="controls">
+    <h3>📁 Görseller</h3>
+    <label class="btn">1️⃣ Tişört Görseli Seç
+      <input type="file" id="shirt-file" accept="image/png,image/jpeg,image/webp"></label>
+    <div class="status" id="shirt-status"></div>
+    <label class="btn">2️⃣ Tasarım Seç (PNG)
+      <input type="file" id="design-file" accept="image/png,image/jpeg,image/webp"></label>
+    <div class="status" id="design-status"></div>
+    <div style="font-size:12px;color:#8cf;">🖱️ Tasarımı sürükle • tekerlekle boyutlandır</div>
+    <button id="reset-area">🔄 Baskı alanını otomatik bul</button>
+
+    <details>
+      <summary style="cursor:pointer;color:#8cf;">⚙️ Detaylı Ayarlar</summary>
+      <div class="controls" style="margin-top:10px;">
+        <label class="row">Bükme Şiddeti <span id="v-int">12</span>
+          <input type="range" id="intensity" min="0" max="40" step="0.5" value="12"></label>
+        <label class="row">Dalga Yumuşatma (Gaussian) <span id="v-blur">3</span>
+          <input type="range" id="blur" min="0.5" max="20" step="0.5" value="3"></label>
+        <label class="row"><input type="checkbox" id="invert"> Büküm yönünü ters çevir</label>
+        <label class="row">Gölge/Parlama Karışımı <span id="v-shade">0.70</span>
+          <input type="range" id="shade" min="0" max="1" step="0.05" value="0.7"></label>
+        <label class="row">Harman Modu
+          <select id="mode">
+            <option value="1">Multiply + Soft-Light (önerilen)</option>
+            <option value="2">Sadece Multiply</option>
+            <option value="0">Harman Yok (düz)</option>
+          </select></label>
+      </div>
+    </details>
+
+    <button id="dl">⬇️ PNG olarak indir</button>
+  </div>
+</div>
+<script id="vs" type="x-shader/x-vertex">
+attribute vec2 a_pos;
+varying vec2 v_uv;
+void main() {
+  // uv (0,0) = görüntünün SOL ÜST köşesi (drawImage düzeni)
+  v_uv = vec2(a_pos.x * 0.5 + 0.5, 0.5 - a_pos.y * 0.5);
+  gl_Position = vec4(a_pos, 0.0, 1.0);
+}
+</script>
+
+<script id="fs" type="x-shader/x-fragment">
+precision highp float;
+varying vec2 v_uv;
+
+uniform sampler2D u_shirt;   // tişört dokusu
+uniform sampler2D u_design;  // tasarım dokusu
+uniform vec2  u_texel;       // 1.0 / tişört boyutu
+uniform vec4  u_rect;        // baskı alanı (uv): x, y, w, h (sol üst köşeli)
+uniform vec2  u_doff;        // tasarım merkezi (baskı alanı içi 0..1) — sürükleme
+uniform float u_dscale;      // tasarım boyutu (baskı alanı fraksiyonu) — tekerlek
+uniform vec4  u_dfit;        // tasarım oran fit'i: offX, offY, scaleX, scaleY
+uniform float u_intensity;   // bükme şiddeti (px)
+uniform float u_blur;        // gaussian yarıçapı (texel)
+uniform float u_shading;     // gölge/parlama karışımı 0..1
+uniform float u_mode;        // 0 yok, 1 multiply+softlight, 2 sadece multiply
+uniform float u_invert;      // büküm yönü
+
+float lumAt(vec2 uv) {
+  vec3 c = texture2D(u_shirt, uv).rgb;
+  return dot(c, vec3(0.299, 0.587, 0.114));
+}
+/* Gaussian ağırlıklı (1-2-1 x 1-2-1) luminance:
+   mikro iplik parazitini eler, sadece ana kumaş dalgalarını alır */
+float lumBlur(vec2 uv, float r) {
+  vec2 o = u_texel * r;
+  float s = 0.0;
+  s += lumAt(uv + vec2(-o.x, -o.y)) * 1.0;
+  s += lumAt(uv + vec2( 0.0, -o.y)) * 2.0;
+  s += lumAt(uv + vec2( o.x, -o.y)) * 1.0;
+  s += lumAt(uv + vec2(-o.x,  0.0)) * 2.0;
+  s += lumAt(uv)                    * 4.0;
+  s += lumAt(uv + vec2( o.x,  0.0)) * 2.0;
+  s += lumAt(uv + vec2(-o.x,  o.y)) * 1.0;
+  s += lumAt(uv + vec2( 0.0,  o.y)) * 2.0;
+  s += lumAt(uv + vec2( o.x,  o.y)) * 1.0;
+  return s / 16.0;
+}
+
+void main() {
+  vec4 shirt = texture2D(u_shirt, v_uv);
+
+  /* 1) BLUR'LU LUMINANCE + SOBEL GRADYAN (GPU'da) */
+  float r = max(u_blur, 0.5);
+  float gStep = r * 2.0; // gradyan turları: ana dalga ölçeği
+  vec2 o = u_texel * gStep;
+  float lL = lumBlur(v_uv - vec2(o.x, 0.0), r);
+  float lR = lumBlur(v_uv + vec2(o.x, 0.0), r);
+  float lT = lumBlur(v_uv - vec2(0.0, o.y), r);
+  float lB = lumBlur(v_uv + vec2(0.0, o.y), r);
+  vec2 grad = vec2(lR - lL, lB - lT);
+  float lum = lumBlur(v_uv, r);
+
+  /* 2) BASKI ALANI DIŞI: tişört aynen */
+  vec2 rel = (v_uv - u_rect.xy) / u_rect.zw;
+  if (rel.x < -0.25 || rel.y < -0.25 || rel.x > 1.25 || rel.y > 1.25) {
+    gl_FragColor = shirt;
+    return;
+  }
+
+  /* 3) PÜRÜZSÜZ DISPLACEMENT (donanım linear interpolasyonu) */
+  vec2 disp = grad * u_intensity * u_texel * 32.0;
+  // Sert kumaş dokusunda gradyan patlamalarını yumuşakça sınırla:
+  float dLen = length(disp);
+  float dCap = u_intensity * 2.0 * u_texel.x; // maks. kayma = 2x şiddet
+  disp /= 1.0 + dLen / max(dCap, 0.000001);   // yumuşak tavan (soft clamp)
+  disp *= mix(1.0, -1.0, u_invert);
+  vec2 drel = rel + disp / u_rect.zw;
+
+  // tasarım kendi konum/boyutuna göre yerleştirilir (sürükleme + tekerlek)
+  vec2 local = (drel - u_doff) / u_dscale + 0.5;
+
+  // kenarda yumuşak sönümleme (testere/kırılma yok)
+  vec2 ef = smoothstep(0.0, 0.01, local) * (1.0 - smoothstep(0.99, 1.0, local));
+  float edge = ef.x * ef.y;
+
+  /* 4) TASARIM ÖRNEKLEME */
+  vec2 duv = u_dfit.xy + local * u_dfit.zw;
+  vec4 design = texture2D(u_design, clamp(duv, 0.0, 1.0));
+  float da = design.a * edge;
+  if (da < 0.003) { gl_FragColor = shirt; return; }
+
+  /* 5) IŞIK / GÖLGE COMPOSITING (shader içi) */
+  vec3 dc = design.rgb;
+  // Multiply: kumaşın koyu kıvrımları tasarıma işler
+  float shadeMul = 1.0 - u_shading * (1.0 - clamp(lum * 1.15, 0.0, 1.0));
+  vec3 shaded = dc * shadeMul;
+  // Soft-Light benzeri parlama: tepe noktaları aydınlanır
+  float hi = clamp((lum - 0.62) / 0.38, 0.0, 1.0);
+  shaded += shaded * hi * u_shading * 0.5;
+
+  if (u_mode > 1.5)      shaded = dc * shadeMul;  // sadece multiply
+  else if (u_mode < 0.5) shaded = dc;             // harman yok
+
+  /* 6) TASARIMI KUMAŞA GÖM */
+  gl_FragColor = vec4(mix(shirt.rgb, shaded, da), 1.0);
+}
+</script>
+
+<script>
+'use strict';
+window.onerror = function (msg, src, line) {
+  var log = document.getElementById('log');
+  if (log) log.textContent += '⚠ HATA: ' + msg + ' (' + (src || '?') + ':' + line + ')\n';
+  return false;
+};
+
+function main() {
+  var canvas = document.getElementById('gl');
+  var logEl = document.getElementById('log');
+  logEl.textContent = '';
+  function log(m, err) { console.log('[gl] ' + m); if (err) logEl.textContent += '⚠ ' + m + '\n'; }
+  function out(id, t) { var e = document.getElementById(id); if (e) e.textContent = t; }
+
+  /* ---------- WebGL kurulum ---------- */
+  var gl = canvas.getContext('webgl', { preserveDrawingBuffer: true, antialias: true })
+        || canvas.getContext('experimental-webgl', { preserveDrawingBuffer: true });
+  if (!gl) { log('WebGL desteklenmiyor!', true); return; }
+  log('WebGL bağlamı hazır ✓');
+
+  function shader(type, srcId) {
+    var s = gl.createShader(type);
+    gl.shaderSource(s, document.getElementById(srcId).textContent);
+    gl.compileShader(s);
+    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
+      log('Shader derlenemedi: ' + gl.getShaderInfoLog(s), true);
+      return null;
+    }
+    return s;
+  }
+  var vs = shader(gl.VERTEX_SHADER, 'vs');
+  var fs = shader(gl.FRAGMENT_SHADER, 'fs');
+  if (!vs || !fs) return;
+  var prog = gl.createProgram();
+  gl.attachShader(prog, vs); gl.attachShader(prog, fs);
+  gl.linkProgram(prog);
+  if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
+    log('Program link hatası: ' + gl.getProgramInfoLog(prog), true); return;
+  }
+  gl.useProgram(prog);
+
+  // tam ekran quad
+  var buf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
+  var aPos = gl.getAttribLocation(prog, 'a_pos');
+  gl.enableVertexAttribArray(aPos);
+  gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
+
+  var U = {};
+  ['u_shirt','u_design','u_texel','u_rect','u_doff','u_dscale','u_dfit','u_intensity',
+   'u_blur','u_shading','u_mode','u_invert'].forEach(function (n) {
+    U[n] = gl.getUniformLocation(prog, n);
+  });
+
+  /* ---------- doku yükleme ---------- */
+  // Büyük fotoğrafları MAX_TEXTURE_SIZE'a göndermeden ÖNCE kaliteli
+  // biçimde küçült (sessiz texImage2D hatalarını ve pikselliği engeller)
+  function prepare(img, maxSide) {
+    var w = img.naturalWidth || img.width, h = img.naturalHeight || img.height;
+    var k = Math.min(1, maxSide / Math.max(w, h));
+    var c = document.createElement('canvas');
+    c.width = Math.max(2, Math.round(w * k));
+    c.height = Math.max(2, Math.round(h * k));
+    var cx = c.getContext('2d');
+    cx.imageSmoothingEnabled = true;
+    cx.imageSmoothingQuality = 'high';
+    cx.drawImage(img, 0, 0, c.width, c.height);
+    return c;
+  }
+
+  function makeTex(unit, src) {
+    var t = gl.createTexture();
+    gl.activeTexture(gl.TEXTURE0 + unit);
+    gl.bindTexture(gl.TEXTURE_2D, t);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, src);
+    if (gl.getError() !== gl.NO_ERROR) log('Doku yüklenirken GPU hatası oluştu', true);
+    return t;
+  }
+
+  var shirtImg = null, designImg = null;
+  var shirtTex = null, designTex = null;
+
+  // baskı alanı (uv, canvas oranında) ve tasarım konumu (alan içi 0..1)
+  var area = { cx: 0.5, cy: 0.42, w: 0.3, h: 0.3 };
+  var pos  = { x: 0.5, y: 0.5, s: 0.9 };
+
+  function fitCanvas() {
+    var iw = shirtImg.width, ih = shirtImg.height;
+    var k = Math.min(1, 1400 / Math.max(iw, ih));
+    canvas.width = Math.round(iw * k);
+    canvas.height = Math.round(ih * k);
+    gl.viewport(0, 0, canvas.width, canvas.height);
+  }
+
+  /* ---------- OTOMATİK baskı alanı tespiti ----------
+     Arka plan rengini köşelerden öğrenir, gövdeyi (tişörtü) bulur,
+     baskı alanını göğüs hizasına yerleştirir. */
+  function autoPrintArea() {
+    if (!shirtImg) return;
+    var n = document.createElement('canvas');
+    n.width = 80;
+    n.height = Math.max(2, Math.round(80 * shirtImg.height / shirtImg.width));
+    var g = n.getContext('2d');
+    g.drawImage(shirtImg, 0, 0, n.width, n.height);
+    var d = g.getImageData(0, 0, n.width, n.height).data;
+    // arka plan = 4 köşe pikselinin ortalaması
+    var cs = [0, (n.width - 1) * 4, (n.height - 1) * n.width * 4,
+              ((n.height - 1) * n.width + n.width - 1) * 4];
+    var bg = [0, 0, 0], p, c, x, y;
+    for (var i = 0; i < 4; i++) for (var j = 0; j < 3; j++) bg[j] += d[cs[i] + j] / 4;
+    var x0 = n.width, y0 = n.height, x1 = 0, y1 = 0, found = false;
+    for (y = 0; y < n.height; y++) for (x = 0; x < n.width; x++) {
+      p = (y * n.width + x) * 4;
+      if (Math.abs(d[p] - bg[0]) + Math.abs(d[p + 1] - bg[1]) + Math.abs(d[p + 2] - bg[2]) > 90) {
+        found = true;
+        if (x < x0) x0 = x; if (x > x1) x1 = x;
+        if (y < y0) y0 = y; if (y > y1) y1 = y;
+      }
+    }
+    if (!found) { // düz arka planlı olmayan görsel: güvenli varsayılan
+      x0 = 0.15 * n.width; x1 = 0.85 * n.width;
+      y0 = 0.1 * n.height; y1 = 0.9 * n.height;
+    }
+    area.cx = ((x0 + x1) / 2) / n.width;                 // gövde merkezi
+    area.cy = (y0 + (y1 - y0) * 0.34) / n.height;        // göğüs hizası
+    area.w  = Math.min(0.45, ((x1 - x0) / n.width) * 0.5);
+    area.h  = area.w * (canvas.width / canvas.height);   // ekranda kare alan
+    pos = { x: 0.5, y: 0.5, s: 0.9 };
+  }
+
+  /* ---------- render ---------- */
+  function render() {
+    if (!shirtTex) return;
+    gl.uniform1i(U.u_shirt, 0);
+    gl.uniform1i(U.u_design, 1);
+    gl.uniform2f(U.u_texel, 1 / shirtImg.width, 1 / shirtImg.height);
+
+    // baskı alanı (uv): otomatik tespit edilmiş durumdan alınır
+    gl.uniform4f(U.u_rect, area.cx - area.w / 2, area.cy - area.h / 2, area.w, area.h);
+
+    // tasarım oranını baskı alanına sığdır (letterbox)
+    if (designImg) {
+      var rectAspect = (area.w * canvas.width) / (area.h * canvas.height);
+      var dAspect = designImg.width / designImg.height;
+      var su, sv;
+      if (dAspect > rectAspect) { su = 1; sv = rectAspect / dAspect; }
+      else { sv = 1; su = dAspect / rectAspect; }
+      gl.uniform4f(U.u_dfit, (1 - su) / 2, (1 - sv) / 2, su, sv);
+    } else {
+      gl.uniform4f(U.u_dfit, 0.5, 0.5, 0.0001, 0.0001); // görünmez
+    }
+    gl.uniform2f(U.u_doff, pos.x, pos.y);
+    gl.uniform1f(U.u_dscale, pos.s);
+
+    gl.uniform1f(U.u_intensity, parseFloat(document.getElementById('intensity').value));
+    gl.uniform1f(U.u_blur, parseFloat(document.getElementById('blur').value));
+    gl.uniform1f(U.u_shading, parseFloat(document.getElementById('shade').value));
+    gl.uniform1f(U.u_mode, parseFloat(document.getElementById('mode').value));
+    gl.uniform1f(U.u_invert, document.getElementById('invert').checked ? 1 : 0);
+
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    out('ok', '✓ GPU render tamam');
+  }
+
+  /* ---------- dosya yükleme ---------- */
+  function loadFile(file, cb) {
+    if (!file) return;
+    if (!/^image\/(png|jpeg|webp)$/i.test(file.type || '')) {
+      log('Desteklenmeyen dosya: ' + (file.name || file.type), true); return;
+    }
+    var r = new FileReader();
+    r.onload = function () {
+      var img = new Image();
+      img.onload = function () { cb(img); };
+      img.onerror = function () { log('Görsel çözümlenemedi: ' + file.name, true); };
+      img.src = r.result;
+    };
+    r.onerror = function () { log('Dosya okunamadı', true); };
+    r.readAsDataURL(file);
+  }
+
+  document.getElementById('shirt-file').addEventListener('change', function (e) {
+    loadFile(e.target.files[0], function (img) {
+      shirtImg = prepare(img, 1800); // güvenli + kaliteli küçültme
+      shirtTex = makeTex(0, shirtImg);
+      fitCanvas();
+      autoPrintArea();
+      out('shirt-status', '✔ ' + img.naturalWidth + '×' + img.naturalHeight +
+          ' → GPU: ' + shirtImg.width + '×' + shirtImg.height);
+      render();
+    });
+  });
+  document.getElementById('design-file').addEventListener('change', function (e) {
+    loadFile(e.target.files[0], function (img) {
+      designImg = prepare(img, 2048);
+      designTex = makeTex(1, designImg);
+      out('design-status', '✔ ' + img.naturalWidth + '×' + img.naturalHeight);
+      render();
+    });
+  });
+
+  /* ---------- kontroller ---------- */
+  ['intensity','blur','shade','mode','invert'].forEach(function (id) {
+    document.getElementById(id).addEventListener('input', function () {
+      out('v-int', document.getElementById('intensity').value);
+      out('v-blur', document.getElementById('blur').value);
+      out('v-shade', parseFloat(document.getElementById('shade').value).toFixed(2));
+      render();
+    });
+  });
+
+  /* ---------- sürükleme + tekerlek (tasarımı hareket ettir) ---------- */
+  var drag = null;
+  function relPos(e) {
+    var t = e.touches ? e.touches[0] : e;
+    var r = canvas.getBoundingClientRect();
+    return {
+      x: ((t.clientX - r.left) / r.width - (area.cx - area.w / 2)) / area.w,
+      y: ((t.clientY - r.top) / r.height - (area.cy - area.h / 2)) / area.h
+    };
+  }
+  function inDesign(e) {
+    var q = relPos(e), half = pos.s / 2;
+    return Math.abs(q.x - pos.x) <= half && Math.abs(q.y - pos.y) <= half;
+  }
+  function startDrag(e) {
+    if (!designTex || !inDesign(e)) return;
+    if (e.touches) e.preventDefault();
+    var q = relPos(e);
+    drag = { dx: q.x - pos.x, dy: q.y - pos.y };
+    canvas.style.cursor = 'grabbing';
+  }
+  function moveDrag(e) {
+    if (drag) {
+      if (e.touches) e.preventDefault();
+      var q = relPos(e);
+      pos.x = Math.min(1.25, Math.max(-0.25, q.x - drag.dx));
+      pos.y = Math.min(1.25, Math.max(-0.25, q.y - drag.dy));
+      render();
+    } else if (!e.touches) {
+      canvas.style.cursor = designTex && inDesign(e) ? 'grab' : 'default';
+    }
+  }
+  function endDrag() { drag = null; canvas.style.cursor = 'default'; }
+  canvas.addEventListener('mousedown', startDrag);
+  window.addEventListener('mousemove', moveDrag);
+  window.addEventListener('mouseup', endDrag);
+  canvas.addEventListener('touchstart', startDrag, { passive: false });
+  canvas.addEventListener('touchmove', moveDrag, { passive: false });
+  canvas.addEventListener('touchend', endDrag);
+  canvas.addEventListener('wheel', function (e) {
+    if (!designTex) return;
+    e.preventDefault();
+    pos.s = Math.min(2.5, Math.max(0.15, pos.s * (e.deltaY < 0 ? 1.06 : 0.94)));
+    render();
+  }, { passive: false });
+
+  /* ---------- baskı alanını yeniden otomatik bul ---------- */
+  document.getElementById('reset-area').addEventListener('click', function () {
+    autoPrintArea();
+    render();
+  });
+
+  /* ---------- PNG indirme ---------- */
+  document.getElementById('dl').addEventListener('click', function () {
+    render();
+    canvas.toBlob(function (blob) {
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'mockup-webgl.png';
+      a.click();
+      setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+    }, 'image/png');
+  });
+
+  /* ---------- gömülü demo tişörtü ile başla ---------- */
+  var demoShirt = new Image();
+  demoShirt.onload = function () {
+    shirtImg = prepare(demoShirt, 1800);
+    shirtTex = makeTex(0, shirtImg);
+    fitCanvas();
+    autoPrintArea();
+    out('shirt-status', '✔ demo tişört (' + demoShirt.naturalWidth + '×' + demoShirt.naturalHeight + ')');
+    var d = new Image();
+    d.onload = function () {
+      designImg = d; designTex = makeTex(1, d);
+      out('design-status', '✔ demo tasarım');
+      render();
+    };
+    d.onerror = function () { log('demo tasarım yüklenemedi', true); render(); };
+    d.src = 'data:image/svg+xml;utf8,' + encodeURIComponent(
+      '<svg xmlns="http://www.w3.org/2000/svg" width="500" height="500">' +
+      '<circle cx="250" cy="250" r="190" fill="#e63946"/>' +
+      '<circle cx="250" cy="250" r="130" fill="#f1faee"/>' +
+      '<text x="250" y="278" font-size="72" font-family="Arial" font-weight="bold" text-anchor="middle" fill="#1d3557">STUDYO</text>' +
+      '</svg>');
+  };
+  demoShirt.onerror = function () { log('demo tişört yüklenemedi', true); };
+  demoShirt.src = 'data:image/svg+xml;utf8,' + encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" width="900" height="1125">' +
+    '<rect width="900" height="1125" fill="#f2f2f2"/>' +
+    '<path d="M315 180 L248 215 L190 338 L258 372 L270 945 L630 945 L642 372 L710 338 L652 215 L585 180 Q506 236 450 236 Q394 236 315 180 Z" fill="#e9e9e9" stroke="#cfcfcf"/>' +
+    '<path d="M304 428 q146 68 292 0" stroke="#c8c8c8" stroke-width="30" fill="none" opacity="0.6"/>' +
+    '<path d="M295 575 q158 -56 310 12" stroke="#bdbdbd" stroke-width="26" fill="none" opacity="0.5"/>' +
+    '<path d="M302 742 q135 68 296 -8" stroke="#c9c9c9" stroke-width="28" fill="none" opacity="0.55"/>' +
+    '<path d="M338 282 q112 45 224 -5" stroke="#d6d6d6" stroke-width="20" fill="none" opacity="0.5"/>' +
+    '</svg>');
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', main);
+} else {
+  main();
+}
+</script>
+</body>
+</html>
