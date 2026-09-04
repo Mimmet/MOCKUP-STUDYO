@@ -16,6 +16,8 @@ body > * {
 body > .geometric-bg,
 body > .bottom-ad-banner,
 body > .top-ad-banner,
+body > .left-ad-banner,
+body > .right-ad-banner,
 body > .modal-overlay,
 body > .click-ripple,
 body > .click-particle,
@@ -357,47 +359,6 @@ select {
   justify-content: center;
 }
 
-.toolbar-label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.quality-picker {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.format-picker {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.quality-select {
-  padding: 8px 34px 8px 12px;
-  background-color: #1e293b;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%2394a3b8' d='M6 8L0 0h12z'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 12px center;
-  color: #cbd5e1;
-  border: 1px solid #334155;
-  border-radius: 8px;
-  font-weight: 600;
-  font-size: 0.9rem;
-  cursor: pointer;
-  appearance: none;
-  -webkit-appearance: none;
-  outline: none;
-  min-width: 110px;
-}
-
-.quality-select:hover {
-  border-color: #38bdf8;
-  color: #fff;
-}
-
 /* ---------- Alt Alan: Manken Galerisi ---------- */
 .gallery {
   background: rgba(255, 255, 255, 0.28); /* yükleme alanıyla aynı saydamlık — tek yüzey görünümü */
@@ -485,7 +446,6 @@ select {
   max-width: 1600px;
   margin: 0 auto;
   width: 100%;
-  /* Her kart görselinin kendi oranına göre doğal yüksekliğini alsın (boşluk kalmasın) */
   align-items: start;
 }
 
@@ -505,102 +465,50 @@ select {
   overflow: hidden;
   align-self: start;
   line-height: 0;
-  /* Performans: ekran dışındaki kartların render edilmesini ertele,
-     böylece sayfa ilk açıldığında kritik içerik daha hızlı boyanır.
-     contain-intrinsic-size ile yüklenmemiş görsel için yer ayrılır (CLS önlenir). */
   content-visibility: auto;
   contain-intrinsic-size: auto 420px;
 }
-
 .mannequin-card:hover {
   transform: translateY(-6px);
   box-shadow: 0 18px 42px rgba(20, 28, 50, 0.28);
 }
-
-/* Görselin doğal oranında kartı dolduran tutucu */
+.mannequin-card.mannequin-clickable { cursor: pointer; }
 .mannequin-holder {
   position: relative;
   width: 100%;
   height: auto;
-  aspect-ratio: auto;
   border-radius: 0;
   overflow: hidden;
   background: #ffffff;
   line-height: 0;
 }
-
-/* Görseli kartın üzerine tam oturt: boşluk/çerçeve kalmaz */
 .mannequin-holder .mannequin-img {
   display: block;
   width: 100%;
   height: auto;
   object-fit: contain;
-  filter: none;
   transition: transform 0.35s ease;
 }
+.mannequin-card:hover .mannequin-img { transform: scale(1.03); }
 
-.mannequin-card:hover .mannequin-img {
-  transform: scale(1.05);
-}
-
-/* Favori kalbi — kartın sağ alt köşesi (yalnızca hover'da görünür) */
-.fav-btn {
-  position: absolute;
-  right: 12px;
-  bottom: 12px;
-  width: 38px;
-  height: 38px;
-  border: none;
-  border-radius: 50%;
-  background: rgba(15, 23, 42, 0.55);
-  color: #ffffff;
-  font-size: 1.35rem;
-  line-height: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  z-index: 5;
-  opacity: 0;
-  transform: scale(0.7);
-  pointer-events: none;
-  transition: opacity 0.2s ease, transform 0.2s ease, background 0.2s ease, color 0.2s ease;
-  backdrop-filter: blur(3px);
-  -webkit-backdrop-filter: blur(3px);
-}
-
-/* Kartın üzerine gelince kalbi göster */
-.mannequin-card:hover .fav-btn {
-  opacity: 1;
-  transform: scale(1);
-  pointer-events: auto;
-}
-
-.fav-btn:hover {
-  transform: scale(1.12);
-  background: rgba(225, 29, 72, 0.85);
-}
-
-.fav-btn.active {
-  background: #ef4444;
-  color: #ffffff;
-  animation: favPop 0.3s ease;
-}
-
-@keyframes favPop {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.35); }
-  100% { transform: scale(1); }
-}
-
-.mannequin-meta {
+/* Galeri başlığı + ekleme butonu */
+.gallery-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 10px;
-  color: #94a3b8;
-  font-size: 0.85rem;
+  gap: 12px;
+  flex-wrap: wrap;
 }
+.gallery-add { white-space: nowrap; }
+
+body.night-mode .mannequin-card {
+  background: rgba(30, 41, 59, 0.9) !important;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45) !important;
+}
+body.night-mode .mannequin-card:hover {
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.6) !important;
+}
+body.night-mode .mannequin-holder { background: transparent; }
 
 .remove-btn {
   background: none;
@@ -623,65 +531,12 @@ select {
   font-size: 0.9rem;
 }
 
-/* Tasarım canvas'ında sürükleme imleci */
-.modal-canvas-wrap canvas {
-  cursor: grab;
-  user-select: none;
-}
-
-.modal-canvas-wrap canvas:active {
-  cursor: grabbing;
-}
-
-/* Çalışma alanı (canvas zaten .modal-canvas-wrap altında mevcut) */
-.modal-canvas-wrap {
-  position: relative;
-}
-
-/* Edit açılırken gösterilen yükleme overlay'i (tişört algılama + yerleştirme) */
-.modal-loading {
-  position: absolute;
-  inset: 0;
-  z-index: 30;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 14px;
-  background: rgba(6, 10, 22, 0.86);
-  backdrop-filter: blur(3px);
-  border-radius: 12px;
-  text-align: center;
-  padding: 20px;
-}
-.modal-loading.hidden {
-  display: none;
-}
-.modal-loading-spinner {
-  width: 46px;
-  height: 46px;
-  border-radius: 50%;
-  border: 3px solid rgba(56, 189, 248, 0.22);
-  border-top-color: #38bdf8;
-  animation: modalSpin 0.75s linear infinite;
-}
-.modal-loading-text {
-  font-size: 0.85rem;
-  letter-spacing: 0.4px;
-  max-width: 260px;
-  line-height: 1.5;
-  color: #bae6fd;
-}
-@keyframes modalSpin {
-  to { transform: rotate(360deg); }
-}
-
 /* ---------- Gece / Gündüz Tema Butonu ---------- */
 .theme-toggle {
   width: 42px;
   height: 42px;
   border-radius: 10px;
-  margin-right: 12px; /* favoriler butonuyla araya nefes alanı */
+  margin-right: 12px; /* navbar butonları arasında nefes payı */
   border: 1.5px solid rgba(148, 163, 184, 0.45);
   background: rgba(255, 255, 255, 0.65);
   cursor: pointer;
@@ -737,7 +592,6 @@ body.night-mode .theme-toggle {
   background: rgba(30, 41, 59, 0.7);
   border-color: rgba(148, 163, 184, 0.35);
 }
-body.night-mode .fav-toggle-label { color: #ffffff !important; }
 
 body.night-mode .upload-zone { background: rgba(11, 15, 25, 0.45) !important; }
 body.night-mode .drop-zone {
@@ -775,13 +629,6 @@ body.night-mode select {
 body.night-mode .gallery { background: rgba(11, 15, 25, 0.45) !important; }
 body.night-mode .gallery-header h3 { color: #f8fafc !important; }
 body.night-mode .empty-state { color: #94a3b8 !important; }
-body.night-mode .mannequin-card {
-  background: rgba(30, 41, 59, 0.9) !important;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45) !important;
-}
-body.night-mode .mannequin-card:hover {
-  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.6) !important;
-}
 
 body.night-mode .secondary-btn {
   background: #334155 !important;
@@ -796,15 +643,7 @@ body.night-mode .modal-box {
 }
 body.night-mode .modal-title-wrap h3 { color: #f1f5f9 !important; }
 body.night-mode .modal-subtitle { color: #94a3b8 !important; }
-body.night-mode .modal-hint { color: #cbd5e1 !important; }
-body.night-mode .control-label { color: #cbd5e1 !important; }
-body.night-mode .format-sub { color: #7dd3fc !important; }
 
-body.night-mode .fav-panel {
-  background: #16203a !important;
-  border-color: #24334f !important;
-}
-body.night-mode .fav-panel-header { color: #f1f5f9 !important; }
 body.night-mode .ad-placeholder {
   border-color: rgba(71, 85, 105, 0.7) !important;
   background: rgba(30, 41, 59, 0.4) !important;
@@ -972,13 +811,7 @@ body.night-mode .content-title { color: #f8fafc; }
 body.night-mode .content-subtitle { color: #f8fafc; border-left-color: #818cf8; }
 body.night-mode .content-paragraph { color: #cbd5e1; }
 
-/* Canvas artık kullanılmıyor - sadece img gösteriliyor */
-
-.mannequin-clickable {
-  cursor: pointer;
-}
-
-/* ---------- Model Düzenleme Modalı ---------- */
+/* ---------- Modal Overlay (yorum + indirme modal'ları kullanır) ---------- */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -1012,17 +845,6 @@ body.night-mode .content-paragraph { color: #cbd5e1; }
   overflow: auto;
   box-shadow: 0 24px 70px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(56, 189, 248, 0.06);
   animation: slideUp 0.22s ease-out;
-}
-
-/* Edit modalı (model düzenleme) daha büyük açılsın:
-   hem kutu boyutu büyütüldü hem genel zoom küçültmesinden hariç tutuldu */
-#modal > .modal-box {
-  width: min(1240px, 96vw);
-  max-height: 94vh;
-  zoom: 1;
-}
-@media (max-width: 860px) {
-  #modal > .modal-box { width: min(1240px, 96vw); }
 }
 
 .modal-header {
@@ -1069,6 +891,11 @@ body.night-mode .content-paragraph { color: #cbd5e1; }
   border-color: #b91c1c;
 }
 
+/* ---------- Edit Modalı (GPU Motor) ---------- */
+#modal > .modal-box.edit-box {
+  width: min(1440px, 97vw);
+  max-height: 94vh;
+}
 .modal-body {
   display: flex;
   gap: 16px;
@@ -1076,9 +903,8 @@ body.night-mode .content-paragraph { color: #cbd5e1; }
   align-items: stretch;
   flex-wrap: wrap;
 }
-
 .modal-canvas-wrap {
-  flex: 1 1 360px;
+  flex: 1 1 460px;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -1087,15 +913,105 @@ body.night-mode .content-paragraph { color: #cbd5e1; }
   border: 1px solid #1e293b;
   border-radius: 12px;
   padding: 10px;
+  position: relative;
 }
+#modal-canvas {
+  max-width: 100%;
+  max-height: 85vh;
+  display: block;
+  border-radius: 8px;
+  touch-action: none;
+  cursor: grab;
+  user-select: none;
+}
+#modal-canvas:active { cursor: grabbing; }
+
+.modal-loading {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  background: rgba(6, 10, 22, 0.86);
+  backdrop-filter: blur(3px);
+  border-radius: 12px;
+  text-align: center;
+  padding: 20px;
+}
+.modal-loading.hidden { display: none; }
+.modal-loading-spinner {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  border: 3px solid rgba(56, 189, 248, 0.22);
+  border-top-color: #38bdf8;
+  animation: modalSpin 0.75s linear infinite;
+}
+.modal-loading-text {
+  font-size: 0.85rem;
+  letter-spacing: 0.4px;
+  max-width: 260px;
+  line-height: 1.5;
+  color: #bae6fd;
+}
+@keyframes modalSpin { to { transform: rotate(360deg); } }
 
 .modal-controls {
-  flex: 0 0 220px;
+  flex: 0 0 280px;
   display: flex;
   flex-direction: column;
   gap: 10px;
+  overflow-y: auto;
 }
-
+.control-divider {
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 6px 12px;
+  gap: 0;
+  background: rgba(56, 189, 248, 0.08);
+  border-color: rgba(56, 189, 248, 0.22);
+  color: #7dd3fc;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+/* Alt Ton Şeridi: modalin altinda yatay, sadece kaydirmali sillerdan olusur */
+.tone-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: center;
+  padding: 12px 16px;
+  margin-top: 2px;
+  border-top: 1px solid #1e293b;
+  background: #0f172a;
+  border-radius: 0 0 12px 12px;
+}
+.tone-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1 1 200px;
+  min-width: 170px;
+}
+.tone-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #94a3b8;
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+.tone-range {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 6px;
+  accent-color: #38bdf8;
+  cursor: pointer;
+}
 .control-group {
   background: #0f172a;
   border: 1px solid #1e293b;
@@ -1106,11 +1022,7 @@ body.night-mode .content-paragraph { color: #cbd5e1; }
   gap: 8px;
   transition: border-color 0.15s;
 }
-
-.control-group:hover {
-  border-color: #334155;
-}
-
+.control-group:hover { border-color: #334155; }
 .control-label {
   display: flex;
   align-items: center;
@@ -1119,7 +1031,6 @@ body.night-mode .content-paragraph { color: #cbd5e1; }
   color: #94a3b8;
   font-weight: 600;
 }
-
 .range-val {
   background: #1e293b;
   border: 1px solid #334155;
@@ -1132,30 +1043,45 @@ body.night-mode .content-paragraph { color: #cbd5e1; }
   min-width: 44px;
   text-align: center;
 }
-
 .modal-controls input[type="range"] {
   width: 100%;
   height: 6px;
   accent-color: #38bdf8;
   cursor: pointer;
 }
-
-.modal-controls select {
+.slider-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.slider-row .ctrl-range {
   width: 100%;
-  background-color: #1e293b;
-  color: #cbd5e1;
-  border: 1px solid #334155;
-  border-radius: 8px;
-  padding: 8px 10px;
-  font-size: 0.85rem;
-  outline: none;
+  height: 6px;
+  accent-color: #38bdf8;
   cursor: pointer;
+  flex: 1 1 auto;
+  min-width: 0;
 }
-
-.modal-controls select:hover {
+.slider-row .num-input {
+  flex: 0 0 60px;
+  width: 60px;
+}
+.num-input {
+  width: 72px;
+  padding: 4px 6px;
+  border-radius: 8px;
+  border: 1px solid #334155;
+  background: #0f172a;
+  color: #e2e8f0;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+}
+.num-input:focus {
+  outline: none;
   border-color: #38bdf8;
+  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
 }
-
 .modal-hint {
   font-size: 0.7rem;
   line-height: 1.4;
@@ -1166,15 +1092,40 @@ body.night-mode .content-paragraph { color: #cbd5e1; }
   padding: 8px 10px;
 }
 
+
+body.night-mode .control-group { background: rgba(15, 23, 42, 0.6); border-color: #24334f; }
+body.night-mode .control-label { color: #cbd5e1; }
+body.night-mode .num-input { background: #16203a; border-color: #334155; color: #e2e8f0; }
+body.night-mode .modal-canvas-wrap { background: #060a16; }
+
+/* Edit modalı — responsive */
+@media (max-width: 860px) {
+  #modal > .modal-box.edit-box { width: 100vw; max-width: 100vw; max-height: 94vh; }
+  body.top-ad-visible #modal > .modal-box.edit-box { margin-top: 84px; }
+}
+@media (max-width: 700px) {
+  .modal-controls { flex: 1 1 100%; }
+}
+
+/* Smoke test çıktısı */
+.smoke-log {
+  position: fixed;
+  left: 8px;
+  bottom: 120px;
+  z-index: 999999;
+  background: rgba(3, 7, 18, 0.92);
+  color: #7ef0c0;
+  font: 600 11px/1.5 Consolas, monospace;
+  padding: 8px 10px;
+  border-radius: 8px;
+  max-width: 320px;
+  pointer-events: none;
+}
+
 .modal-actions {
   display: flex;
   gap: 8px;
   margin-top: auto;
-  /* Edit modalı ekrana sığmadığında (zoomlu/küçük ekran) Uygula butonları
-     her zaman görünür kalsın: modal kaydırılırken altta sabit kalır */
-  position: sticky;
-  bottom: 0;
-  z-index: 5;
   padding-top: 8px;
   background: linear-gradient(180deg, rgba(30, 41, 59, 0) 0%, #1e293b 30%);
 }
@@ -1183,15 +1134,6 @@ body.night-mode .content-paragraph { color: #cbd5e1; }
 .modal-actions .secondary-btn {
   flex: 1;
   padding: 8px 12px;
-}
-
-@media (max-width: 700px) {
-  .modal-body {
-    flex-direction: column;
-  }
-  .modal-controls {
-    flex: 1 1 100%;
-  }
 }
 
 /* ---------- Ücretsiz İndirme Ekranı ---------- */
@@ -1422,15 +1364,79 @@ body.night-mode .content-paragraph { color: #cbd5e1; }
   max-height: 100%;
 }
 
-/* Reklam üstte görünürken edit modalı aşağı itilir:
-   reklamla arasında boşluk kalır */
-body.top-ad-visible #modal > .modal-box {
-  margin-top: 96px;
-  max-height: calc(94vh - 106px);
-}
 @media (max-width: 700px) {
   .top-ad-banner { transform: translateX(-50%) scale(0.85); transform-origin: top center; }
-  body.top-ad-visible #modal > .modal-box { margin-top: 84px; }
+}
+
+/* ---------- Edit Modalı Açıkken Görünen Yan (Dikey) Reklam Bannerları (Adsterra 160x600) ---------- */
+.side-ad-banner {
+  position: fixed;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 215; /* top-ad-banner(210) ve modal-overlay(200) üstünde */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 160px;
+  height: 600px;
+  min-height: 600px;
+  padding: 10px;
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.97), rgba(30, 41, 59, 0.97));
+  border: 1px solid #334155;
+  border-radius: 14px;
+  box-shadow: 0 10px 30px rgba(2, 8, 23, 0.5);
+  backdrop-filter: blur(8px);
+  transition: opacity 0.18s ease;
+}
+
+.side-ad-banner.hidden {
+  display: none;
+}
+
+.left-ad-banner {
+  left: 10px;
+}
+
+.right-ad-banner {
+  right: 10px;
+}
+
+.side-ad-label {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: #f8fafc;
+  background: rgba(239, 68, 68, 0.9);
+  border-radius: 4px;
+  padding: 3px 6px;
+}
+
+.side-ad-slot {
+  width: 100%;
+  height: 100%;
+  min-height: 600px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 10px;
+  background: #0f172a;
+}
+
+.side-ad-slot iframe {
+  width: 100%;
+  height: 100%;
+  min-height: 600px;
+  border: 0;
+  display: block;
+}
+
+/* Mobilde (tablet/telefon) yan dikey banner'ları gizle — alan dar */
+@media (max-width: 860px) {
+  .side-ad-banner { display: none !important; }
 }
 
 /* Küçük ekran (telefon) optimizasyonu */
@@ -2224,39 +2230,7 @@ input:checked + .slider.round:before {
   /* Navbar linkleri taşmasın */
   .nav-links { flex-wrap: wrap; gap: 8px; }
 
-  /* --- 3) EDİT MODALİ telefonda tam ekran hissi verir --- */
-  #modal > .modal-box {
-    width: 100vw;
-    max-width: 100vw;
-    max-height: 94vh;
-    border-radius: 12px;
-  }
-  body.top-ad-visible #modal > .modal-box { margin-top: 84px; }
-  .modal-body {
-    flex-direction: column;
-    padding: 10px;
-    gap: 10px;
-  }
-  .modal-canvas-wrap {
-    flex: 0 0 auto;
-    width: 100%;
-  }
-  .modal-controls {
-    flex: 1 1 auto;
-    width: 100%;
-  }
-  .modal-actions {
-    position: static; /* sticky taban mobilde kayma yapabilir */
-  }
-
-  /* Dokunmatikte hover yok: favori kalbi her zaman görünür */
-  .mannequin-card .fav-btn {
-    opacity: 1;
-    transform: scale(1);
-  }
-
-  /* Galeri kartı dokunma hedefleri büyüsün */
-  .mannequin-card { border-radius: 10px; }
+  /* --- 3) Edit modalı kuralları kaldırıldı (edit sıfırdan yazılacak) --- */
 }
 
 /* Çok küçük telefonlar (≤480px) için ek sadeleştirme */
@@ -2382,22 +2356,6 @@ select {
   color: #64748b !important;
 }
 
-/* Ürün kartları: görselin kendisi karttır → zemin/çizgi yok, sadece gölge */
-.mannequin-card {
-  background: #ffffff !important;
-  border-color: transparent !important;
-  box-shadow: 0 6px 18px rgba(37, 50, 80, 0.12) !important;
-}
-.mannequin-card:hover {
-  box-shadow: 0 18px 42px rgba(37, 50, 80, 0.2) !important;
-  border-color: transparent !important;
-}
-
-/* Manken görsel tutucusu: boşluk/stüdyo zemini yerine şeffaf */
-.mannequin-holder {
-  background: transparent !important;
-}
-
 /* İkincil butonlar */
 .secondary-btn {
   background: #ffffff !important;
@@ -2423,34 +2381,6 @@ select {
 .modal-subtitle {
   color: #475569 !important;
 }
-.modal-hint {
-  color: #334155 !important;
-}
-/* Sabit format göstergesi: 2000×2000 PNG + listelemeye uygun notu */
-.format-fixed {
-  background: linear-gradient(135deg, #2563eb 0%, #0284c7 100%);
-  color: #ffffff;
-  font-weight: 700;
-  font-size: 0.95rem;
-  text-align: center;
-  padding: 10px 8px;
-  border-radius: 8px;
-  letter-spacing: 0.3px;
-}
-.format-sub {
-  color: #0284c7;
-  font-size: 0.72rem;
-  text-align: center;
-  padding-top: 4px;
-}
-.control-label {
-  color: #334155 !important;
-}
-.range-val {
-  background: #ffffff !important;
-  border-color: #cbd5e1 !important;
-  color: #0f172a !important;
-}
 /* Yükleme alanı: dar ekranda bilgi kartı ve yükleme alt alta */
 @media (max-width: 1100px) {
   .upload-zone {
@@ -2471,168 +2401,12 @@ select {
 }
 
 /* ============================================================
-   FAVORİ MAKETLER — Üst bar butonu + aşağı açılan panel
+   ÜST BAR BUTONLARI
    ============================================================ */
 .navbar-actions {
   position: relative;
   display: flex;
   align-items: center;
-}
-
-.fav-toggle-btn {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  padding: 10px 18px;
-  background: linear-gradient(135deg, #ef4444, #db2777);
-  color: #ffffff;
-  border: none;
-  border-radius: 999px;
-  cursor: pointer;
-  font-size: 0.95rem;
-  font-weight: 800;
-  letter-spacing: 0.3px;
-  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.35);
-  transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
-}
-
-.fav-toggle-btn:hover {
-  background: linear-gradient(135deg, #dc2626, #be185d);
-  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.5);
-  transform: translateY(-1px);
-}
-
-.fav-toggle-btn:active {
-  transform: scale(0.97);
-}
-
-.fav-toggle-heart {
-  color: #ffffff;
-  font-size: 1.2rem;
-  line-height: 1;
-}
-
-.fav-toggle-label {
-  color: #ffffff;
-  font-weight: 800;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
-}
-
-.fav-toggle-count {
-  min-width: 20px;
-  height: 20px;
-  padding: 0 5px;
-  border-radius: 999px;
-  background: #ef4444;
-  color: #ffffff;
-  font-size: 0.72rem;
-  font-weight: 700;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* Aşağı açılan panel */
-.fav-panel {
-  position: absolute;
-  top: calc(100% + 12px);
-  right: 0;
-  width: 320px;
-  max-height: 420px;
-  display: flex;
-  flex-direction: column;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 14px;
-  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.22);
-  overflow: hidden;
-  z-index: 200;
-}
-
-.fav-panel-header {
-  padding: 12px 16px;
-  font-weight: 700;
-  color: #0f172a;
-  font-size: 0.92rem;
-  border-bottom: 1px solid #eef2f7;
-  background: #f8fafc;
-}
-
-.fav-panel-body {
-  overflow-y: auto;
-  padding: 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.fav-empty {
-  text-align: center;
-  color: #64748b;
-  font-size: 0.85rem;
-  padding: 26px 10px;
-}
-
-.fav-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 6px;
-  border-radius: 10px;
-  cursor: pointer;
-  transition: background 0.15s;
-}
-
-.fav-item:hover {
-  background: #f1f5f9;
-}
-
-.fav-thumb {
-  flex: 0 0 46px;
-  width: 46px;
-  height: 46px;
-  border-radius: 8px;
-  overflow: hidden;
-  background: #f1f5f9;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.fav-thumb img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
-
-.fav-item-name {
-  flex: 1 1 auto;
-  min-width: 0;
-  font-size: 0.8rem;
-  color: #334155;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.fav-remove {
-  flex: 0 0 auto;
-  width: 26px;
-  height: 26px;
-  border: none;
-  border-radius: 50%;
-  background: transparent;
-  color: #94a3b8;
-  font-size: 0.85rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.fav-remove:hover {
-  background: #fee2e2;
-  color: #ef4444;
 }
 
 /* ==================== LEGAL FOOTER ==================== */
@@ -2990,98 +2764,5 @@ body.night-mode .legal-links a:hover {
 
   .legal-title {
     font-size: 1.4rem;
-  }
-}
-
-/* ============================================================
-   EDIT PANELİ — Sayısal girişler + İnce Ton Paneli
-   ============================================================ */
-.num-input {
-  width: 72px;
-  padding: 4px 6px;
-  margin-top: 6px;
-  border-radius: 8px;
-  border: 1px solid #cbd5e1;
-  background: #ffffff;
-  color: #0f172a;
-  font-size: 13px;
-  font-weight: 600;
-  text-align: center;
-}
-.num-input:focus {
-  outline: none;
-  border-color: #38bdf8;
-  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
-}
-body.night-mode .num-input {
-  background: #1e293b !important;
-  color: #e2e8f0 !important;
-  border-color: #334155 !important;
-}
-
-.tone-panel {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 8px 16px;
-  border-top: 1px solid #e2e8f0;
-  background: rgba(248, 250, 252, 0.7);
-  overflow-x: auto;
-  flex: 0 0 auto;
-}
-.tone-panel::-webkit-scrollbar {
-  height: 6px;
-}
-.tone-panel::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 999px;
-}
-.tone-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex: 0 0 auto;
-}
-.tone-item label {
-  font-size: 12px;
-  font-weight: 700;
-  color: #334155;
-  white-space: nowrap;
-  cursor: default;
-}
-.tone-item input[type="range"] {
-  width: 92px;
-}
-.tone-item .tone-num {
-  width: 56px;
-  margin-top: 0;
-  padding: 3px 4px;
-  font-size: 12px;
-}
-.tone-item .range-val {
-  font-size: 11px;
-  min-width: 40px;
-  text-align: center;
-}
-.tone-reset {
-  flex: 0 0 auto;
-  padding: 6px 12px;
-  font-size: 0.8rem;
-}
-body.night-mode .tone-panel {
-  background: rgba(15, 23, 42, 0.55) !important;
-  border-top-color: #334155 !important;
-}
-body.night-mode .tone-item label {
-  color: #cbd5e1 !important;
-}
-
-@media (max-width: 768px) {
-  .tone-panel {
-    gap: 10px;
-    padding: 8px 10px;
-  }
-  .tone-item input[type="range"] {
-    width: 70px;
   }
 }

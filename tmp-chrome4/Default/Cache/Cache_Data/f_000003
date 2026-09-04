@@ -1,0 +1,1347 @@
+/* ============================================================
+   Mockup Studyo — Ana Uygulama Mantığı (temiz sürüm)
+   Eski mockup motoru, edit modalı ve galeri görsel kodları
+   tamamen kaldırıldı. Motor sıfırdan yazılacak; reklam akışı,
+   tema, dil, yorumlar ve sayfa animasyonları korunmuştur.
+   ============================================================ */
+'use strict';
+
+/* ---------------- Çeviri Sözlüğü ---------------- */
+const TRANSLATIONS = {
+  tr: {
+    pageTitle: 'Mockup Studyo',
+    dropHint: 'PNG / JPEG dosyanızı buraya sürükleyin',
+    uploadTitle: 'Dosya Yükle',
+    selectDesign: 'Tasarım Seç',
+    replaceHint: 'Tasarımı değiştirmek için tıklayın',
+    removeDesign: 'Tasarımı Kaldır',
+    infoTitle: '🖼 Kaliteli Mockup İçin',
+    infoStep1: 'PNG veya JPEG tasarımınızı seçin.',
+    infoStep2: 'Şeffaf arka planlı dosya kullanın — arka plan otomatik temizlenmez.',
+    infoStep3: 'Yüksek çözünürlük (en az 2000×2000 px) daha keskin sonuç verir.',
+    infoStep4: 'Aşağıdan dilediğiniz mankeni seçerek tasarımı uygulayın.',
+    infoNote: '💡 Hazır mockup 2000×2000 px PNG olarak indirilir.',
+    galleryTitle: 'Manken Galerisi',
+    emptyState: 'Henüz manken görseli yok.',
+    galleryAdd: '+ Manken Ekle',
+    needDesign: 'Önce bir tasarım yükleyin, sonra maketi seçin.',
+    editTitle: 'Maketi Düzenle',
+    editSub: 'Tasarımı sürükleyin • tekerlekle boyutlandırın',
+    loadingText: 'Mockup hazırlanıyor…',
+    colorLabel: '🎨 Tişört Rengi',
+    colorOriginal: 'Orijinal',
+    sizeLabel: 'Boyut',
+    angleLabel: 'Açı',
+    skewXLabel: 'Yana Eğim',
+    skewYLabel: 'Yukarı Eğim',
+    modalHint: '💡 Tasarımı sürükleyin; dalgalar tasarımı kumaşa işler, renk paneliyle tişörtü boyayın.',
+    designBtn: '🖼 Tasarım Seç',
+    recenterBtn: '⟲ Ortala',
+    applyBtn: 'Uygula',
+    reviewBtn: '💬 Yorum Yap',
+    reviewsTitle: '💬 Kullanıcı Yorumları',
+    reviewTitle: 'Değerlendirmeniz',
+    reviewPlaceholder: 'Düşüncelerinizi yazın...',
+    reviewCancel: 'Vazgeç',
+    reviewSave: 'Kaydet',
+    reviewsEmpty: 'Henüz yorum yok. İlk yorumu sen yap! 💬',
+    reviewNeedStars: 'En az 1 yıldız vermelisiniz.',
+    reviewNeedText: 'Lütfen düşüncelerinizi yazın.',
+    reviewConfirmDelete: 'Bu yorumu silmek istediğine emin misin?',
+    closeTitle: 'Kapat',
+    themeTitle: 'Gece / Gündüz Modu',
+    dlTitle: 'Ücretsiz İndirme',
+    dlMsg: 'Reklamı izleyin, biraz bekleyin; tasarımınız hazırlanıyor',
+    adStatus: 'Biraz bekleyin, tasarımınız hazırlanıyor…',
+    dlDone: 'Mockup indiriliyor…',
+    bottomAdText: 'Reklamınız burada görünebilir — bize ulaşın',
+    dlCancel: 'Vazgeç',
+    privacyLink: 'Gizlilik Politikası',
+    privacyFixedText: 'Gizlilik Politikası: Kişisel verileriniz Google AdSense çerezleriyle korunur.',
+    privacyFullLink: 'Politiği Oku ›',
+    termsLink: 'Kullanım Şartları',
+    disclaimerLink: 'Feragatname',
+    contactLink: 'İletişim',
+    contactLabel: 'contact@mockupstudio.com',
+    contentTitle: 'Mockup Studyo: Ücretsiz Online Mockup Oluşturucu',
+    contentPara1: 'Mockup Studyo, online mağazalarında ürün satan girişimciler, zanaatkârlar ve küçük işletmeler için tasarlanmış, tamamen ücretsiz ve tarayıcıda çalışan bir mockup oluşturma aracıdır. Karmaşık tasarım yazılımlarına veya pahalı aboneliklere gerek kalmadan, kendi logo veya görselinizi seçip saniyeler içinde profesyonel görünümlü ürün görselleri hazırlayabilirsiniz. Tüm işlemler doğrudan tarayıcınızda gerçekleşir; dosya yüklemek için hesap açmanıza veya ek bir program kurmanıza gerek yoktur.',
+    contentPara2: 'Bu araç özellikle tişört, hoodie, sweatshirt ve benzeri tekstil ürünleri üzerinde tasarımlarınızı denemek için idealdir. Tasarımınızı yükleyin, galeriden dilediğiniz mankeni seçin ve uygulayın; sonuç 2000×2000 piksel, ürün sayfalarınız için uygun yüksek çözünürlüklü bir PNG dosyası olarak indirilir. Böylece ürün listelemeleriniz için gerçekçi, satışı artıran görselleri ücretsiz oluşturabilirsiniz.',
+    contentSub1: 'Neden Mockup Studyo?',
+    contentPara3: 'Ücretsiz ve sınırsız kullanım sayesinde kaç mockup isterseniz oluşturun. Arayüz sade ve anlaşılırdır; tasarımı sürükleyip bırakarak konumlandırabilir, boyut, açı ve eğim gibi ince ayarları tek tıkla değiştirebilirsiniz. Favori maketlerinizi kaydederek sık kullandığınız görselleri kolayca yeniden düzenleyebilirsiniz. Dilerseniz koyu tema ile de çalışabilirsiniz.',
+    contentSub2: 'Nasıl Çalışır?',
+    contentPara4: 'Süreç çok basittir: İlk olarak PNG veya JPEG tasarımınızı seçin. Yüksek çözünürlük ve şeffaf arka plan, daha keskin ve profesyonel sonuçlar elde etmenize yardımcı olur. Ardından galeriden beğendiğiniz mankeni seçin; tasarımınız seçilen tüm mankenlere otomatik olarak uygulanır. Konum ve açıyı ayarlayıp Uygula düğmesine bastıktan sonra en iyi kareyi seçerek PNG olarak indirin.',
+    contentSub3: 'Ürün Görselleri İçin İpuçları',
+    contentPara5: 'Ürününüzü gerçek bir model veya manken üzerinde göstermek, alıcıların ürünü hayal etmesine yardımcı olur ve tıklama oranınızı artırır. İlk görseliniz net ve çekici olsun; yüksek çözünürlüklü görseller her zaman daha güvenilir görünür. Tasarımınızın ürünün boyutuna ve şekline uygun olduğundan emin olun ve farklı renkler için ayrı mockup ’lar hazırlayın. Doğru aydınlatma ve açı seçimiyle ürününüzün en iyi yönlerini öne çıkarabilirsiniz.',
+    contentPara6: 'Mockup Studyo tamamen ücretsizdir ve reklam gelirleriyle desteklenir. Aracı rahatça kullanabilir, dilediğiniz kadar görsel oluşturabilirsiniz. Siteyle ilgili sorularınız için iletişim sayfamızdan bize ulaşabilirsiniz. İyi satışlar dileriz!'
+  },
+  en: {
+    pageTitle: 'Mockup Studio',
+    dropHint: 'Drag & drop your PNG / JPEG file here',
+    uploadTitle: 'Upload File',
+    selectDesign: 'Select Design',
+    replaceHint: 'Click to change the design',
+    removeDesign: 'Remove Design',
+    infoTitle: '🖼 For a High-Quality Mockup',
+    infoStep1: 'Choose your design as PNG or JPEG.',
+    infoStep2: 'Use a file with a transparent background — the background is not removed automatically.',
+    infoStep3: 'Higher resolution (at least 2000×2000 px) gives sharper results.',
+    infoStep4: 'Select any mannequin below and apply your design.',
+    infoNote: '💡 The finished mockup is downloaded as a 2000×2000 px PNG.',
+    galleryTitle: 'Mannequin Gallery',
+    emptyState: 'No mannequin images yet.',
+    galleryAdd: '+ Add Image',
+    needDesign: 'Upload a design first, then pick a mockup.',
+    editTitle: 'Edit Mockup',
+    editSub: 'Drag the design • scroll to resize',
+    loadingText: 'Preparing mockup…',
+    colorLabel: '🎨 Shirt Color',
+    colorOriginal: 'Original',
+    sizeLabel: 'Size',
+    angleLabel: 'Angle',
+    skewXLabel: 'Side Tilt',
+    skewYLabel: 'Up Tilt',
+    modalHint: '💡 Drag the design — folds wrap it onto the fabric; use the color panel to recolor the shirt.',
+    designBtn: '🖼 Choose Design',
+    recenterBtn: '⟲ Center',
+    applyBtn: 'Apply',
+    reviewBtn: '💬 Write a Review',
+    reviewsTitle: '💬 User Reviews',
+    reviewTitle: 'Your Rating',
+    reviewPlaceholder: 'Write your thoughts...',
+    reviewCancel: 'Cancel',
+    reviewSave: 'Save',
+    reviewsEmpty: 'No reviews yet. Be the first! 💬',
+    reviewNeedStars: 'Please give at least 1 star.',
+    reviewNeedText: 'Please write your thoughts.',
+    reviewConfirmDelete: 'Are you sure you want to delete this review?',
+    closeTitle: 'Close',
+    themeTitle: 'Night / Day Mode',
+    dlTitle: 'Free Download',
+    dlMsg: 'Watch the ad and wait a moment — your design is being prepared',
+    adStatus: 'Please wait a moment, preparing your design…',
+    dlDone: 'Downloading mockup…',
+    bottomAdText: 'Your ad could be here — contact us to advertise',
+    dlCancel: 'Cancel',
+    privacyLink: 'Privacy Policy',
+    privacyFixedText: 'Privacy Policy: Your data is protected with Google AdSense cookies.',
+    privacyFullLink: 'Read Policy ›',
+    termsLink: 'Terms of Service',
+    disclaimerLink: 'Disclaimer',
+    contactLink: 'Contact',
+    contactLabel: 'contact@mockupstudio.com',
+    contentTitle: 'Mockup Studyo: Free Online Mockup Generator',
+    contentPara1: 'Mockup Studyo is a completely free, browser-based mockup generator built for entrepreneurs, crafters, and small businesses selling products in their online stores. Without the need for complex design software or paid subscriptions, you can select your own logo or artwork and create professional-looking product images in seconds. Everything runs directly in your browser — no account is required and there is nothing to install.',
+    contentPara2: 'This tool is ideal for previewing your designs on t-shirts, hoodies, sweatshirts, and other textile products. Upload your design, choose any mannequin from the gallery, and apply it; the result is downloaded as a high-resolution 2000×2000 px PNG, perfect for your product pages. Create realistic, conversion-friendly product photos for your listings at no cost.',
+    contentSub1: 'Why Mockup Studyo?',
+    contentPara3: 'Use it as much as you want, completely free. The interface is simple and intuitive: drag and drop your design into place, then fine-tune size, angle, and tilt with a single click. Save your favorite mockups to quickly re-edit the images you use most. You can also switch to dark theme whenever you like.',
+    contentSub2: 'How It Works',
+    contentPara4: 'The process is very simple. First, choose your design as a PNG or JPEG; high resolution and a transparent background help produce sharper, more professional results. Next, select a mannequin from the gallery and your design is applied to all chosen mannequins automatically. Adjust the position and angle, press Apply, then pick your best frame and download it as a PNG.',
+    contentSub3: 'Tips for Product Photos',
+    contentPara5: 'Showing your product on a real model or mannequin helps buyers imagine it and can boost your click-through rate. Make your first image clear and eye-catching — high-resolution photos always look more trustworthy. Make sure your design fits the product size and shape, and create separate mockups for different colors. With the right lighting and angle, you can highlight the best features of your product.',
+    contentPara6: 'Mockup Studyo is completely free and supported by advertising revenue. Use it freely and create as many images as you like. If you have any questions, feel free to reach out through our contact page. Happy selling!'
+  }
+};
+let currentLang = 'en';
+
+/* ---------------- Yardımcılar ---------------- */
+const $ = (sel, root) => (root || document).querySelector(sel);
+const $$ = (sel, root) => Array.from((root || document).querySelectorAll(sel));
+
+/* ---------------- Durum ---------------- */
+let design = null;           // { name, dataUrl, img: HTMLImageElement }
+let dlTimer = null;
+let downloading = false;     // indirme akışı sürerken buton spam koruması
+let dlCancelPending = false; // kullanıcı indirmeyi iptal etti mi
+
+/* ---------------- Dil Değiştirme ---------------- */
+function setLang(lang) {
+  currentLang = (lang === 'en') ? 'en' : 'tr';
+  const t = TRANSLATIONS[currentLang] || TRANSLATIONS.tr;
+  document.documentElement.lang = currentLang === 'tr' ? 'tr' : 'en';
+  $$('[data-i18n]').forEach((el) => {
+    const key = el.getAttribute('data-i18n');
+    if (t[key]) el.textContent = t[key];
+  });
+  $$('[data-i18n-placeholder]').forEach((el) => {
+    const key = el.getAttribute('data-i18n-placeholder');
+    if (t[key]) el.setAttribute('placeholder', t[key]);
+  });
+  $$('[data-i18n-title]').forEach((el) => {
+    const key = el.getAttribute('data-i18n-title');
+    if (t[key]) el.setAttribute('title', t[key]);
+  });
+  if (t.pageTitle) document.title = t.pageTitle;
+  const code = $('#lang-wheel-code');
+  if (code) code.textContent = currentLang.toUpperCase();
+  // Dil değişince dinamik listeler de yeni dille yeniden çizilsin
+  if (typeof renderReviews === 'function') renderReviews();
+  try { localStorage.setItem('mockup_lang', currentLang); } catch (e) { /* sessiz */ }
+}
+
+function applyStoredLang() {
+  let stored = null;
+  try { stored = localStorage.getItem('mockup_lang'); } catch (e) { /* sessiz */ }
+  // Ana dil İngilizce: kayıtlı tercih yoksa veya 'tr' değilse EN
+  setLang(stored === 'tr' ? 'tr' : 'en');
+}
+
+function bindLangWheel() {
+  const wheel = $('#lang-wheel');
+  if (!wheel) return;
+  wheel.addEventListener('click', () => {
+    if (wheel.classList.contains('spinning')) return;
+    wheel.classList.add('spinning');
+    setTimeout(() => wheel.classList.remove('spinning'), 700);
+    setLang(currentLang === 'tr' ? 'en' : 'tr');
+  });
+}
+
+/* ---------------- Gece / Gündüz Tema ---------------- */
+const THEME_KEY = 'mockup_theme';
+
+function applyStoredTheme() {
+  const saved = localStorage.getItem(THEME_KEY);
+  if (saved === 'night') {
+    document.body.classList.add('night-mode');
+    const icon = $('#theme-icon');
+    if (icon) icon.textContent = '☀️';
+  }
+}
+
+function bindThemeToggle() {
+  const btn = $('#theme-toggle');
+  if (!btn) return;
+  btn.addEventListener('click', () => {
+    const night = document.body.classList.toggle('night-mode');
+    localStorage.setItem(THEME_KEY, night ? 'night' : 'day');
+    const icon = $('#theme-icon');
+    if (icon) icon.textContent = night ? '☀️' : '🌙';
+  });
+}
+
+/* ---------------- Tasarım Yükleme ---------------- */
+function showDesignPreview() {
+  const ph = $('#drop-placeholder');
+  const prev = $('#design-preview');
+  if (!ph || !prev) return;
+  ph.classList.add('hidden');
+  prev.src = design.dataUrl || design.src;
+  prev.classList.remove('hidden');
+  // Tasarım yokken maket seçilmişse: şimdi edit'i aç
+  if (pendingMannequinId) {
+    const m = mannequins.find((x) => x.id === pendingMannequinId);
+    pendingMannequinId = null;
+    if (m) { openModal(m.cardEl, m); return; }
+  }
+  // Edit açıksa motor tasarımını tazele
+  if (activeMannequin) refreshModalDesign();
+}
+
+function clearDesign() {
+  design = null;
+  const prev = $('#design-preview');
+  if (prev) {
+    prev.classList.add('hidden');
+    if (prev.src) prev.removeAttribute('src');
+  }
+  const ph = $('#drop-placeholder');
+  if (ph) ph.classList.remove('hidden');
+  const input = $('#design-upload');
+  if (input) input.value = '';
+}
+
+/* ---------------- Dosya Doğrulama (Güvenlik) ---------------- */
+const ALLOWED_UPLOAD_TYPES = /^image\/(png|jpeg|webp)$/i;
+const REJECTED_SVG_TYPE = /^image\/svg\+xml$/i;
+const MAX_UPLOAD_BYTES = 100 * 1024 * 1024; // 100 MB
+
+// Dosya tipi/boyut doğrulama. Hata yoksa null, aksi halde kullanıcıya gösterilecek mesaj döner.
+function validateImageFile(file) {
+  if (!file) return 'Dosya seçilmedi.';
+  if (REJECTED_SVG_TYPE.test(file.type || '')) {
+    return 'SVG dosyaları desteklenmez (güvenlik nedeniyle).';
+  }
+  if (!ALLOWED_UPLOAD_TYPES.test(file.type || '')) {
+    return 'Sadece PNG, JPEG veya WebP görselleri desteklenir.';
+  }
+  if (file.size > MAX_UPLOAD_BYTES) {
+    return 'Dosya çok büyük (maks. 100 MB).';
+  }
+  return null;
+}
+
+function readFileAsDataURL(file) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => res(r.result);
+    r.onerror = () => rej(new Error('read-fail'));
+    r.readAsDataURL(file);
+  });
+}
+
+async function handleDesignFile(file) {
+  const err = validateImageFile(file);
+  if (err) { alert(err); return; }
+  try {
+    const dataUrl = await readFileAsDataURL(file);
+    const img = new Image();
+    img.onload = () => {
+      design = { name: file.name, dataUrl, img };
+      showDesignPreview();
+    };
+    img.onerror = () => {
+      alert('Görsel yüklenemedi: dosya bozuk veya desteklenmeyebilir.');
+      const input = $('#design-upload');
+      if (input) input.value = '';
+    };
+    img.src = dataUrl;
+  } catch (e) {
+    alert('Dosya okunamadı.');
+  }
+}
+
+/* ---------------- Dosya Yükleme Olayları ---------------- */
+function bindUploadEvents() {
+  const dropZone = $('#drop-zone');
+  const fileInput = $('#design-upload');
+  if (!dropZone || !fileInput) return;
+  const selectBtn = $('#drop-placeholder .primary-btn');
+
+  if (selectBtn) selectBtn.addEventListener('click', () => fileInput.click());
+
+  ['dragenter', 'dragover'].forEach((ev) =>
+    dropZone.addEventListener(ev, (e) => {
+      e.preventDefault();
+      dropZone.classList.add('dragging');
+    }));
+  ['dragleave', 'drop'].forEach((ev) =>
+    dropZone.addEventListener(ev, (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('dragging');
+    }));
+  dropZone.addEventListener('drop', (e) => {
+    const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+    if (f) handleDesignFile(f); // tip / güvenlik kontrolü handleDesignFile içinde
+  });
+  // drop-zone tıklayınca da dosya seç
+  dropZone.addEventListener('click', (e) => {
+    if (e.target.closest('button')) return;
+    fileInput.click();
+  });
+  fileInput.addEventListener('change', () => {
+    if (fileInput.files && fileInput.files[0]) handleDesignFile(fileInput.files[0]);
+    fileInput.value = ''; // aynı dosya tekrar seçilebilsin
+  });
+
+  const removeBtn = $('#remove-design');
+  if (removeBtn) removeBtn.addEventListener('click', clearDesign);
+}
+
+/* ---------------- Manken Galerisi (GPU Motor ile entegre) ----------------
+   Görseller gallery-data.js üzerinden gelir (tools/build-gallery.ps1 üretir).
+   Sonradan eklenen görseller de motor tarafından otomatik desteklenir. */
+const GALLERY_FILES = (window.GALLERY_FILES || []);
+let mannequins = []; // { id, name, src, cardEl }
+let galleryUid = 0;
+function uid() { return 'm' + (++galleryUid) + '_' + Date.now().toString(36); }
+
+function mannequinPath(file) { return 'görsel/' + encodeURIComponent(file); }
+function thumbPath(file) {
+  const base = String(file).replace(/\.[^.]+$/, '');
+  return 'görsel/thumbs/' + encodeURIComponent(base + '.jpg');
+}
+
+const seenSrcs = new Set();
+function tryLoadMannequin(paths, name, idx) {
+  if (idx >= paths.length) return;
+  const img = new Image();
+  img.onload = () => {
+    if (seenSrcs.has(img.src)) { updateGalleryState(); return; }
+    seenSrcs.add(img.src);
+    const m = { id: uid(), name, src: img.src, cardEl: null };
+    mannequins.push(m);
+    renderCard(m);
+    updateGalleryState();
+  };
+  img.onerror = () => tryLoadMannequin(paths, name, idx + 1);
+  img.src = paths[idx];
+}
+
+function seedDefaultMannequins() {
+  GALLERY_FILES.forEach((file) => {
+    // önce küçük thumbnail; yüklenemezse tam çözünürlük
+    tryLoadMannequin([thumbPath(file), mannequinPath(file)], file.replace(/\.[^.]+$/, ''), 0);
+  });
+}
+
+function makeCard(m) {
+  const card = document.createElement('div');
+  card.className = 'mannequin-card mannequin-clickable';
+  card.dataset.id = m.id;
+  const holder = document.createElement('div');
+  holder.className = 'mannequin-holder';
+  const img = document.createElement('img');
+  img.className = 'mannequin-img';
+  img.alt = m.name || 'Manken';
+  img.loading = 'lazy';
+  img.decoding = 'async';
+  img.src = m.src;
+  holder.appendChild(img);
+  card.appendChild(holder);
+  card.addEventListener('click', () => openModal(card, m));
+  return card;
+}
+
+function renderCard(m) {
+  const grid = $('#mannequin-grid');
+  if (!grid) return;
+  m.cardEl = makeCard(m);
+  grid.appendChild(m.cardEl);
+}
+
+function updateGalleryState() {
+  const es = $('#empty-state');
+  if (es) es.style.display = mannequins.length ? 'none' : '';
+}
+
+// Galeriye kendi görselini ekleme — motor jeneriktir, her görselde çalışır.
+function addMannequinFromFiles(files) {
+  Array.from(files || []).forEach((f) => {
+    const err = validateImageFile(f);
+    if (err) { alert(err); return; }
+    const src = URL.createObjectURL(f);
+    if (seenSrcs.has(src)) return;
+    seenSrcs.add(src);
+    const m = { id: uid(), name: f.name.replace(/\.[^.]+$/, ''), src, cardEl: null };
+    mannequins.push(m);
+    renderCard(m);
+    updateGalleryState();
+  });
+}
+
+function bindGalleryEvents() {
+  const addBtn = $('#add-mannequin');
+  const input = $('#mannequin-upload');
+  if (addBtn && input) addBtn.addEventListener('click', () => input.click());
+  if (input) input.addEventListener('change', () => {
+    addMannequinFromFiles(input.files);
+    input.value = '';
+  });
+}
+
+/* ---------------- Edit Modalı (GPU Motor) ----------------
+   Renk paneli + dalga bükme önizlemesi. Motor: gpu-engine.js */
+let activeMannequin = null;
+let pendingMannequinId = null; // tasarım yokken seçilen maket
+let modalTransform = null;     // { cx, cy, w, h, angle, skewX, skewY }
+let modalDefaults = null;      // açılış transformu (slider %100 = bu)
+let currentTintHex = null;
+let modalRenderPending = false;
+const imageCache = new Map();
+
+function loadImageCached(src) {
+  if (imageCache.has(src)) return Promise.resolve(imageCache.get(src));
+  return new Promise((res, rej) => {
+    const img = new Image();
+    img.onload = () => { imageCache.set(src, img); res(img); };
+    img.onerror = () => rej(new Error('gorsel-yuklenemedi'));
+    img.src = src;
+  });
+}
+
+function renderModal() {
+  if (!window.MockupEngine || !MockupEngine.canRender()) return;
+  if (modalRenderPending) return;
+  modalRenderPending = true;
+  requestAnimationFrame(() => {
+    modalRenderPending = false;
+    MockupEngine.renderPreview();
+  });
+}
+
+function designAspect() {
+  if (design && design.img) {
+    const w = design.img.naturalWidth || design.img.width || 1;
+    const h = design.img.naturalHeight || design.img.height || 1;
+    return w / h;
+  }
+  return 1;
+}
+
+// Göğüs algısına göre başlangıç yerleşimi (motor jenerik: her görselde çalışır)
+function defaultTransformFor(det, img) {
+  const chest = (det && det.chest) || { cx: 0.5, cy: 0.42, w: 0.34, h: 0.34 };
+  const natW = img.naturalWidth || 1000;
+  const natH = img.naturalHeight || 1000;
+  const w = Math.max(0.05, chest.w * 0.9);
+  const h = Math.max(0.04, w * (natW / natH) / designAspect());
+  return { cx: chest.cx, cy: chest.cy, w, h, angle: 0, skewX: 0, skewY: 0 };
+}
+
+function openModal(card, m) {
+  if (!window.MockupEngine) { alert('GPU motoru yüklenemedi.'); return; }
+  if (!design) {
+    pendingMannequinId = m.id;
+    alert((TRANSLATIONS[currentLang] || TRANSLATIONS.tr).needDesign);
+    return;
+  }
+  activeMannequin = m;
+  modalTransform = null;
+  modalDefaults = null;
+  setTintUI(null);
+  resetModalControls();
+  $('#modal').classList.remove('hidden');
+  // Edit ekranı açıkken üst reklam banneri görünsün
+  const topAd = $('#top-ad-banner');
+  if (topAd) topAd.classList.remove('hidden');
+  document.body.classList.add('top-ad-visible');
+  initModalEngine(m);
+}
+
+async function initModalEngine(m) {
+  const canvas = $('#modal-canvas');
+  const wrap = $('#modal-canvas-wrap');
+  const loadingEl = $('#modal-loading');
+  const MIN_LOADING_MS = 600;
+  const loadStart = Date.now();
+  if (loadingEl) loadingEl.classList.remove('hidden');
+  const finishLoading = () => {
+    const wait = Math.max(0, MIN_LOADING_MS - (Date.now() - loadStart));
+    setTimeout(() => { if (loadingEl) loadingEl.classList.add('hidden'); }, wait);
+  };
+  try {
+    const img = await loadImageCached(m.src);
+    const det = MockupEngine.detect(img);
+    const ok = MockupEngine.attach({ img, canvas, det });
+    if (!ok) { finishLoading(); alert('WebGL bu tarayıcıda desteklenmiyor.'); return; }
+    modalDefaults = defaultTransformFor(det, img);
+    modalTransform = Object.assign({}, modalDefaults);
+    MockupEngine.setTransform(modalTransform);
+    MockupEngine.setTintColor(currentTintHex);
+    if (design && design.img) MockupEngine.setDesign(design.img);
+    const maxW = Math.max((wrap.clientWidth || 560) - 16, 280);
+    const maxH = 560;
+    let dw = Math.min(img.naturalWidth, maxW);
+    let dh = Math.max(2, Math.round(dw * img.naturalHeight / img.naturalWidth));
+    if (dh > maxH) { dh = maxH; dw = Math.max(2, Math.round(dh * img.naturalWidth / img.naturalHeight)); }
+    MockupEngine.setPreviewSize(dw, dh);
+    resetModalControls();
+    renderModal();
+    finishLoading();
+  } catch (e) {
+    console.error('[Modal] motor başlatılamadı:', e);
+    finishLoading();
+  }
+}
+
+function closeModal() {
+  const modal = $('#modal');
+  if (modal) modal.classList.add('hidden');
+  const topAd = $('#top-ad-banner');
+  if (topAd) topAd.classList.add('hidden');
+  document.body.classList.remove('top-ad-visible');
+  if (window.MockupEngine) MockupEngine.detach();
+  activeMannequin = null;
+  modalTransform = null;
+  modalDefaults = null;
+}
+
+/* --- Renk Paneli: tişört rengini anında değiştirir --- */
+const TINT_SWATCHES = [
+  '#ffffff', '#e2e8f0', '#94a3b8', '#1f2937', '#000000',
+  '#fca5a5', '#dc2626', '#ea580c', '#f59e0b', '#fde047',
+  '#4ade80', '#16a34a', '#2dd4bf', '#0ea5e9', '#1d4ed8',
+  '#4338ca', '#8b5cf6', '#d946ef', '#ec4899', '#92400e'
+];
+function buildColorSwatches() {
+  const box = $('#color-swatches');
+  if (!box || box.childElementCount) return;
+  TINT_SWATCHES.forEach((hex) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'color-swatch';
+    b.style.background = hex;
+    b.dataset.hex = hex;
+    b.title = hex;
+    b.addEventListener('click', () => applyTint(hex, b));
+    box.appendChild(b);
+  });
+}
+function applyTint(hex, swatchBtn) {
+  currentTintHex = hex;
+  if (window.MockupEngine) MockupEngine.setTintColor(hex);
+  $$('#color-swatches .color-swatch').forEach((b) => b.classList.remove('active'));
+  if (swatchBtn) swatchBtn.classList.add('active');
+  renderModal();
+}
+function setTintUI(hex) {
+  currentTintHex = hex;
+  $$('#color-swatches .color-swatch').forEach((b) => b.classList.toggle('active', b.dataset.hex === hex));
+  const custom = $('#custom-color');
+  if (custom && hex) custom.value = hex;
+}
+
+/* --- Kontroller: slider + sayısal giriş çiftleri --- */
+function resetModalControls() {
+  const set = (rangeId, valId, val, fmt) => {
+    const r = $(rangeId), n = $(rangeId + '-num'), v = $(valId);
+    if (r) r.value = val;
+    if (n) n.value = val;
+    if (v) v.textContent = fmt(val);
+  };
+  set('#modal-scale', '#modal-scale-val', 100, (x) => '%' + x);
+  set('#modal-rotate', '#modal-rotate-val', 0, (x) => x + '°');
+  set('#modal-skewx', '#modal-skewx-val', 0, (x) => x + '°');
+  set('#modal-skewy', '#modal-skewy-val', 0, (x) => x + '°');
+}
+
+function applyControls() {
+  if (!modalDefaults || !window.MockupEngine) return;
+  const sc = Number($('#modal-scale').value) || 100;
+  const w = modalDefaults.w * (sc / 100);
+  const h = w * (modalDefaults.h / modalDefaults.w);
+  const t = {
+    cx: modalTransform ? modalTransform.cx : modalDefaults.cx,
+    cy: modalTransform ? modalTransform.cy : modalDefaults.cy,
+    w, h,
+    angle: Number($('#modal-rotate').value) || 0,
+    skewX: Number($('#modal-skewx').value) || 0,
+    skewY: Number($('#modal-skewy').value) || 0
+  };
+  modalTransform = t;
+  MockupEngine.setTransform(t);
+  renderModal();
+}
+
+function bindNumericPair(rangeId, valId, fmt) {
+  const r = $(rangeId), n = $(rangeId + '-num'), v = $(valId);
+  if (!r) return;
+  const clamp = (x) => Math.max(Number(r.min), Math.min(Number(r.max), x));
+  const setFrom = (x) => {
+    x = clamp(x);
+    r.value = x;
+    if (n) n.value = x;
+    if (v) v.textContent = fmt(x);
+    applyControls();
+  };
+  r.addEventListener('input', () => setFrom(Number(r.value)));
+  if (n) {
+    n.addEventListener('input', () => { if (n.value !== '' && n.value !== '-') setFrom(Number(n.value)); });
+    n.addEventListener('blur', () => { if (n.value === '') n.value = r.value; });
+  }
+}
+
+// Yeni tasarım yüklenince motor tasarımını tazele
+function refreshModalDesign() {
+  if (!window.MockupEngine || !activeMannequin) return;
+  const img = imageCache.get(activeMannequin.src);
+  if (!img) return;
+  if (design && design.img) MockupEngine.setDesign(design.img);
+  const det = MockupEngine.detect(img);
+  modalDefaults = defaultTransformFor(det, img);
+  modalTransform = Object.assign({}, modalDefaults);
+  MockupEngine.setTransform(modalTransform);
+  resetModalControls();
+  renderModal();
+}
+
+/* --- Edit olay bağlama --- */
+function bindModalEvents() {
+  buildColorSwatches();
+  bindNumericPair('#modal-scale', '#modal-scale-val', (x) => '%' + x);
+  bindNumericPair('#modal-rotate', '#modal-rotate-val', (x) => x + '°');
+  bindNumericPair('#modal-skewx', '#modal-skewx-val', (x) => x + '°');
+  bindNumericPair('#modal-skewy', '#modal-skewy-val', (x) => x + '°');
+  const custom = $('#custom-color');
+  if (custom) custom.addEventListener('input', () => applyTint(custom.value, null));
+  const resetBtn = $('#color-reset');
+  if (resetBtn) resetBtn.addEventListener('click', () => {
+    setTintUI(null);
+    if (window.MockupEngine) MockupEngine.setTintColor(null);
+    renderModal();
+  });
+  const designBtn = $('#modal-design');
+  if (designBtn) designBtn.addEventListener('click', () => { const fi = $('#design-upload'); if (fi) fi.click(); });
+  const recenterBtn = $('#modal-recenter');
+  if (recenterBtn) recenterBtn.addEventListener('click', () => {
+    if (!modalDefaults) return;
+    modalTransform = Object.assign({}, modalDefaults);
+    MockupEngine.setTransform(modalTransform);
+    resetModalControls();
+    renderModal();
+  });
+  const applyBtn = $('#modal-apply');
+  if (applyBtn) applyBtn.addEventListener('click', () => { if (design && activeMannequin) startDownloadFlow(); });
+  const closeBtn = $('#modal-close');
+  if (closeBtn) closeBtn.addEventListener('click', closeModal);
+  const overlay = $('#modal');
+  if (overlay) overlay.addEventListener('click', (e) => { if (e.target === overlay) closeModal(); });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && overlay && !overlay.classList.contains('hidden')) closeModal();
+  });
+  // Canvas: sürükle-bırak yerleştirme
+  const canvas = $('#modal-canvas');
+  if (canvas) {
+    let dragging = false, lastX = 0, lastY = 0;
+    canvas.addEventListener('pointerdown', (e) => {
+      if (!modalTransform) return;
+      dragging = true; lastX = e.clientX; lastY = e.clientY;
+      try { canvas.setPointerCapture(e.pointerId); } catch (err) { /* sessiz */ }
+    });
+    canvas.addEventListener('pointermove', (e) => {
+      if (!dragging || !modalTransform) return;
+      const rect = canvas.getBoundingClientRect();
+      if (!rect.width || !rect.height) return;
+      modalTransform.cx += (e.clientX - lastX) / rect.width;
+      modalTransform.cy += (e.clientY - lastY) / rect.height;
+      lastX = e.clientX; lastY = e.clientY;
+      modalTransform.cx = Math.max(0.02, Math.min(0.98, modalTransform.cx));
+      modalTransform.cy = Math.max(0.02, Math.min(0.98, modalTransform.cy));
+      MockupEngine.setTransform(modalTransform);
+      renderModal();
+    });
+    ['pointerup', 'pointercancel', 'pointerleave'].forEach((ev) =>
+      canvas.addEventListener(ev, () => { dragging = false; }));
+    // Tekerlekle boyutlandır
+    canvas.addEventListener('wheel', (e) => {
+      if (!modalTransform || !modalDefaults) return;
+      e.preventDefault();
+      const f = e.deltaY < 0 ? 1.06 : 1 / 1.06;
+      const w = Math.max(0.04, Math.min(1.4, modalTransform.w * f));
+      modalTransform.w = w;
+      modalTransform.h = w * (modalDefaults.h / modalDefaults.w);
+      const pct = Math.max(20, Math.min(320, Math.round(w / modalDefaults.w * 100)));
+      const r = $('#modal-scale'), n = $('#modal-scale-num'), v = $('#modal-scale-val');
+      if (r) r.value = pct;
+      if (n) n.value = pct;
+      if (v) v.textContent = '%' + pct;
+      MockupEngine.setTransform(modalTransform);
+      renderModal();
+    }, { passive: false });
+  }
+}
+
+/* ---------------- Ücretsiz İndirme / Reklam Akışı ----------------
+   Uygula → reklam paneli + 15 sn geri sayım → indirme. */
+function closeDownloadModal() {
+  stopAdPlayback();
+  const modal = $('#download-modal');
+  if (modal) modal.classList.add('hidden');
+}
+
+// Reklam geri sayımını durdurur (modal kapanırken çağrılır).
+function stopAdPlayback() {
+  if (dlTimer) { clearInterval(dlTimer); dlTimer = null; }
+}
+
+function setAdProgress(ratio) {
+  const fill = $('#ad-progress-fill');
+  if (fill) fill.style.width = Math.round(Math.min(1, Math.max(0, ratio)) * 100) + '%';
+}
+
+function setAdCountdown(text) {
+  const el = $('#ad-countdown');
+  if (el) el.textContent = text;
+}
+
+// Mockup üretimi: GPU motor tam çözünürlük render → 2000×2000 PNG indir.
+async function exportMockup() {
+  if (!window.MockupEngine || !MockupEngine.canRender()) {
+    console.warn('[Export] motor hazır değil');
+    return;
+  }
+  const m = activeMannequin;
+  const outW = 2000, outH = 2000;
+  const full = MockupEngine.renderFull();
+  if (!full) return;
+  const out = document.createElement('canvas');
+  out.width = outW; out.height = outH;
+  const ctx = out.getContext('2d');
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, outW, outH);
+  const fit = Math.min(outW / full.width, outH / full.height);
+  const dw = full.width * fit, dh = full.height * fit;
+  ctx.drawImage(full, (outW - dw) / 2, (outH - dh) / 2, dw, dh);
+  const name = (m && m.name ? m.name : 'mockup').replace(/\.[^.]+$/, '').replace(/\W+/g, '_');
+  let objectUrl = null;
+  try {
+    if (typeof out.toBlob !== 'function') return;
+    const blob = await new Promise((res, rej) => {
+      try { out.toBlob((b) => (b ? res(b) : rej(new Error('blob-empty'))), 'image/png'); }
+      catch (e) { rej(e); }
+    });
+    objectUrl = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = objectUrl;
+    a.download = 'mockup_' + name + '_' + outW + 'x' + outH + '.png';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => a.remove(), 0);
+    setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+  } catch (e) {
+    console.error('[Export] dışa aktarma hatası:', e);
+    alert('İndirme başarısız oldu. Sayfayı yerel bir sunucuyla (örn. Live Server) açıp tekrar deneyin.');
+  }
+}
+
+// Reklam akışı: Uygula → normal reklam paneli gösterilir → 15 sn'lik reklam
+// süresi boyunca beklenir (tasarım indirmeye hazırlanıyor) → geri sayım bitince indirir.
+function startDownloadFlow() {
+  if (!design) return;                 // tasarım yoksa akış başlatma
+  if (downloading) return;             // buton spam koruması: akış zaten sürüyor
+  downloading = true;
+  dlCancelPending = false;
+
+  const applyBtn = $('#modal-apply');
+  if (applyBtn) {
+    applyBtn.disabled = true;          // akış sürerken yeniden başlatmayı engelle
+    applyBtn.classList.add('loading');
+  }
+
+  const t = TRANSLATIONS[currentLang] || TRANSLATIONS.tr || {};
+  const sub = $('#dl-subtitle');
+  if (sub) sub.textContent = t.dlMsg || sub.textContent;
+  const status = $('#ad-status');
+  if (status) status.textContent = t.adStatus || status.textContent;
+
+  // Normal reklam paneli her zaman görünür (video yok), ilerlemeyi sıfırla
+  setAdProgress(0);
+  setAdCountdown('15s');
+  const modal = $('#download-modal');
+  if (modal) modal.classList.remove('hidden');
+
+  // Geri sayım bitince çağrılır: indir + kapat.
+  const finishAndDownload = async () => {
+    if (dlCancelPending) return;
+    stopAdPlayback();
+    setAdProgress(1);
+    if (status) status.textContent = t.dlDone || status.textContent;
+    try {
+      await exportMockup(); // yeni motor hazır olduğunda mockup burada üretilir
+    } catch (e) {
+      console.error('[Download] dışa aktarma hatası:', e);
+    }
+    closeDownloadModal();
+    closeModal(); // indirme bitti, edit ekranını kapat
+    finishDownloadFlow(applyBtn);
+  };
+
+  // 15 saniyelik reklam süresi: kullanıcı reklama bakar, indirme bekler.
+  const DURATION = 15;
+  let left = DURATION;
+  setAdCountdown(left + 's');
+  dlTimer = setInterval(() => {
+    if (dlCancelPending) { stopAdPlayback(); return; }
+    left -= 1;
+    setAdProgress(1 - left / DURATION);
+    setAdCountdown(Math.max(0, left) + 's');
+    if (left <= 0) finishAndDownload();
+  }, 1000);
+}
+
+// İndirme akışını sonlandırıp butonları tekrar etkinleştirir.
+function finishDownloadFlow(applyBtn) {
+  downloading = false;
+  dlCancelPending = false;
+  if (applyBtn) {
+    applyBtn.disabled = false;
+    applyBtn.classList.remove('loading');
+  }
+}
+
+// Tek sefer bağlanan kalıcı olaylar (reklam panelinin kapatma/iptal butonları).
+function bindStaticEvents() {
+  const dlCancel = $('#dl-cancel');
+  if (dlCancel && !dlCancel._bound) {
+    dlCancel._bound = true;
+    dlCancel.addEventListener('click', () => {
+      dlCancelPending = true;
+      if (dlTimer) { clearInterval(dlTimer); dlTimer = null; }
+      closeDownloadModal();
+      finishDownloadFlow($('#modal-apply'));
+    });
+  }
+  const dlClose = $('#dl-close');
+  if (dlClose && !dlClose._bound) {
+    dlClose._bound = true;
+    dlClose.addEventListener('click', () => {
+      dlCancelPending = true;
+      if (dlTimer) { clearInterval(dlTimer); dlTimer = null; }
+      closeDownloadModal();
+      finishDownloadFlow($('#modal-apply'));
+    });
+  }
+}
+
+/* ---------------- Yorum / Değerlendirme Sistemi ---------------- */
+const REVIEWS_KEY = 'mockup_reviews';
+let reviewRating = 0;
+
+function getReviews() {
+  try { return JSON.parse(localStorage.getItem(REVIEWS_KEY)) || []; }
+  catch (e) { return []; }
+}
+
+function renderReviews() {
+  const list = $('#reviews-list');
+  if (!list) return;
+  const reviews = getReviews();
+  list.innerHTML = '';
+  if (!reviews.length) {
+    const empty = document.createElement('div');
+    empty.className = 'reviews-empty';
+    empty.textContent = (TRANSLATIONS[currentLang] || TRANSLATIONS.tr).reviewsEmpty;
+    list.appendChild(empty);
+    return;
+  }
+  // En yeni yorum üstte
+  reviews.slice().reverse().forEach((r) => {
+    const card = document.createElement('div');
+    card.className = 'review-card';
+    const stars = document.createElement('div');
+    stars.className = 'stars';
+    stars.textContent = '★'.repeat(r.r) + '☆'.repeat(5 - r.r);
+    const txt = document.createElement('div');
+    txt.className = 'txt';
+    txt.textContent = r.t;
+    const date = document.createElement('div');
+    date.className = 'date';
+    date.textContent = new Date(r.d).toLocaleDateString('tr-TR', { year: 'numeric', month: 'long', day: 'numeric' });
+    const del = document.createElement('button');
+    del.type = 'button';
+    del.className = 'review-delete';
+    del.title = 'Yorumu Sil';
+    del.textContent = '🗑';
+    const originalIndex = reviews.indexOf(r);
+    del.addEventListener('click', () => {
+      if (!confirm((TRANSLATIONS[currentLang] || TRANSLATIONS.tr).reviewConfirmDelete)) return;
+      const arr = getReviews();
+      arr.splice(originalIndex, 1);
+      try { localStorage.setItem(REVIEWS_KEY, JSON.stringify(arr)); } catch (e) {}
+      renderReviews();
+    });
+    card.appendChild(stars);
+    card.appendChild(txt);
+    card.appendChild(date);
+    card.appendChild(del);
+    list.appendChild(card);
+  });
+}
+
+function resetReviewModal() {
+  reviewRating = 5; // varsayılan: 5 yıldız
+  $$('#review-stars .review-star').forEach((s) => {
+    s.classList.toggle('active', (parseInt(s.dataset.v, 10) || 0) <= reviewRating);
+  });
+  const ta = $('#review-text');
+  if (ta) ta.value = '';
+}
+
+function bindReviewEvents() {
+  const openBtn = $('#review-open-btn');
+  const modal = $('#review-modal');
+  if (!openBtn || !modal) return;
+
+  openBtn.addEventListener('click', () => {
+    resetReviewModal();
+    modal.classList.remove('hidden');
+  });
+
+  $$('#review-stars .review-star').forEach((star) => {
+    star.addEventListener('click', () => {
+      reviewRating = parseInt(star.dataset.v, 10) || 0;
+      $$('#review-stars .review-star').forEach((s) => {
+        s.classList.toggle('active', (parseInt(s.dataset.v, 10) || 0) <= reviewRating);
+      });
+    });
+  });
+
+  const close = () => modal.classList.add('hidden');
+  const cancelBtn = $('#review-cancel');
+  if (cancelBtn) cancelBtn.addEventListener('click', close);
+  // Karanlık alana tıklayınca da kapansın
+  modal.addEventListener('click', (e) => { if (e.target === modal) close(); });
+
+  const saveBtn = $('#review-save');
+  if (saveBtn) {
+    saveBtn.addEventListener('click', () => {
+      const ta = $('#review-text');
+      const text = (ta ? ta.value : '').trim();
+      if (reviewRating < 1) { alert((TRANSLATIONS[currentLang] || TRANSLATIONS.tr).reviewNeedStars); return; }
+      if (!text) { alert((TRANSLATIONS[currentLang] || TRANSLATIONS.tr).reviewNeedText); return; }
+      const reviews = getReviews();
+      reviews.push({ r: reviewRating, t: text, d: Date.now() });
+      try { localStorage.setItem(REVIEWS_KEY, JSON.stringify(reviews)); } catch (e) {}
+      renderReviews();
+      close();
+    });
+  }
+}
+
+/* ---------------- Otomatik Smoke Test (?smoketest=1) ----------------
+   Headless tarayıcıda motoru uçtan uca doğrular: galeri → tasarım →
+   render → renk değişimi → tasarım korunması → sürükleme. */
+function smokeLog(msg) {
+  console.log('[SMOKE] ' + msg);
+  const el = document.getElementById('smoke-log');
+  if (el) {
+    el.classList.remove('hidden');
+    const d = document.createElement('div');
+    d.textContent = msg;
+    el.appendChild(d);
+  }
+}
+
+function smokeStats(cv) {
+  const c = document.createElement('canvas');
+  const w = cv.width, h = cv.height;
+  c.width = w; c.height = h;
+  const x = c.getContext('2d');
+  x.drawImage(cv, 0, 0);
+  const d = x.getImageData(0, 0, w, h).data;
+  let sR = 0, sG = 0, sB = 0, s2 = 0, n = 0;
+  let cR = 0, cG = 0, cB = 0, cN = 0;
+  const x0 = Math.floor(w * 0.45), x1 = Math.ceil(w * 0.55);
+  const y0 = Math.floor(h * 0.40), y1 = Math.ceil(h * 0.54);
+  for (let y = 0; y < h; y += 2) {
+    for (let px = 0; px < w; px += 2) {
+      const i = (y * w + px) * 4;
+      sR += d[i]; sG += d[i + 1]; sB += d[i + 2];
+      s2 += d[i] + d[i + 1] + d[i + 2];
+      n++;
+      if (px >= x0 && px < x1 && y >= y0 && y < y1) { cR += d[i]; cG += d[i + 1]; cB += d[i + 2]; cN++; }
+    }
+  }
+  const mR = sR / n, mG = sG / n, mB = sB / n;
+  // kaba parlaklık std'si (kanal ortalaması üzerinden)
+  const meanSum = (mR + mG + mB) / 3;
+  const std = Math.sqrt(Math.max(0, s2 / (3 * n) - meanSum * meanSum));
+  return { std, mean: [mR, mG, mB], cMean: cN ? [cR / cN, cG / cN, cB / cN] : [0, 0, 0] };
+}
+
+function smokeSleep(ms) { return new Promise((r) => setTimeout(r, ms)); }
+
+async function runSmokeTest() {
+  const logs = [];
+  const log = (m) => { logs.push(m); smokeLog(m); };
+  try {
+    log('SMOKE:START');
+    // 1) galeri yüklendi mi
+    const t0 = Date.now();
+    while (!mannequins.length && Date.now() - t0 < 30000) await smokeSleep(250);
+    log(mannequins.length ? 'GALLERY_OK ' + mannequins.length : 'GALLERY_FAIL');
+    if (!mannequins.length) { log('SMOKE:DONE'); return; }
+    // 2) motor hazır mı
+    if (!window.MockupEngine) { log('ENGINE_FAIL'); log('SMOKE:DONE'); return; }
+    log('ENGINE_OK');
+    // 3) test tasarımı üret (kırmızı zemin + beyaz daire)
+    const dc = document.createElement('canvas'); dc.width = 300; dc.height = 300;
+    const dctx = dc.getContext('2d');
+    dctx.fillStyle = '#d81f1f'; dctx.fillRect(0, 0, 300, 300);
+    dctx.fillStyle = '#ffffff'; dctx.beginPath(); dctx.arc(150, 150, 80, 0, Math.PI * 2); dctx.fill();
+    const dataUrl = dc.toDataURL('image/png');
+    await new Promise((res) => {
+      const im = new Image();
+      im.onload = () => { design = { name: 'smoke', dataUrl, img: im }; res(); };
+      im.onerror = () => res();
+      im.src = dataUrl;
+    });
+    if (!design) { log('DESIGN_FAIL'); log('SMOKE:DONE'); return; }
+    log('DESIGN_OK');
+    // 4) ilk maketle edit'i aç
+    openModal(null, mannequins[0]);
+    await smokeSleep(3500);
+    const cv = document.getElementById('modal-canvas');
+    if (!cv || !cv.width) { log('MODAL_FAIL'); log('SMOKE:DONE'); return; }
+    const s1 = smokeStats(cv);
+    log('RENDER_OK std=' + s1.std.toFixed(1));
+    if (s1.std < 8) { log('RENDER_FAIL duz-goruntu'); log('SMOKE:DONE'); return; }
+    // 5) renk değişimi: mavi tinta → mavi kayması
+    applyTint('#1d4ed8', null);
+    await smokeSleep(800);
+    const s2 = smokeStats(cv);
+    const dBlue = s2.mean[2] - s1.mean[2];
+    log((dBlue > 0 ? 'RECOLOR_OK ' : 'RECOLOR_WARN ') + 'dB=' + dBlue.toFixed(1));
+    // 6) tasarım korunuyor mu: merkez hâlâ kırmızı baskın
+    const designRed = s2.cMean[0] - s2.cMean[2];
+    log((designRed > 20 ? 'DESIGN_SAFE_OK ' : 'DESIGN_SAFE_WARN ') + 'dR=' + designRed.toFixed(1));
+    // 7) tasarımı kaydır: merkez mavi tişört olmalı
+    if (modalTransform) {
+      modalTransform.cx = Math.min(0.98, modalTransform.cx + 0.18);
+      MockupEngine.setTransform(modalTransform);
+      renderModal();
+      await smokeSleep(800);
+      const s3 = smokeStats(cv);
+      const moved = (s3.cMean[2] - s3.cMean[0]) - (s2.cMean[2] - s2.cMean[0]);
+      log((moved > 15 ? 'MOVE_OK ' : 'MOVE_WARN ') + 'dBR=' + moved.toFixed(1));
+    }
+    closeModal();
+    log('SMOKE:DONE');
+  } catch (e) {
+    log('SMOKE_ERR ' + (e && e.message));
+    log('SMOKE:DONE');
+  } finally {
+    try {
+      fetch('http://localhost:8123/result', {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: logs.join('\n')
+      }).catch(() => {});
+    } catch (e) { /* sessiz */ }
+  }
+}
+if (location.search.indexOf('smoketest=1') >= 0) setTimeout(runSmokeTest, 600);
+function protectAssets() {
+  // Sağ tık menüsü: görsel/canvas üzerinde kapat (form alanlarında serbest)
+  document.addEventListener('contextmenu', (e) => {
+    const t = e.target;
+    const isInput = t.closest && t.closest('input, textarea, select, [contenteditable]');
+    if (!isInput) e.preventDefault();
+  });
+
+  // Görsel/canvas sürükleyip dışarı taşımayı engelle
+  document.addEventListener('dragstart', (e) => {
+    const t = e.target;
+    if (t && (t.tagName === 'IMG' || t.tagName === 'CANVAS')) e.preventDefault();
+  });
+}
+
+// Kayıtlı olabilecek eski üçüncü taraf (Monetag gibi) servis worker'ı devre dışı bırak.
+// Reklam servis worker'ları tıklama başına yönlendirme yapabilir; dosya silinse bile
+// tarayıcı önbelleğinde kalan kayıt önbellekten eski sayfayı sunmaya devam eder.
+// Bu yüzden yalnızca kaydı değil, önbelleğe alınmış cache verilerini de temizliyoruz.
+function purgeLegacyServiceWorkers() {
+  try {
+    // 1) Yönlendirme yapan servis worker kayıtlarını kaldır
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then((regs) => {
+        regs.forEach((reg) => {
+          if (reg.active) reg.active.postMessage({ type: 'SKIP_WAITING' });
+          try { reg.unregister(); } catch (e) { /* sessiz */ }
+        });
+      });
+      // Bekleyen/çoğalan worker'ı da atla
+      if (navigator.serviceWorker.controller && navigator.serviceWorker.controller.postMessage) {
+        try { navigator.serviceWorker.controller.postMessage({ type: 'SKIP_WAITING' }); } catch (e) { /* sessiz */ }
+      }
+    }
+    // 2) Reklam servis worker'larının önbelleğe aldığı cache verilerini temizle.
+    //    Fav/görsel verileri localStorage'da saklanır, cache'e dokunmaz; burada sadece
+    //    servis worker önbellekleri sıfırlanır.
+    if ('caches' in window) {
+      caches.keys().then((keys) => keys.forEach((k) => caches.delete(k)));
+    }
+  } catch (e) { /* sessiz */ }
+}
+
+/* --- Yeni nesil arka plan: büyük, zarif, canlı parçalar --- */
+/* --- Mobil algılama: telefonda ağır efektleri kısarak performans sağlar.
+   Masaüstü deneyimi hiç değişmez. --- */
+const IS_MOBILE_DEVICE =
+  (typeof window !== 'undefined' &&
+    (window.matchMedia('(max-width: 860px)').matches ||
+      (navigator.maxTouchPoints > 1 && Math.min(window.innerWidth, window.innerHeight) < 820)));
+
+function spawnGeometricShapeLayers(container) {
+  const rand = (a, b) => a + Math.random() * (b - a);
+  const pieces = [
+    // Renkli küreler — her biri farklı renk
+    ['bg-piece bg-piece--orb c-blue',   [400, 700]],
+    ['bg-piece bg-piece--orb c-violet', [380, 680]],
+    ['bg-piece bg-piece--orb c-amber',  [360, 660]],
+    ['bg-piece bg-piece--orb c-green',  [340, 640]],
+    ['bg-piece bg-piece--orb c-coral',  [320, 600]],
+    ['bg-piece bg-piece--orb c-purple', [300, 560]],
+    ['bg-piece bg-piece--orb c-cyan',   [280, 520]],
+    ['bg-piece bg-piece--orb c-orange', [260, 480]],
+    ['bg-piece bg-piece--orb c-rose',   [240, 440]],
+    ['bg-piece bg-piece--orb c-indigo', [220, 420]],
+    // Renkli şeritler — her biri farklı renk
+    ['bg-piece bg-piece--ribbon r-blue',   [700, 1100]],
+    ['bg-piece bg-piece--ribbon r-pink',   [640, 1000]],
+    ['bg-piece bg-piece--ribbon r-teal',   [600, 950]],
+    ['bg-piece bg-piece--ribbon r-orange', [560, 900]],
+    // Büyük yavaş dönen halkalar
+    ['bg-piece bg-piece--ring',         [340, 620]],
+    ['bg-piece bg-piece--ring dashed',  [280, 520]],
+    // Hafif cam paneller
+    ['bg-piece bg-piece--panel', [260, 460]],
+    ['bg-piece bg-piece--panel', [200, 380]]
+  ];
+
+  pieces.forEach(([cls, sizeRange], i) => {
+    const el = document.createElement('div');
+    el.className = cls;
+    const size = Math.round(rand(sizeRange[0], sizeRange[1]));
+    if (cls.indexOf('--ribbon') !== -1) {
+      el.style.width = size + 'px';
+      el.style.height = Math.round(size * rand(0.08, 0.16)) + 'px';
+    } else {
+      el.style.width = size + 'px';
+      el.style.height = size + 'px';
+    }
+    el.style.left = rand(-12, 78).toFixed(1) + '%';
+    el.style.top = rand(-12, 78).toFixed(1) + '%';
+    // Her parça farklı faz ve hızda başlasın
+    el.style.animationDelay = '-' + rand(0, 30).toFixed(2) + 's';
+    el.style.animationDuration = (rand(18, 34)).toFixed(1) + 's, ' + (rand(10, 18)).toFixed(1) + 's';
+    container.appendChild(el);
+  });
+}
+
+/* --- Şekil etkileşimi: hover parlatır, tıklayınca parçalanıp yok olur --- */
+const FRAGMENT_COLORS = [
+  'rgba(56, 189, 248, 0.9)', 'rgba(129, 140, 248, 0.9)', 'rgba(232, 121, 249, 0.9)',
+  'rgba(45, 212, 191, 0.9)', 'rgba(251, 191, 36, 0.9)', 'rgba(74, 222, 128, 0.9)',
+  'rgba(251, 113, 133, 0.9)', 'rgba(192, 132, 252, 0.9)'
+];
+
+function randomizePiecePosition(piece) {
+  piece.style.left = (Math.random() * 90 - 12).toFixed(1) + '%';
+  piece.style.top = (Math.random() * 90 - 12).toFixed(1) + '%';
+}
+
+function burstPiece(piece, cx, cy) {
+  const container = document.getElementById('geometric-bg');
+  if (!container) return;
+  const COUNT = 18;
+  for (let i = 0; i < COUNT; i++) {
+    const f = document.createElement('div');
+    f.className = 'bg-fragment';
+    const size = 6 + Math.random() * 12;
+    f.style.width = size + 'px';
+    f.style.height = size + 'px';
+    f.style.left = (cx - size / 2) + 'px';
+    f.style.top = (cy - size / 2) + 'px';
+    const ang = Math.random() * Math.PI * 2;
+    const dist = 60 + Math.random() * 130;
+    f.style.setProperty('--dx', (Math.cos(ang) * dist).toFixed(1) + 'px');
+    f.style.setProperty('--dy', (Math.sin(ang) * dist).toFixed(1) + 'px');
+    f.style.background = FRAGMENT_COLORS[Math.floor(Math.random() * FRAGMENT_COLORS.length)];
+    container.appendChild(f);
+    setTimeout(() => f.remove(), 950);
+  }
+  // Parça yok olur, birkaç saniye sonra başka yerde yeniden doğar
+  piece.style.visibility = 'hidden';
+  piece.classList.remove('bg-piece-hover');
+  setTimeout(() => {
+    randomizePiecePosition(piece);
+    piece.style.visibility = 'visible';
+  }, 3500 + Math.random() * 2500);
+}
+
+function initShapeInteractions() {
+  const container = document.getElementById('geometric-bg');
+  if (!container) return;
+
+  // Buradaki ağır hover/patlama etkileşimi (her mousemove'da elementsFromPoint)
+  // yalnızca küçük bir hız koruması olan pending throttling ile çalışır.
+  let pending = false;
+  document.addEventListener('mousemove', (e) => {
+    if (pending) return;
+    pending = true;
+    requestAnimationFrame(() => {
+      pending = false;
+      const hit = document.elementsFromPoint(e.clientX, e.clientY)
+        .some((el) => el.classList && el.classList.contains('bg-piece'));
+      if (hit !== initShapeInteractions._over) {
+        initShapeInteractions._over = hit;
+        document.body.style.cursor = hit ? 'pointer' : '';
+      }
+      // Hover parlatması: doğrudan üstteki şekle uygula
+      $$('.bg-piece-hover').forEach((el) => el.classList.remove('bg-piece-hover'));
+      if (hit) {
+        const top = document.elementsFromPoint(e.clientX, e.clientY)
+          .find((el) => el.classList && el.classList.contains('bg-piece'));
+        if (top) top.classList.add('bg-piece-hover');
+      }
+    });
+  });
+
+  document.addEventListener('click', (e) => {
+    const piece = document.elementsFromPoint(e.clientX, e.clientY)
+      .find((el) => el.classList && el.classList.contains('bg-piece'));
+    if (piece) burstPiece(piece, e.clientX, e.clientY);
+  });
+}
+
+/* --- Dinamik Canlı Arka Plan --- */
+function createAnimatedShapes() {
+  const container = document.getElementById('geometric-bg');
+  if (!container) return;
+  spawnGeometricShapeLayers(container);
+  initShapeInteractions();
+}
+
+/* --- Tıklama animasyonu: halka + renkli parçacık patlaması --- */
+const CLICK_PALETTE = ['#38bdf8', '#818cf8', '#e879f9', '#2dd4bf', '#fb923c', '#ffffff'];
+document.addEventListener('click', (e) => {
+  // Mobilde tıklama animasyonları kapatılır (performans) — masaüstünde aynen devam
+  if (IS_MOBILE_DEVICE) return;
+  // 1) Genişleyen halka
+  const ripple = document.createElement('div');
+  ripple.className = 'click-ripple';
+  ripple.style.left = e.clientX + 'px';
+  ripple.style.top = e.clientY + 'px';
+  document.body.appendChild(ripple);
+  setTimeout(() => ripple.remove(), 600);
+
+  // 2) Rastgele renklerle parçacık patlaması
+  const N = 10;
+  for (let i = 0; i < N; i++) {
+    const p = document.createElement('div');
+    p.className = 'click-particle';
+    const angle = (Math.PI * 2 * i) / N + Math.random() * 0.5;
+    const dist = 45 + Math.random() * 50;
+    p.style.left = e.clientX + 'px';
+    p.style.top = e.clientY + 'px';
+    p.style.background = CLICK_PALETTE[Math.floor(Math.random() * CLICK_PALETTE.length)];
+    p.style.boxShadow = '0 0 8px ' + CLICK_PALETTE[Math.floor(Math.random() * CLICK_PALETTE.length)];
+    p.style.setProperty('--dx', Math.cos(angle) * dist + 'px');
+    p.style.setProperty('--dy', Math.sin(angle) * dist + 'px');
+    p.style.animationDuration = (0.5 + Math.random() * 0.35).toFixed(2) + 's';
+    document.body.appendChild(p);
+    setTimeout(() => p.remove(), 900);
+  }
+
+  // 3) Anlık parlama (flash)
+  const flash = document.createElement('div');
+  flash.style.cssText =
+    'position:fixed;left:' + e.clientX + 'px;top:' + e.clientY + 'px;' +
+    'width:70px;height:70px;border-radius:50%;pointer-events:none;z-index:9998;zoom:1;' +
+    'transform:translate(-50%,-50%);' +
+    'background:radial-gradient(circle, rgba(255,255,255,0.5) 0%, rgba(56,189,248,0.25) 40%, transparent 70%);' +
+    'animation:clickRipple 0.4s ease-out forwards;';
+  document.body.appendChild(flash);
+  setTimeout(() => flash.remove(), 450);
+});
+
+/* ---------------- Başlatma ---------------- */
+function init() {
+  // Her adım ayrı try/catch içinde: biri patlarsa diğerleri yine çalışsın.
+  const steps = [
+    ['purgeLegacyServiceWorkers', purgeLegacyServiceWorkers],
+    ['applyStoredTheme', applyStoredTheme],
+    ['protectAssets', protectAssets],
+    ['bindThemeToggle', bindThemeToggle],
+    ['bindReviewEvents', bindReviewEvents],
+    ['renderReviews', renderReviews],
+    ['applyStoredLang', applyStoredLang],
+    ['bindLangWheel', bindLangWheel],
+    ['bindUploadEvents', bindUploadEvents],
+    ['bindModalEvents', bindModalEvents],
+    ['bindGalleryEvents', bindGalleryEvents],
+    ['seedDefaultMannequins', seedDefaultMannequins],
+    ['bindStaticEvents', bindStaticEvents],
+    ['createAnimatedShapes', createAnimatedShapes]
+  ];
+  steps.forEach(([name, fn]) => {
+    try {
+      fn();
+    } catch (e) {
+      console.error('[Init] ' + name + ' hatası:', e);
+    }
+  });
+}
+
+document.addEventListener('DOMContentLoaded', init);

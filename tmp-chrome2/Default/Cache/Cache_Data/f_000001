@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title data-i18n="pageTitle">MOCKUP STUDYO</title>
+    <link rel="stylesheet" href="style.css?v=78">
+  <!-- Google AdSense (onay sonrası publisher ID ekleyin) -->
+  <!--
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+  <meta name="google-adsense" content="ca-pub-XXXXXXXXXXXXXXX">
+  -->
+  <!-- Mockup motoru: eski motor kodları tamamen kaldırıldı — sıfırdan yazılacak -->
+  <!-- Galeri verisi + GPU motor + uygulama (sıra önemli) -->
+  <script src="gallery-data.js?v=1" defer></script>
+  <script src="gpu-engine.js?v=1" defer></script>
+  <script src="main.js?v=70" defer></script>
+</head>
+<body>
+  <!-- Hareketli geometrik şekil katmanı -->
+  <div class="geometric-bg" id="geometric-bg"></div>
+
+  <!-- Üst Menü -->
+  <header class="navbar">
+    <div class="logo" id="logo-text">
+      <span class="logo-icon" aria-hidden="true">
+        <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="teeGrad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#38bdf8"/>
+              <stop offset="45%" stop-color="#818cf8"/>
+              <stop offset="100%" stop-color="#e879f9"/>
+            </linearGradient>
+            <linearGradient id="teeShine" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stop-color="rgba(255,255,255,0)"/>
+              <stop offset="50%" stop-color="rgba(255,255,255,0.85)"/>
+              <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+            </linearGradient>
+          </defs>
+          <path class="tee-body" fill="url(#teeGrad)"
+            d="M20 8 L26 5 C28 10 36 10 38 5 L44 8 L58 16 L52 27 L46 24 L46 56 C46 58 44 60 42 60 L22 60 C20 60 18 58 18 56 L18 24 L12 27 L6 16 Z"/>
+          <path class="tee-shine" fill="url(#teeShine)"
+            d="M20 8 L26 5 C28 10 36 10 38 5 L44 8 L58 16 L52 27 L46 24 L46 56 C46 58 44 60 42 60 L22 60 C20 60 18 58 18 56 L18 24 L12 27 L6 16 Z"/>
+        </svg>
+      </span> <span>MOCKUP</span> <span class="logo-accent">STUDYO</span></div>
+        <div class="header-badges">
+      <div class="navbar-actions">
+        <button type="button" id="theme-toggle" class="theme-toggle" title="Gece / Gündüz Modu" data-i18n-title="themeTitle">
+          <span id="theme-icon">🌙</span>
+        </button>
+        <button type="button" id="review-open-btn" class="review-open-btn" title="Yorum Yap" data-i18n="reviewBtn" data-i18n-title="reviewBtn">💬 Yorum Yap</button>
+      </div>
+      <div class="lang-wheel" id="lang-wheel" title="Dili değiştir / Change language">
+        <span class="lang-wheel-ring"></span>
+        <span class="lang-wheel-code" id="lang-wheel-code">TR</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="app-container">
+
+    <!-- Orta Alan: Büyük Dosya Yükleme Bölgesi -->
+    <section class="upload-zone">
+
+      <!-- Sol: Bilgilendirici + şık ipucu kartı -->
+      <aside class="upload-info" aria-label="Nasıl dosya yüklenir">
+        <div class="upload-info-title" data-i18n="infoTitle">🖼 Kaliteli Mockup İçin</div>
+        <ul class="upload-info-list">
+          <li data-i18n="infoStep1">PNG veya JPEG tasarımınızı seçin.</li>
+          <li data-i18n="infoStep2">Şeffaf arka planlı dosya kullanın — arka plan otomatik temizlenmez.</li>
+          <li data-i18n="infoStep3">Yüksek çözünürlük (en az 2000×2000 px) daha keskin sonuç verir.</li>
+          <li data-i18n="infoStep4">Aşağıdan dilediğiniz mankeni seçerek tasarımı uygulayın.</li>
+        </ul>
+        <div class="upload-info-note" data-i18n="infoNote">💡 Hazır mockup 2000×2000 px PNG olarak indirilir.</div>
+      </aside>
+
+      <!-- Sağ: Yükleme alanı -->
+      <div class="upload-main">
+        <div id="drop-zone" class="drop-zone" tabindex="0">
+          <div id="drop-placeholder" class="drop-placeholder">
+            <div class="upload-icon">⬆</div>
+            <div class="upload-title" data-i18n="uploadTitle">Dosya Yükle</div>
+            <div class="drop-hint" data-i18n="dropHint">PNG / JPEG dosyanızı buraya sürükleyin</div>
+            <button type="button" class="primary-btn" data-i18n="selectDesign">Tasarım Seç</button>
+          </div>
+          <img id="design-preview" class="design-preview hidden" alt="" decoding="async">
+          <div class="replace-hint" id="replace-hint" data-i18n="replaceHint">Tasarımı değiştirmek için tıklayın</div>
+        </div>
+        <input type="file" id="design-upload" class="hidden-input" accept="image/png, image/jpeg, image/webp">
+
+        <div class="upload-toolbar" id="upload-toolbar">
+          <button id="remove-design" class="secondary-btn" data-i18n="removeDesign">Tasarımı Kaldır</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Alt Alan: Manken Galerisi (görseller kaldırıldı — motor ve edit ile birlikte yeniden kurulacak) -->
+    <section class="gallery">
+      <div class="gallery-seam" aria-hidden="true"></div>
+      <div class="gallery-header">
+        <h3 data-i18n="galleryTitle">Manken Galerisi</h3>
+        <button id="add-mannequin" class="secondary-btn gallery-add" data-i18n="galleryAdd">+ Manken Ekle</button>
+      </div>
+      <input type="file" id="mannequin-upload" class="hidden-input" accept="image/png, image/jpeg, image/webp" multiple>
+      <div id="mannequin-grid" class="mannequin-grid">
+        <div id="empty-state" class="empty-state" data-i18n="emptyState"></div>
+      </div>
+    </section>
+
+  </main>
+  <!-- İçerik / SEO Metni (Google AdSense onayı için) -->
+  <section class="content-section" id="content-section">
+    <div class="content-inner">
+      <h2 class="content-title" data-i18n="contentTitle">Mockup Studyo: Ücretsiz Online Mockup Oluşturucu</h2>
+      <p class="content-paragraph" data-i18n="contentPara1">Mockup Studyo, online mağazalarında ürün satan girişimciler, zanaatkârlar ve küçük işletmeler için tasarlanmış, tamamen ücretsiz ve tarayıcıda çalışan bir mockup oluşturma aracıdır. Karmaşık tasarım yazılımlarına veya pahalı aboneliklere gerek kalmadan, kendi logo veya görselinizi seçip saniyeler içinde profesyonel görünümlü ürün görselleri hazırlayabilirsiniz. Tüm işlemler doğrudan tarayıcınızda gerçekleşir; dosya yüklemek için hesap açmanıza veya ek bir program kurmanıza gerek yoktur.</p>
+      <p class="content-paragraph" data-i18n="contentPara2">Bu araç özellikle tişört, hoodie, sweatshirt ve benzeri tekstil ürünleri üzerinde tasarımlarınızı denemek için idealdir. Tasarımınızı yükleyin, galeriden dilediğiniz mankeni seçin ve uygulayın; sonuç 2000×2000 piksel, ürün sayfalarınız için uygun yüksek çözünürlüklü bir PNG dosyası olarak indirilir. Böylece ürün listelemeleriniz için gerçekçi, satışı artıran görselleri ücretsiz oluşturabilirsiniz.</p>
+      <h3 class="content-subtitle" data-i18n="contentSub1">Neden Mockup Studyo?</h3>
+      <p class="content-paragraph" data-i18n="contentPara3">Ücretsiz ve sınırsız kullanım sayesinde kaç mockup isterseniz oluşturun. Arayüz sade ve anlaşılırdır; tasarımı sürükleyip bırakarak konumlandırabilir, boyut, açı ve eğim gibi ince ayarları tek tıkla değiştirebilirsiniz. Favori maketlerinizi kaydederek sık kullandığınız görselleri kolayca yeniden düzenleyebilirsiniz. Dilerseniz koyu tema ile de çalışabilirsiniz.</p>
+      <h3 class="content-subtitle" data-i18n="contentSub2">Nasıl Çalışır?</h3>
+      <p class="content-paragraph" data-i18n="contentPara4">Süreç çok basittir: İlk olarak PNG veya JPEG tasarımınızı seçin. Yüksek çözünürlük ve şeffaf arka plan, daha keskin ve profesyonel sonuçlar elde etmenize yardımcı olur. Ardından galeriden beğendiğiniz mankeni seçin; tasarımınız seçilen tüm mankenlere otomatik olarak uygulanır. Konum ve açıyı ayarlayıp Uygula düğmesine bastıktan sonra en iyi kareyi seçerek PNG olarak indirin.</p>
+      <h3 class="content-subtitle" data-i18n="contentSub3">Ürün Görselleri İçin İpuçları</h3>
+      <p class="content-paragraph" data-i18n="contentPara5">Ürününüzü gerçek bir model veya manken üzerinde göstermek, alıcıların ürünü hayal etmesine yardımcı olur ve tıklama oranınızı artırır. İlk görseliniz net ve çekici olsun; yüksek çözünürlüklü görseller her zaman daha güvenilir görünür. Tasarımınızın ürünün boyutuna ve şekline uygun olduğundan emin olun ve farklı renkler için ayrı mockup'lar hazırlayın. Doğru aydınlatma ve açı seçimiyle ürününüzün en iyi yönlerini öne çıkarabilirsiniz.</p>
+      <p class="content-paragraph" data-i18n="contentPara6">Mockup Studyo tamamen ücretsizdir ve reklam gelirleriyle desteklenir. Aracı rahatça kullanabilir, dilediğiniz kadar görsel oluşturabilirsiniz. Siteyle ilgili sorularınız için iletişim sayfamızdan bize ulaşabilirsiniz. İyi satışlar dileriz!</p>
+    </div>
+  </section>
+
+
+
+  <!-- Kullanıcı Yorumları -->
+  <section id="reviews-section" class="reviews-section">
+    <h3 class="reviews-title" data-i18n="reviewsTitle">💬 Kullanıcı Yorumları</h3>
+    <div id="reviews-list" class="reviews-list"></div>
+  </section>
+
+  <!-- Gizlilik Politikası — sayfa akışında, yorum kısmının altında kalır (ekranı takip etmez) -->
+  <section id="privacy-policy-fixed" class="privacy-policy-fixed">
+    <div class="privacy-policy-inner">
+      <span class="privacy-policy-icon" aria-hidden="true">🔒</span>
+      <span class="privacy-policy-text" data-i18n="privacyFixedText">
+        Gizlilik Politikası: Kişisel verileriniz Google AdSense çerezleriyle korunur.
+      </span>
+      <a href="privacy-policy.html" class="privacy-policy-link" data-i18n="privacyFullLink">Politiği Oku ›</a>
+    </div>
+  </section>
+
+  <!-- Yorum Modalı -->
+  <div id="review-modal" class="modal-overlay hidden">
+    <div class="modal-box review-box">
+      <div class="modal-title-wrap">
+        <h3 data-i18n="reviewTitle">Değerlendirmeniz</h3>
+      </div>
+      <div id="review-stars" class="review-stars">
+        <button type="button" class="review-star" data-v="1">★</button>
+        <button type="button" class="review-star" data-v="2">★</button>
+        <button type="button" class="review-star" data-v="3">★</button>
+        <button type="button" class="review-star" data-v="4">★</button>
+        <button type="button" class="review-star" data-v="5">★</button>
+      </div>
+      <textarea id="review-text" class="review-text" maxlength="500" placeholder="Düşüncelerinizi yazın..." data-i18n-placeholder="reviewPlaceholder"></textarea>
+      <div class="modal-actions">
+        <button type="button" id="review-cancel" class="secondary-btn" data-i18n="reviewCancel">Vazgeç</button>
+        <button type="button" id="review-save" class="primary-btn" data-i18n="reviewSave">Kaydet</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Alt Footer: Yasal Bağlantılar -->
+  <footer id="legal-footer" class="legal-footer">
+    <div class="legal-content">
+      <div class="legal-copy">© 2026 Mockup Studio. Tüm hakları saklıdır.</div>
+      <div class="legal-links">
+        <a href="privacy-policy.html" data-i18n="privacyLink">Gizlilik Politikası</a>
+        <a href="terms-of-service.html" data-i18n="termsLink">Kullanım Şartları</a>
+        <a href="disclaimer.html" data-i18n="disclaimerLink">Feragatname</a>
+        <a href="contact.html" data-i18n="contactLink">İletişim</a>
+        <a href="mailto:contact@mockupstudio.com" data-i18n="contactLabel">contact@mockupstudio.com</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Model Düzenleme Modalı (GPU Motor: dalga bükme + renk paneli) -->
+  <div id="modal" class="modal-overlay hidden">
+    <div class="modal-box edit-box">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <h3 data-i18n="editTitle">Maketi Düzenle</h3>
+          <span class="modal-subtitle" data-i18n="editSub">Tasarımı sürükleyin • tekerlekle boyutlandırın</span>
+        </div>
+        <button id="modal-close" class="remove-btn modal-close-btn" title="Kapat" data-i18n-title="closeTitle">✕</button>
+      </div>
+      <div class="modal-body">
+        <div id="modal-canvas-wrap" class="modal-canvas-wrap">
+          <canvas id="modal-canvas"></canvas>
+          <!-- Yükleme ekranı: motor hazırlanırken görünür -->
+          <div id="modal-loading" class="modal-loading hidden">
+            <div class="modal-loading-spinner"></div>
+            <div class="modal-loading-text" data-i18n="loadingText">Mockup hazırlanıyor…</div>
+          </div>
+        </div>
+        <div class="modal-controls">
+          <!-- Renk Paneli: tişört rengini anında değiştirir -->
+          <div class="control-group color-group">
+            <div class="control-label"><span data-i18n="colorLabel">🎨 Tişört Rengi</span></div>
+            <div id="color-swatches" class="color-swatches"></div>
+            <div class="color-picker-row">
+              <input type="color" id="custom-color" value="#ffffff" aria-label="Özel renk seç">
+              <button type="button" id="color-reset" class="secondary-btn" data-i18n="colorOriginal">Orijinal</button>
+            </div>
+          </div>
+          <div class="control-group">
+            <div class="control-label">
+              <span data-i18n="sizeLabel">Boyut</span>
+              <span class="range-val" id="modal-scale-val">%100</span>
+            </div>
+            <input type="range" id="modal-scale" min="20" max="320" value="100">
+            <input type="number" class="num-input" id="modal-scale-num" min="20" max="320" step="1" value="100">
+          </div>
+          <div class="control-group">
+            <div class="control-label">
+              <span data-i18n="angleLabel">Açı</span>
+              <span class="range-val" id="modal-rotate-val">0°</span>
+            </div>
+            <input type="range" id="modal-rotate" min="-180" max="180" value="0">
+            <input type="number" class="num-input" id="modal-rotate-num" min="-180" max="180" step="1" value="0">
+          </div>
+          <div class="control-group">
+            <div class="control-label">
+              <span data-i18n="skewXLabel">Yana Eğim</span>
+              <span class="range-val" id="modal-skewx-val">0°</span>
+            </div>
+            <input type="range" id="modal-skewx" min="-45" max="45" value="0">
+            <input type="number" class="num-input" id="modal-skewx-num" min="-45" max="45" step="1" value="0">
+          </div>
+          <div class="control-group">
+            <div class="control-label">
+              <span data-i18n="skewYLabel">Yukarı Eğim</span>
+              <span class="range-val" id="modal-skewy-val">0°</span>
+            </div>
+            <input type="range" id="modal-skewy" min="-45" max="45" value="0">
+            <input type="number" class="num-input" id="modal-skewy-num" min="-45" max="45" step="1" value="0">
+          </div>
+          <div class="modal-hint" data-i18n="modalHint">
+            💡 Tasarımı sürükleyin; dalgalar tasarımı kumaşa işler, renk paneliyle tişörtü boyayın.
+          </div>
+          <div class="modal-actions">
+            <button id="modal-design" class="secondary-btn" data-i18n="designBtn">🖼 Tasarım Seç</button>
+            <button id="modal-recenter" class="secondary-btn" data-i18n="recenterBtn">⟲ Ortala</button>
+            <button id="modal-apply" class="primary-btn" data-i18n="applyBtn">Uygula</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Otomatik test çıktısı (?smoketest=1) -->
+  <div id="smoke-log" class="smoke-log hidden"></div>
+
+  <!-- Edit Modalı Açıkken Görünen Üst Reklam Banneri (Adsterra 320x50) -->
+  <div id="top-ad-banner" class="top-ad-banner hidden" role="complementary" aria-label="Advertisement">
+    <span class="top-ad-label">AD</span>
+    <div class="top-ad-slot">
+      <!-- Adsterra 320x50 Banner -->
+      <script>
+        atOptions = {
+          'key' : '044f30439f115a11e74fe34141f4f862',
+          'format' : 'iframe',
+          'height' : 50,
+          'width' : 320,
+          'params' : {}
+        };
+      </script>
+      <script src="https://www.highrevenueformat.com/044f30439f115a11e74fe34141f4f862/invoke.js"></script>
+    </div>
+  </div>
+
+  <!-- Sabit Alt Reklam Banneri (her zaman ekranın en altında) -->
+  <div id="bottom-ad-banner" class="bottom-ad-banner" role="complementary" aria-label="Advertisement">
+    <span class="bottom-ad-label">AD</span>
+    <div class="bottom-ad-slot">
+      <!-- Adsterra 728x90 Banner -->
+      <script>
+        atOptions = {
+          'key' : '1a49f286f28e80ef24e08cfb9c7b4644',
+          'format' : 'iframe',
+          'height' : 90,
+          'width' : 728,
+          'params' : {}
+        };
+      </script>
+      <script src="https://www.highrevenueformat.com/1a49f286f28e80ef24e08cfb9c7b4644/invoke.js"></script>
+    </div>
+  </div>
+
+  <script>
+    /* Mobilde alt banner: 728x90 telefona sığmaz, yerine 320x50 birim kullanılır.
+       Masaüstünde hiçbir değişiklik olmaz. (script'ler innerHTML ile eklenirse
+       tarayıcı çalıştırmadığı için DOM API ile oluşturulur) */
+    (function () {
+      var isMobile = window.matchMedia('(max-width: 860px)').matches ||
+        (navigator.maxTouchPoints > 1 && Math.min(window.innerWidth, window.innerHeight) < 820);
+      if (!isMobile) return;
+      var slot = document.querySelector('#bottom-ad-banner .bottom-ad-slot');
+      if (!slot) return;
+      slot.innerHTML = '';
+      var s1 = document.createElement('script');
+      s1.textContent = "atOptions = { 'key' : '044f30439f115a11e74fe34141f4f862', 'format' : 'iframe', 'height' : 50, 'width' : 320, 'params' : {} };";
+      slot.appendChild(s1);
+      var s2 = document.createElement('script');
+      s2.src = 'https://www.highrevenueformat.com/044f30439f115a11e74fe34141f4f862/invoke.js';
+      slot.appendChild(s2);
+    })();
+  </script>
+
+  <!-- Ücretsiz İndirme (Normal Reklam Paneli + Geri Sayım) Ekranı -->
+  <div id="download-modal" class="modal-overlay hidden">
+    <div class="modal-box download-box">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <h3 data-i18n="dlTitle">Free Download</h3>
+          <span class="modal-subtitle" id="dl-subtitle" data-i18n="dlMsg">Watch the ad and wait a moment — your design is being prepared</span>
+        </div>
+        <button id="dl-close" class="remove-btn modal-close-btn" title="Kapat" data-i18n-title="closeTitle">✕</button>
+      </div>
+
+      <!-- Reklam İçerik Alanı -->
+      <div id="ad-container" class="ad-container">
+        <!-- Normal reklam paneli: video yerine statik reklam görseli gösterilir -->
+        <div class="ad-player">
+          <div id="ad-video-placeholder" class="ad-video-placeholder">
+            <div class="ad-content">
+              <div class="ad-badge">AD</div>
+              <div id="ad-text" class="ad-text" data-i18n="dlMsg">Watch the ad and wait a moment — your design is being prepared</div>
+              <div id="ad-brand" class="ad-brand">Sponsored Content</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Adsterra 160x300 Banner (reklam panelinin sağında, dikey) -->
+        <div class="adsterra-slot">
+          <script>
+            atOptions = {
+              'key' : '4db2c2b82a68dabc4d6f1820d7d6fe5e',
+              'format' : 'iframe',
+              'height' : 300,
+              'width' : 160,
+              'params' : {}
+            };
+          </script>
+          <script src="https://www.highrevenueformat.com/4db2c2b82a68dabc4d6f1820d7d6fe5e/invoke.js"></script>
+        </div>
+
+        <!-- İlerleme Çubuğu ve Geri Sayım -->
+        <div class="ad-timer-section">
+          <div class="ad-progress-bar">
+            <div id="ad-progress-fill" class="ad-progress-fill"></div>
+          </div>
+          <div class="ad-timer-row">
+            <span id="ad-countdown" class="ad-countdown">15s</span>
+            <span id="ad-status" class="ad-status" data-i18n="adStatus">Please wait a moment, preparing your design…</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="dl-actions">
+        <button id="dl-cancel" class="secondary-btn" data-i18n="dlCancel">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

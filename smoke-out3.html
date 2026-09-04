@@ -1,0 +1,355 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title data-i18n="pageTitle">Mockup Studio</title>
+    <link rel="stylesheet" href="style.css?v=78">
+  <!-- Google AdSense (onay sonras─▒ publisher ID ekleyin) -->
+  <!--
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+  <meta name="google-adsense" content="ca-pub-XXXXXXXXXXXXXXX">
+  -->
+  <!-- Mockup motoru: eski motor kodlar─▒ tamamen kald─▒r─▒ld─▒ ÔÇö s─▒f─▒rdan yaz─▒lacak -->
+  <!-- Galeri verisi + GPU motor + uygulama (s─▒ra ├Ânemli) -->
+  <script src="gallery-data.js?v=1" defer=""></script>
+  <script src="gpu-engine.js?v=1" defer=""></script>
+  <script src="main.js?v=70" defer=""></script>
+</head>
+<body class="top-ad-visible">
+  <!-- Hareketli geometrik ┼şekil katman─▒ -->
+  <div class="geometric-bg" id="geometric-bg"><div class="bg-piece bg-piece--orb c-blue" style="width: 575px; height: 575px; left: 34.6%; top: -9.2%; animation-delay: -7.85s; animation-duration: 29.7s, 16s;"></div><div class="bg-piece bg-piece--orb c-violet" style="width: 437px; height: 437px; left: -7.2%; top: -10.1%; animation-delay: -26.94s; animation-duration: 19.7s, 11.6s;"></div><div class="bg-piece bg-piece--orb c-amber" style="width: 615px; height: 615px; left: 19.2%; top: 13.7%; animation-delay: -3.7s; animation-duration: 18.9s, 11.6s;"></div><div class="bg-piece bg-piece--orb c-green" style="width: 509px; height: 509px; left: 72.5%; top: 5.7%; animation-delay: -7.42s; animation-duration: 32.9s, 17.5s;"></div><div class="bg-piece bg-piece--orb c-coral" style="width: 328px; height: 328px; left: 1.3%; top: 39.6%; animation-delay: -21.31s; animation-duration: 32.6s, 15.3s;"></div><div class="bg-piece bg-piece--orb c-purple" style="width: 407px; height: 407px; left: 42.3%; top: 52.1%; animation-delay: -2.09s; animation-duration: 23.6s, 12.4s;"></div><div class="bg-piece bg-piece--orb c-cyan" style="width: 391px; height: 391px; left: -3.8%; top: 41.4%; animation-delay: -29.71s; animation-duration: 23.4s, 10s;"></div><div class="bg-piece bg-piece--orb c-orange" style="width: 313px; height: 313px; left: 69.6%; top: 18.4%; animation-delay: -15.45s; animation-duration: 22.2s, 12.7s;"></div><div class="bg-piece bg-piece--orb c-rose" style="width: 338px; height: 338px; left: 55.2%; top: 38.1%; animation-delay: -21.73s; animation-duration: 28.8s, 14.1s;"></div><div class="bg-piece bg-piece--orb c-indigo" style="width: 355px; height: 355px; left: 73.1%; top: 2.7%; animation-delay: -22.97s; animation-duration: 24.6s, 17.3s;"></div><div class="bg-piece bg-piece--ribbon r-blue" style="width: 950px; height: 116px; left: 69.7%; top: 32.3%; animation-delay: -25.92s; animation-duration: 23.5s, 17.1s;"></div><div class="bg-piece bg-piece--ribbon r-pink" style="width: 665px; height: 104px; left: 24.9%; top: 39.4%; animation-delay: -0.18s; animation-duration: 25.4s, 10.7s;"></div><div class="bg-piece bg-piece--ribbon r-teal" style="width: 624px; height: 100px; left: 51.1%; top: -10.3%; animation-delay: -17.86s; animation-duration: 33.1s, 17.1s;"></div><div class="bg-piece bg-piece--ribbon r-orange" style="width: 752px; height: 107px; left: 6%; top: -4.1%; animation-delay: -18.21s; animation-duration: 20.5s, 11.8s;"></div><div class="bg-piece bg-piece--ring" style="width: 382px; height: 382px; left: -7.6%; top: -8.9%; animation-delay: -22.26s; animation-duration: 19s, 12.9s;"></div><div class="bg-piece bg-piece--ring dashed" style="width: 360px; height: 360px; left: -11.8%; top: 75.4%; animation-delay: -11.71s; animation-duration: 19s, 11.8s;"></div><div class="bg-piece bg-piece--panel" style="width: 305px; height: 305px; left: 72.7%; top: 31.2%; animation-delay: -22.13s; animation-duration: 24.6s, 14.2s;"></div><div class="bg-piece bg-piece--panel" style="width: 204px; height: 204px; left: 42%; top: 21.9%; animation-delay: -4.5s; animation-duration: 24.3s, 12.1s;"></div></div>
+
+  <!-- ├£st Men├╝ -->
+  <header class="navbar">
+    <div class="logo" id="logo-text">
+      <span class="logo-icon" aria-hidden="true">
+        <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="teeGrad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#38bdf8"></stop>
+              <stop offset="45%" stop-color="#818cf8"></stop>
+              <stop offset="100%" stop-color="#e879f9"></stop>
+            </linearGradient>
+            <linearGradient id="teeShine" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stop-color="rgba(255,255,255,0)"></stop>
+              <stop offset="50%" stop-color="rgba(255,255,255,0.85)"></stop>
+              <stop offset="100%" stop-color="rgba(255,255,255,0)"></stop>
+            </linearGradient>
+          </defs>
+          <path class="tee-body" fill="url(#teeGrad)" d="M20 8 L26 5 C28 10 36 10 38 5 L44 8 L58 16 L52 27 L46 24 L46 56 C46 58 44 60 42 60 L22 60 C20 60 18 58 18 56 L18 24 L12 27 L6 16 Z"></path>
+          <path class="tee-shine" fill="url(#teeShine)" d="M20 8 L26 5 C28 10 36 10 38 5 L44 8 L58 16 L52 27 L46 24 L46 56 C46 58 44 60 42 60 L22 60 C20 60 18 58 18 56 L18 24 L12 27 L6 16 Z"></path>
+        </svg>
+      </span> <span>MOCKUP</span> <span class="logo-accent">STUDYO</span></div>
+        <div class="header-badges">
+      <div class="navbar-actions">
+        <button type="button" id="theme-toggle" class="theme-toggle" title="Night / Day Mode" data-i18n-title="themeTitle">
+          <span id="theme-icon">­şîÖ</span>
+        </button>
+        <button type="button" id="review-open-btn" class="review-open-btn" title="­şÆ¼ Write a Review" data-i18n="reviewBtn" data-i18n-title="reviewBtn">­şÆ¼ Write a Review</button>
+      </div>
+      <div class="lang-wheel" id="lang-wheel" title="Dili de─şi┼ştir / Change language">
+        <span class="lang-wheel-ring"></span>
+        <span class="lang-wheel-code" id="lang-wheel-code">EN</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="app-container">
+
+    <!-- Orta Alan: B├╝y├╝k Dosya Y├╝kleme B├Âlgesi -->
+    <section class="upload-zone">
+
+      <!-- Sol: Bilgilendirici + ┼ş─▒k ipucu kart─▒ -->
+      <aside class="upload-info" aria-label="Nas─▒l dosya y├╝klenir">
+        <div class="upload-info-title" data-i18n="infoTitle">­şû╝ For a High-Quality Mockup</div>
+        <ul class="upload-info-list">
+          <li data-i18n="infoStep1">Choose your design as PNG or JPEG.</li>
+          <li data-i18n="infoStep2">Use a file with a transparent background ÔÇö the background is not removed automatically.</li>
+          <li data-i18n="infoStep3">Higher resolution (at least 2000├ù2000 px) gives sharper results.</li>
+          <li data-i18n="infoStep4">Select any mannequin below and apply your design.</li>
+        </ul>
+        <div class="upload-info-note" data-i18n="infoNote">­şÆí The finished mockup is downloaded as a 2000├ù2000 px PNG.</div>
+      </aside>
+
+      <!-- Sa─ş: Y├╝kleme alan─▒ -->
+      <div class="upload-main">
+        <div id="drop-zone" class="drop-zone" tabindex="0">
+          <div id="drop-placeholder" class="drop-placeholder">
+            <div class="upload-icon">Ô¼å</div>
+            <div class="upload-title" data-i18n="uploadTitle">Upload File</div>
+            <div class="drop-hint" data-i18n="dropHint">Drag &amp; drop your PNG / JPEG file here</div>
+            <button type="button" class="primary-btn" data-i18n="selectDesign">Select Design</button>
+          </div>
+          <img id="design-preview" class="design-preview hidden" alt="" decoding="async">
+          <div class="replace-hint" id="replace-hint" data-i18n="replaceHint">Click to change the design</div>
+        </div>
+        <input type="file" id="design-upload" class="hidden-input" accept="image/png, image/jpeg, image/webp">
+
+        <div class="upload-toolbar" id="upload-toolbar">
+          <button id="remove-design" class="secondary-btn" data-i18n="removeDesign">Remove Design</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Alt Alan: Manken Galerisi (g├Ârseller kald─▒r─▒ld─▒ ÔÇö motor ve edit ile birlikte yeniden kurulacak) -->
+    <section class="gallery">
+      <div class="gallery-seam" aria-hidden="true"></div>
+      <div class="gallery-header">
+        <h3 data-i18n="galleryTitle">Mannequin Gallery</h3>
+        <button id="add-mannequin" class="secondary-btn gallery-add" data-i18n="galleryAdd">+ Add Image</button>
+      </div>
+      <input type="file" id="mannequin-upload" class="hidden-input" accept="image/png, image/jpeg, image/webp" multiple="">
+      <div id="mannequin-grid" class="mannequin-grid">
+        <div id="empty-state" class="empty-state" data-i18n="emptyState" style="display: none;">No mannequin images yet.</div>
+      <div class="mannequin-card mannequin-clickable" data-id="m1_mtlptata"><div class="mannequin-holder"><img class="mannequin-img" alt="Ads─▒rgrz tasar─▒m" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/Ads%C4%B1rgrz%20tasar%C4%B1m.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m2_mtlptaul"><div class="mannequin-holder"><img class="mannequin-img" alt="adfe" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/adfe.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m3_mtlptav5"><div class="mannequin-holder"><img class="mannequin-img" alt="Ads─▒werwz tasar─▒m" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/Ads%C4%B1werwz%20tasar%C4%B1m.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m4_mtlptb13"><div class="mannequin-holder"><img class="mannequin-img" alt="gjnerfw3rfes" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/gjnerfw3rfes.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m5_mtlptb14"><div class="mannequin-holder"><img class="mannequin-img" alt="gtg" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/gtg.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m6_mtlptb14"><div class="mannequin-holder"><img class="mannequin-img" alt="gtsrhtyjun" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/gtsrhtyjun.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m7_mtlptb14"><div class="mannequin-holder"><img class="mannequin-img" alt="hntyjuyu" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/hntyjuyu.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m8_mtlptb14"><div class="mannequin-holder"><img class="mannequin-img" alt="jg─▒ojer─▒t" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/jg%C4%B1ojer%C4%B1t.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m9_mtlptb14"><div class="mannequin-holder"><img class="mannequin-img" alt="kvdjfea" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/kvdjfea.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m10_mtlptb14"><div class="mannequin-holder"><img class="mannequin-img" alt="ldvd" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/ldvd.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m11_mtlptb14"><div class="mannequin-holder"><img class="mannequin-img" alt="reegtrhryg" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/reegtrhryg.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m12_mtlptb14"><div class="mannequin-holder"><img class="mannequin-img" alt="rejgetjgo─▒jteg" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/rejgetjgo%C4%B1jteg.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m13_mtlptb14"><div class="mannequin-holder"><img class="mannequin-img" alt="rfgerg" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/rfgerg.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m14_mtlptb14"><div class="mannequin-holder"><img class="mannequin-img" alt="rgftghtrht" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/rgftghtrht.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m15_mtlptb15"><div class="mannequin-holder"><img class="mannequin-img" alt="rgketrgke" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/rgketrgke.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m16_mtlptb15"><div class="mannequin-holder"><img class="mannequin-img" alt="rgtry" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/rgtry.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m17_mtlptb15"><div class="mannequin-holder"><img class="mannequin-img" alt="rjfgerjgre" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/rjfgerjgre.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m18_mtlptb15"><div class="mannequin-holder"><img class="mannequin-img" alt="Ads─▒z tafrfsar─▒m" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/Ads%C4%B1z%20tafrfsar%C4%B1m.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m19_mtlptb17"><div class="mannequin-holder"><img class="mannequin-img" alt="Ads─▒z tafrfrsar─▒m" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/Ads%C4%B1z%20tafrfrsar%C4%B1m.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m20_mtlptb18"><div class="mannequin-holder"><img class="mannequin-img" alt="Ads─▒z regtasar─▒m" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/Ads%C4%B1z%20regtasar%C4%B1m.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m21_mtlptb18"><div class="mannequin-holder"><img class="mannequin-img" alt="Ads─▒z tarfregsar─▒m" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/Ads%C4%B1z%20tarfregsar%C4%B1m.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m22_mtlptb19"><div class="mannequin-holder"><img class="mannequin-img" alt="Ads─▒z tasacvfr─▒m" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/Ads%C4%B1z%20tasacvfr%C4%B1m.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m23_mtlptb19"><div class="mannequin-holder"><img class="mannequin-img" alt="Ads─▒z tasadfsr─▒m" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/Ads%C4%B1z%20tasadfsr%C4%B1m.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m24_mtlptb19"><div class="mannequin-holder"><img class="mannequin-img" alt="Ads─▒z tasaefrr─▒m" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/Ads%C4%B1z%20tasaefrr%C4%B1m.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m25_mtlptb19"><div class="mannequin-holder"><img class="mannequin-img" alt="Ads─▒z tasareerr─▒m" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/Ads%C4%B1z%20tasareerr%C4%B1m.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m26_mtlptb19"><div class="mannequin-holder"><img class="mannequin-img" alt="Ads─▒z tasaregerr─▒m" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/Ads%C4%B1z%20tasaregerr%C4%B1m.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m27_mtlptb19"><div class="mannequin-holder"><img class="mannequin-img" alt="rtgrgerdged" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/rtgrgerdged.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m28_mtlptb19"><div class="mannequin-holder"><img class="mannequin-img" alt="rtgtrh" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/rtgtrh.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m29_mtlptb19"><div class="mannequin-holder"><img class="mannequin-img" alt="sddffgskg" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/sddffgskg.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m30_mtlptb19"><div class="mannequin-holder"><img class="mannequin-img" alt="Ads─▒z tasarer─▒m" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/Ads%C4%B1z%20tasarer%C4%B1m.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m31_mtlptb19"><div class="mannequin-holder"><img class="mannequin-img" alt="Ads─▒z tasarg5et─▒m" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/Ads%C4%B1z%20tasarg5et%C4%B1m.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m32_mtlptb19"><div class="mannequin-holder"><img class="mannequin-img" alt="Ads─▒z tasargfht─▒m" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/Ads%C4%B1z%20tasargfht%C4%B1m.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m33_mtlptb19"><div class="mannequin-holder"><img class="mannequin-img" alt="Ads─▒z tasargrer─▒m" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/Ads%C4%B1z%20tasargrer%C4%B1m.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m34_mtlptb19"><div class="mannequin-holder"><img class="mannequin-img" alt="Ads─▒z tasar─▒m" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/Ads%C4%B1z%20tasar%C4%B1m.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m35_mtlptb19"><div class="mannequin-holder"><img class="mannequin-img" alt="Ads─▒z tasartge─▒m" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/Ads%C4%B1z%20tasartge%C4%B1m.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m36_mtlptb1a"><div class="mannequin-holder"><img class="mannequin-img" alt="sdfghjk" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/sdfghjk.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m37_mtlptb1a"><div class="mannequin-holder"><img class="mannequin-img" alt="Ads─▒z tasartwr─▒m" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/Ads%C4%B1z%20tasartwr%C4%B1m.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m38_mtlptb1a"><div class="mannequin-holder"><img class="mannequin-img" alt="Ads─▒z tasasfr─▒m" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/Ads%C4%B1z%20tasasfr%C4%B1m.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m39_mtlptb1a"><div class="mannequin-holder"><img class="mannequin-img" alt="Ads─▒z tasatg5er─▒m" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/Ads%C4%B1z%20tasatg5er%C4%B1m.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m40_mtlptb1a"><div class="mannequin-holder"><img class="mannequin-img" alt="sfgdg" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/sfgdg.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m41_mtlptb1a"><div class="mannequin-holder"><img class="mannequin-img" alt="Ads─▒z taswrfar─▒m" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/Ads%C4%B1z%20taswrfar%C4%B1m.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m42_mtlptb1a"><div class="mannequin-holder"><img class="mannequin-img" alt="Ads─▒z tathtrsar─▒m" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/Ads%C4%B1z%20tathtrsar%C4%B1m.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m43_mtlptb1a"><div class="mannequin-holder"><img class="mannequin-img" alt="Ads─▒z tatyrtsar─▒m" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/Ads%C4%B1z%20tatyrtsar%C4%B1m.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m44_mtlptb1a"><div class="mannequin-holder"><img class="mannequin-img" alt="Ads─▒z tdfsasar─▒m" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/Ads%C4%B1z%20tdfsasar%C4%B1m.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m45_mtlptb1a"><div class="mannequin-holder"><img class="mannequin-img" alt="Ads─▒z tgetasar─▒m" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/Ads%C4%B1z%20tgetasar%C4%B1m.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m46_mtlptb1a"><div class="mannequin-holder"><img class="mannequin-img" alt="Ads─▒z tgregegasar─▒m" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/Ads%C4%B1z%20tgregegasar%C4%B1m.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m47_mtlptb1a"><div class="mannequin-holder"><img class="mannequin-img" alt="asdjfsf" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/asdjfsf.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m48_mtlptb1a"><div class="mannequin-holder"><img class="mannequin-img" alt="bdfgdgr" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/bdfgdgr.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m49_mtlptb1a"><div class="mannequin-holder"><img class="mannequin-img" alt="ddcscds" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/ddcscds.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m50_mtlptb1a"><div class="mannequin-holder"><img class="mannequin-img" alt="sfgjfj" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/sfgjfj.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m51_mtlptb1a"><div class="mannequin-holder"><img class="mannequin-img" alt="ddsc" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/ddsc.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m52_mtlptb1a"><div class="mannequin-holder"><img class="mannequin-img" alt="dfdes" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/dfdes.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m53_mtlptb1b"><div class="mannequin-holder"><img class="mannequin-img" alt="dfsekf" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/dfsekf.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m54_mtlptb1b"><div class="mannequin-holder"><img class="mannequin-img" alt="dfghjkl┼şlt" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/dfghjkl%C5%9Flt.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m55_mtlptb1b"><div class="mannequin-holder"><img class="mannequin-img" alt="dfs" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/dfs.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m56_mtlptb1b"><div class="mannequin-holder"><img class="mannequin-img" alt="dgthtd" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/dgthtd.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m57_mtlptb1b"><div class="mannequin-holder"><img class="mannequin-img" alt="dkfgokreoger" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/dkfgokreoger.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m58_mtlptb1b"><div class="mannequin-holder"><img class="mannequin-img" alt="dlfskf" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/dlfskf.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m59_mtlptb1b"><div class="mannequin-holder"><img class="mannequin-img" alt="dmznfn" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/dmznfn.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m60_mtlptb1b"><div class="mannequin-holder"><img class="mannequin-img" alt="dncsd" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/dncsd.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m61_mtlptb1b"><div class="mannequin-holder"><img class="mannequin-img" alt="sfgj─▒dg" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/sfgj%C4%B1dg.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m62_mtlptb1b"><div class="mannequin-holder"><img class="mannequin-img" alt="dsf" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/dsf.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m63_mtlptb1b"><div class="mannequin-holder"><img class="mannequin-img" alt="dsfd" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/dsfd.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m64_mtlptb1b"><div class="mannequin-holder"><img class="mannequin-img" alt="dsfdg" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/dsfdg.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m65_mtlptb1b"><div class="mannequin-holder"><img class="mannequin-img" alt="dsfds" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/dsfds.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m66_mtlptb1b"><div class="mannequin-holder"><img class="mannequin-img" alt="dsfdsfl" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/dsfdsfl.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m67_mtlptb1b"><div class="mannequin-holder"><img class="mannequin-img" alt="dsfdskf" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/dsfdskf.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m68_mtlptb1b"><div class="mannequin-holder"><img class="mannequin-img" alt="dsfes" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/dsfes.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m69_mtlptb1b"><div class="mannequin-holder"><img class="mannequin-img" alt="dsfesfe" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/dsfesfe.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m70_mtlptb1c"><div class="mannequin-holder"><img class="mannequin-img" alt="sfkvrkgre" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/sfkvrkgre.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m71_mtlptb1c"><div class="mannequin-holder"><img class="mannequin-img" alt="dsfsd" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/dsfsd.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m72_mtlptb1c"><div class="mannequin-holder"><img class="mannequin-img" alt="dsfsf" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/dsfsf.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m73_mtlptb1c"><div class="mannequin-holder"><img class="mannequin-img" alt="dsfsrf" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/dsfsrf.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m74_mtlptb1c"><div class="mannequin-holder"><img class="mannequin-img" alt="dsgfdg" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/dsgfdg.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m75_mtlptb1c"><div class="mannequin-holder"><img class="mannequin-img" alt="ejjf─▒eje" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/ejjf%C4%B1eje.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m76_mtlptb1c"><div class="mannequin-holder"><img class="mannequin-img" alt="dsgffg" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/dsgffg.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m77_mtlptb1c"><div class="mannequin-holder"><img class="mannequin-img" alt="ergjtgdtgeths" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/ergjtgdtgeths.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m78_mtlptb1c"><div class="mannequin-holder"><img class="mannequin-img" alt="eryutryffoosae" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/eryutryffoosae.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m79_mtlptb1c"><div class="mannequin-holder"><img class="mannequin-img" alt="ewujfuerg" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/ewujfuerg.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m80_mtlptb1c"><div class="mannequin-holder"><img class="mannequin-img" alt="fdgd" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/fdgd.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m81_mtlptb1c"><div class="mannequin-holder"><img class="mannequin-img" alt="fdgdfg" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/fdgdfg.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m82_mtlptb1d"><div class="mannequin-holder"><img class="mannequin-img" alt="sfregrtd" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/sfregrtd.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m83_mtlptb1d"><div class="mannequin-holder"><img class="mannequin-img" alt="fdgfhdyf" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/fdgfhdyf.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m84_mtlptb1d"><div class="mannequin-holder"><img class="mannequin-img" alt="fdgfhyjut" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/fdgfhyjut.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m85_mtlptb1d"><div class="mannequin-holder"><img class="mannequin-img" alt="fgklfdmgl" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/fgklfdmgl.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m86_mtlptb1d"><div class="mannequin-holder"><img class="mannequin-img" alt="fgrd" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/fgrd.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m87_mtlptb1d"><div class="mannequin-holder"><img class="mannequin-img" alt="fgre" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/fgre.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m88_mtlptb1d"><div class="mannequin-holder"><img class="mannequin-img" alt="fgsthyhj" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/fgsthyhj.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m89_mtlptb1d"><div class="mannequin-holder"><img class="mannequin-img" alt="fsfrgf" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/fsfrgf.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m90_mtlptb1d"><div class="mannequin-holder"><img class="mannequin-img" alt="gfgtrjkuo─▒" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/gfgtrjkuo%C4%B1.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m91_mtlptb1d"><div class="mannequin-holder"><img class="mannequin-img" alt="ghryry" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/ghryry.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m92_mtlptb1d"><div class="mannequin-holder"><img class="mannequin-img" alt="ghbrhf" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/ghbrhf.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m93_mtlptb1d"><div class="mannequin-holder"><img class="mannequin-img" alt="sfrf" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/sfrf.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m94_mtlptb1e"><div class="mannequin-holder"><img class="mannequin-img" alt="ghtge" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/ghtge.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m95_mtlptb1e"><div class="mannequin-holder"><img class="mannequin-img" alt="ghyyf" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/ghyyf.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m96_mtlptb1e"><div class="mannequin-holder"><img class="mannequin-img" alt="tgtryt" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/tgtryt.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m97_mtlptb1e"><div class="mannequin-holder"><img class="mannequin-img" alt="vff" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/vff.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m98_mtlptb1e"><div class="mannequin-holder"><img class="mannequin-img" alt="vfrsv" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/vfrsv.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m99_mtlptb1e"><div class="mannequin-holder"><img class="mannequin-img" alt="zcsd" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/zcsd.jpg"></div></div><div class="mannequin-card mannequin-clickable" data-id="m100_mtlptb1e"><div class="mannequin-holder"><img class="mannequin-img" alt="zdfs" loading="lazy" decoding="async" src="http://localhost:8123/g%C3%B6rsel/thumbs/zdfs.jpg"></div></div></div>
+    </section>
+
+  </main>
+  <!-- ─░├ğerik / SEO Metni (Google AdSense onay─▒ i├ğin) -->
+  <section class="content-section" id="content-section">
+    <div class="content-inner">
+      <h2 class="content-title" data-i18n="contentTitle">Mockup Studyo: Free Online Mockup Generator</h2>
+      <p class="content-paragraph" data-i18n="contentPara1">Mockup Studyo is a completely free, browser-based mockup generator built for entrepreneurs, crafters, and small businesses selling products in their online stores. Without the need for complex design software or paid subscriptions, you can select your own logo or artwork and create professional-looking product images in seconds. Everything runs directly in your browser ÔÇö no account is required and there is nothing to install.</p>
+      <p class="content-paragraph" data-i18n="contentPara2">This tool is ideal for previewing your designs on t-shirts, hoodies, sweatshirts, and other textile products. Upload your design, choose any mannequin from the gallery, and apply it; the result is downloaded as a high-resolution 2000├ù2000 px PNG, perfect for your product pages. Create realistic, conversion-friendly product photos for your listings at no cost.</p>
+      <h3 class="content-subtitle" data-i18n="contentSub1">Why Mockup Studyo?</h3>
+      <p class="content-paragraph" data-i18n="contentPara3">Use it as much as you want, completely free. The interface is simple and intuitive: drag and drop your design into place, then fine-tune size, angle, and tilt with a single click. Save your favorite mockups to quickly re-edit the images you use most. You can also switch to dark theme whenever you like.</p>
+      <h3 class="content-subtitle" data-i18n="contentSub2">How It Works</h3>
+      <p class="content-paragraph" data-i18n="contentPara4">The process is very simple. First, choose your design as a PNG or JPEG; high resolution and a transparent background help produce sharper, more professional results. Next, select a mannequin from the gallery and your design is applied to all chosen mannequins automatically. Adjust the position and angle, press Apply, then pick your best frame and download it as a PNG.</p>
+      <h3 class="content-subtitle" data-i18n="contentSub3">Tips for Product Photos</h3>
+      <p class="content-paragraph" data-i18n="contentPara5">Showing your product on a real model or mannequin helps buyers imagine it and can boost your click-through rate. Make your first image clear and eye-catching ÔÇö high-resolution photos always look more trustworthy. Make sure your design fits the product size and shape, and create separate mockups for different colors. With the right lighting and angle, you can highlight the best features of your product.</p>
+      <p class="content-paragraph" data-i18n="contentPara6">Mockup Studyo is completely free and supported by advertising revenue. Use it freely and create as many images as you like. If you have any questions, feel free to reach out through our contact page. Happy selling!</p>
+    </div>
+  </section>
+
+
+
+  <!-- Kullan─▒c─▒ Yorumlar─▒ -->
+  <section id="reviews-section" class="reviews-section">
+    <h3 class="reviews-title" data-i18n="reviewsTitle">­şÆ¼ User Reviews</h3>
+    <div id="reviews-list" class="reviews-list"><div class="reviews-empty">No reviews yet. Be the first! ­şÆ¼</div></div>
+  </section>
+
+  <!-- Gizlilik Politikas─▒ ÔÇö sayfa ak─▒┼ş─▒nda, yorum k─▒sm─▒n─▒n alt─▒nda kal─▒r (ekran─▒ takip etmez) -->
+  <section id="privacy-policy-fixed" class="privacy-policy-fixed">
+    <div class="privacy-policy-inner">
+      <span class="privacy-policy-icon" aria-hidden="true">­şöÆ</span>
+      <span class="privacy-policy-text" data-i18n="privacyFixedText">Privacy Policy: Your data is protected with Google AdSense cookies.</span>
+      <a href="privacy-policy.html" class="privacy-policy-link" data-i18n="privacyFullLink">Read Policy ÔÇ║</a>
+    </div>
+  </section>
+
+  <!-- Yorum Modal─▒ -->
+  <div id="review-modal" class="modal-overlay hidden">
+    <div class="modal-box review-box">
+      <div class="modal-title-wrap">
+        <h3 data-i18n="reviewTitle">Your Rating</h3>
+      </div>
+      <div id="review-stars" class="review-stars">
+        <button type="button" class="review-star" data-v="1">Ôİà</button>
+        <button type="button" class="review-star" data-v="2">Ôİà</button>
+        <button type="button" class="review-star" data-v="3">Ôİà</button>
+        <button type="button" class="review-star" data-v="4">Ôİà</button>
+        <button type="button" class="review-star" data-v="5">Ôİà</button>
+      </div>
+      <textarea id="review-text" class="review-text" maxlength="500" placeholder="Write your thoughts..." data-i18n-placeholder="reviewPlaceholder"></textarea>
+      <div class="modal-actions">
+        <button type="button" id="review-cancel" class="secondary-btn" data-i18n="reviewCancel">Cancel</button>
+        <button type="button" id="review-save" class="primary-btn" data-i18n="reviewSave">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Alt Footer: Yasal Ba─şlant─▒lar -->
+  <footer id="legal-footer" class="legal-footer">
+    <div class="legal-content">
+      <div class="legal-copy">┬® 2026 Mockup Studio. T├╝m haklar─▒ sakl─▒d─▒r.</div>
+      <div class="legal-links">
+        <a href="privacy-policy.html" data-i18n="privacyLink">Privacy Policy</a>
+        <a href="terms-of-service.html" data-i18n="termsLink">Terms of Service</a>
+        <a href="disclaimer.html" data-i18n="disclaimerLink">Disclaimer</a>
+        <a href="contact.html" data-i18n="contactLink">Contact</a>
+        <a href="mailto:contact@mockupstudio.com" data-i18n="contactLabel">contact@mockupstudio.com</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Model D├╝zenleme Modal─▒ (GPU Motor: dalga b├╝kme + renk paneli) -->
+  <div id="modal" class="modal-overlay">
+    <div class="modal-box edit-box">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <h3 data-i18n="editTitle">Edit Mockup</h3>
+          <span class="modal-subtitle" data-i18n="editSub">Drag the design ÔÇó scroll to resize</span>
+        </div>
+        <button id="modal-close" class="remove-btn modal-close-btn" title="Close" data-i18n-title="closeTitle">Ô£ò</button>
+      </div>
+      <div class="modal-body">
+        <div id="modal-canvas-wrap" class="modal-canvas-wrap">
+          <canvas id="modal-canvas" width="380" height="380"></canvas>
+          <!-- Y├╝kleme ekran─▒: motor haz─▒rlan─▒rken g├Âr├╝n├╝r -->
+          <div id="modal-loading" class="modal-loading hidden">
+            <div class="modal-loading-spinner"></div>
+            <div class="modal-loading-text" data-i18n="loadingText">Preparing mockupÔÇĞ</div>
+          </div>
+        </div>
+        <div class="modal-controls">
+          <!-- Renk Paneli: ti┼ş├Ârt rengini an─▒nda de─şi┼ştirir -->
+          <div class="control-group color-group">
+            <div class="control-label"><span data-i18n="colorLabel">­şÄ¿ Shirt Color</span></div>
+            <div id="color-swatches" class="color-swatches"><button type="button" class="color-swatch" data-hex="#ffffff" title="#ffffff" style="background: rgb(255, 255, 255);"></button><button type="button" class="color-swatch" data-hex="#e2e8f0" title="#e2e8f0" style="background: rgb(226, 232, 240);"></button><button type="button" class="color-swatch" data-hex="#94a3b8" title="#94a3b8" style="background: rgb(148, 163, 184);"></button><button type="button" class="color-swatch" data-hex="#1f2937" title="#1f2937" style="background: rgb(31, 41, 55);"></button><button type="button" class="color-swatch" data-hex="#000000" title="#000000" style="background: rgb(0, 0, 0);"></button><button type="button" class="color-swatch" data-hex="#fca5a5" title="#fca5a5" style="background: rgb(252, 165, 165);"></button><button type="button" class="color-swatch" data-hex="#dc2626" title="#dc2626" style="background: rgb(220, 38, 38);"></button><button type="button" class="color-swatch" data-hex="#ea580c" title="#ea580c" style="background: rgb(234, 88, 12);"></button><button type="button" class="color-swatch" data-hex="#f59e0b" title="#f59e0b" style="background: rgb(245, 158, 11);"></button><button type="button" class="color-swatch" data-hex="#fde047" title="#fde047" style="background: rgb(253, 224, 71);"></button><button type="button" class="color-swatch" data-hex="#4ade80" title="#4ade80" style="background: rgb(74, 222, 128);"></button><button type="button" class="color-swatch" data-hex="#16a34a" title="#16a34a" style="background: rgb(22, 163, 74);"></button><button type="button" class="color-swatch" data-hex="#2dd4bf" title="#2dd4bf" style="background: rgb(45, 212, 191);"></button><button type="button" class="color-swatch" data-hex="#0ea5e9" title="#0ea5e9" style="background: rgb(14, 165, 233);"></button><button type="button" class="color-swatch" data-hex="#1d4ed8" title="#1d4ed8" style="background: rgb(29, 78, 216);"></button><button type="button" class="color-swatch" data-hex="#4338ca" title="#4338ca" style="background: rgb(67, 56, 202);"></button><button type="button" class="color-swatch" data-hex="#8b5cf6" title="#8b5cf6" style="background: rgb(139, 92, 246);"></button><button type="button" class="color-swatch" data-hex="#d946ef" title="#d946ef" style="background: rgb(217, 70, 239);"></button><button type="button" class="color-swatch" data-hex="#ec4899" title="#ec4899" style="background: rgb(236, 72, 153);"></button><button type="button" class="color-swatch" data-hex="#92400e" title="#92400e" style="background: rgb(146, 64, 14);"></button></div>
+            <div class="color-picker-row">
+              <input type="color" id="custom-color" value="#ffffff" aria-label="├ûzel renk se├ğ">
+              <button type="button" id="color-reset" class="secondary-btn" data-i18n="colorOriginal">Original</button>
+            </div>
+          </div>
+          <div class="control-group">
+            <div class="control-label">
+              <span data-i18n="sizeLabel">Size</span>
+              <span class="range-val" id="modal-scale-val">%100</span>
+            </div>
+            <input type="range" id="modal-scale" min="20" max="320" value="100">
+            <input type="number" class="num-input" id="modal-scale-num" min="20" max="320" step="1" value="100">
+          </div>
+          <div class="control-group">
+            <div class="control-label">
+              <span data-i18n="angleLabel">Angle</span>
+              <span class="range-val" id="modal-rotate-val">0┬░</span>
+            </div>
+            <input type="range" id="modal-rotate" min="-180" max="180" value="0">
+            <input type="number" class="num-input" id="modal-rotate-num" min="-180" max="180" step="1" value="0">
+          </div>
+          <div class="control-group">
+            <div class="control-label">
+              <span data-i18n="skewXLabel">Side Tilt</span>
+              <span class="range-val" id="modal-skewx-val">0┬░</span>
+            </div>
+            <input type="range" id="modal-skewx" min="-45" max="45" value="0">
+            <input type="number" class="num-input" id="modal-skewx-num" min="-45" max="45" step="1" value="0">
+          </div>
+          <div class="control-group">
+            <div class="control-label">
+              <span data-i18n="skewYLabel">Up Tilt</span>
+              <span class="range-val" id="modal-skewy-val">0┬░</span>
+            </div>
+            <input type="range" id="modal-skewy" min="-45" max="45" value="0">
+            <input type="number" class="num-input" id="modal-skewy-num" min="-45" max="45" step="1" value="0">
+          </div>
+          <div class="modal-hint" data-i18n="modalHint">­şÆí Drag the design ÔÇö folds wrap it onto the fabric; use the color panel to recolor the shirt.</div>
+          <div class="modal-actions">
+            <button id="modal-design" class="secondary-btn" data-i18n="designBtn">­şû╝ Choose Design</button>
+            <button id="modal-recenter" class="secondary-btn" data-i18n="recenterBtn">Ôş▓ Center</button>
+            <button id="modal-apply" class="primary-btn" data-i18n="applyBtn">Apply</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Otomatik test ├ğ─▒kt─▒s─▒ (?smoketest=1) -->
+  <div id="smoke-log" class="smoke-log"><div>SMOKE:START</div><div>GALLERY_OK 100</div><div>ENGINE_OK</div><div>DESIGN_OK</div><div>RENDER_OK std=0.0</div><div>RENDER_FAIL duz-goruntu</div><div>SMOKE:DONE</div></div>
+
+  <!-- Edit Modal─▒ A├ğ─▒kken G├Âr├╝nen ├£st Reklam Banneri (Adsterra 320x50) -->
+  <div id="top-ad-banner" class="top-ad-banner" role="complementary" aria-label="Advertisement">
+    <span class="top-ad-label">AD</span>
+    <div class="top-ad-slot">
+      <!-- Adsterra 320x50 Banner -->
+      <script>
+        atOptions = {
+          'key' : '044f30439f115a11e74fe34141f4f862',
+          'format' : 'iframe',
+          'height' : 50,
+          'width' : 320,
+          'params' : {}
+        };
+      </script>
+      <script src="https://www.highrevenueformat.com/044f30439f115a11e74fe34141f4f862/invoke.js"></script>
+    </div>
+  </div>
+
+  <!-- Sabit Alt Reklam Banneri (her zaman ekran─▒n en alt─▒nda) -->
+  <div id="bottom-ad-banner" class="bottom-ad-banner" role="complementary" aria-label="Advertisement">
+    <span class="bottom-ad-label">AD</span>
+    <div class="bottom-ad-slot"><script>atOptions = { 'key' : '044f30439f115a11e74fe34141f4f862', 'format' : 'iframe', 'height' : 50, 'width' : 320, 'params' : {} };</script><script src="https://www.highrevenueformat.com/044f30439f115a11e74fe34141f4f862/invoke.js"></script></div>
+  </div>
+
+  <script>
+    /* Mobilde alt banner: 728x90 telefona s─▒─şmaz, yerine 320x50 birim kullan─▒l─▒r.
+       Masa├╝st├╝nde hi├ğbir de─şi┼şiklik olmaz. (script'ler innerHTML ile eklenirse
+       taray─▒c─▒ ├ğal─▒┼şt─▒rmad─▒─ş─▒ i├ğin DOM API ile olu┼şturulur) */
+    (function () {
+      var isMobile = window.matchMedia('(max-width: 860px)').matches ||
+        (navigator.maxTouchPoints > 1 && Math.min(window.innerWidth, window.innerHeight) < 820);
+      if (!isMobile) return;
+      var slot = document.querySelector('#bottom-ad-banner .bottom-ad-slot');
+      if (!slot) return;
+      slot.innerHTML = '';
+      var s1 = document.createElement('script');
+      s1.textContent = "atOptions = { 'key' : '044f30439f115a11e74fe34141f4f862', 'format' : 'iframe', 'height' : 50, 'width' : 320, 'params' : {} };";
+      slot.appendChild(s1);
+      var s2 = document.createElement('script');
+      s2.src = 'https://www.highrevenueformat.com/044f30439f115a11e74fe34141f4f862/invoke.js';
+      slot.appendChild(s2);
+    })();
+  </script>
+
+  <!-- ├£cretsiz ─░ndirme (Normal Reklam Paneli + Geri Say─▒m) Ekran─▒ -->
+  <div id="download-modal" class="modal-overlay hidden">
+    <div class="modal-box download-box">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <h3 data-i18n="dlTitle">Free Download</h3>
+          <span class="modal-subtitle" id="dl-subtitle" data-i18n="dlMsg">Watch the ad and wait a moment ÔÇö your design is being prepared</span>
+        </div>
+        <button id="dl-close" class="remove-btn modal-close-btn" title="Close" data-i18n-title="closeTitle">Ô£ò</button>
+      </div>
+
+      <!-- Reklam ─░├ğerik Alan─▒ -->
+      <div id="ad-container" class="ad-container">
+        <!-- Normal reklam paneli: video yerine statik reklam g├Ârseli g├Âsterilir -->
+        <div class="ad-player">
+          <div id="ad-video-placeholder" class="ad-video-placeholder">
+            <div class="ad-content">
+              <div class="ad-badge">AD</div>
+              <div id="ad-text" class="ad-text" data-i18n="dlMsg">Watch the ad and wait a moment ÔÇö your design is being prepared</div>
+              <div id="ad-brand" class="ad-brand">Sponsored Content</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Adsterra 160x300 Banner (reklam panelinin sa─ş─▒nda, dikey) -->
+        <div class="adsterra-slot">
+          <script>
+            atOptions = {
+              'key' : '4db2c2b82a68dabc4d6f1820d7d6fe5e',
+              'format' : 'iframe',
+              'height' : 300,
+              'width' : 160,
+              'params' : {}
+            };
+          </script>
+          <script src="https://www.highrevenueformat.com/4db2c2b82a68dabc4d6f1820d7d6fe5e/invoke.js"></script>
+        </div>
+
+        <!-- ─░lerleme ├çubu─şu ve Geri Say─▒m -->
+        <div class="ad-timer-section">
+          <div class="ad-progress-bar">
+            <div id="ad-progress-fill" class="ad-progress-fill"></div>
+          </div>
+          <div class="ad-timer-row">
+            <span id="ad-countdown" class="ad-countdown">15s</span>
+            <span id="ad-status" class="ad-status" data-i18n="adStatus">Please wait a moment, preparing your designÔÇĞ</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="dl-actions">
+        <button id="dl-cancel" class="secondary-btn" data-i18n="dlCancel">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+
+</body></html>

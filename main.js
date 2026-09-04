@@ -1,20 +1,9 @@
 /* ============================================================
-   Mockup Stüdyo — Ana Uygulama Mantığı
-   Fabric.js ile mockup düzenleme: manken galerisi, tasarım
-   bindleme, dil çevirisi (TR/EN) ve görsel dışa aktarma.
+   Mockup Studyo — Ana Uygulama Mantığı (temiz sürüm)
+   Eski mockup motoru, edit modalı ve galeri görsel kodları
+   tamamen kaldırıldı. Motor sıfırdan yazılacak; reklam akışı,
+   tema, dil, yorumlar ve sayfa animasyonları korunmuştur.
    ============================================================ */
-console.log('[STUDYO] main.js v66 yüklendi — canlı GPU önizlemeli sürüm');
-// Görünür sürüm damgası (konsol açmadan doğrulama için)
-window.addEventListener('DOMContentLoaded', function () {
-  try {
-    var b = document.createElement('div');
-    b.textContent = 'v66 · GPU motor';
-    b.style.cssText = 'position:fixed;bottom:6px;right:6px;z-index:99999;' +
-      'background:#7c3aed;color:#fff;font:600 11px sans-serif;padding:3px 8px;' +
-      'border-radius:8px;opacity:.85;pointer-events:none;';
-    document.body.appendChild(b);
-  } catch (e) { /* sessiz */ }
-});
 'use strict';
 
 /* ---------------- Çeviri Sözlüğü ---------------- */
@@ -23,20 +12,9 @@ const TRANSLATIONS = {
     pageTitle: 'Mockup Studyo',
     dropHint: 'PNG / JPEG dosyanızı buraya sürükleyin',
     uploadTitle: 'Dosya Yükle',
-    uploadSub: 'Tasarımınızı (PNG / JPEG) buraya sürükleyin veya tıklayıp seçin',
     selectDesign: 'Tasarım Seç',
     replaceHint: 'Tasarımı değiştirmek için tıklayın',
-    brightnessLabel: 'Işık',
-    saturationLabel: 'Doygunluk',
-    sharpnessLabel: 'Keskinlik',
-    contrastLabel: 'Kontrast',
-    warmthLabel: 'Sıcaklık',
-    hueLabel: 'Ton',
-    toneReset: '⟲ Sıfırla',
     removeDesign: 'Tasarımı Kaldır',
-    favBtn: 'Favori Maketler',
-    favPanelTitle: '♥ Favori Maketler',
-    favEmpty: 'Henüz favori maket yok.',
     infoTitle: '🖼 Kaliteli Mockup İçin',
     infoStep1: 'PNG veya JPEG tasarımınızı seçin.',
     infoStep2: 'Şeffaf arka planlı dosya kullanın — arka plan otomatik temizlenmez.',
@@ -44,8 +22,27 @@ const TRANSLATIONS = {
     infoStep4: 'Aşağıdan dilediğiniz mankeni seçerek tasarımı uygulayın.',
     infoNote: '💡 Hazır mockup 2000×2000 px PNG olarak indirilir.',
     galleryTitle: 'Manken Galerisi',
-    addMannequin: '+ Manken Ekle',
     emptyState: 'Henüz manken görseli yok.',
+    galleryAdd: '+ Manken Ekle',
+    needDesign: 'Önce bir tasarım yükleyin, sonra maketi seçin.',
+    editTitle: 'Maketi Düzenle',
+    editSub: 'Tasarımı sürükleyin • tekerlekle boyutlandırın',
+    loadingText: 'Mockup hazırlanıyor…',
+    sizeLabel: 'Boyut',
+    angleLabel: 'Açı',
+    skewXLabel: 'Yana Eğim',
+    skewYLabel: 'Yukarı Eğim',
+    modalHint: '💡 Tasarımı sürükleyin; dalga yoğunluğunu 0 yaparak düz basabilirsiniz.',
+    waveGroupLabel: '🌊 Kumaş Dalgası',
+    waveIntensityLabel: 'Dalga Yoğunluğu',
+    waveBlurLabel: 'Dalga Yumuşatma',
+    waveShadingLabel: 'Kıvrım Gölgesi',
+    toneBrightness: 'Parlaklık',
+    toneContrast: 'Kontrast',
+    toneSaturation: 'Doygunluk',
+    designBtn: '🖼 Tasarım Seç',
+    recenterBtn: '⟲ Ortala',
+    applyBtn: 'Uygula',
     reviewBtn: '💬 Yorum Yap',
     reviewsTitle: '💬 Kullanıcı Yorumları',
     reviewTitle: 'Değerlendirmeniz',
@@ -56,24 +53,9 @@ const TRANSLATIONS = {
     reviewNeedStars: 'En az 1 yıldız vermelisiniz.',
     reviewNeedText: 'Lütfen düşüncelerinizi yazın.',
     reviewConfirmDelete: 'Bu yorumu silmek istediğine emin misin?',
-    loadingText: 'Mockup hazırlanıyor…',
     closeTitle: 'Kapat',
     themeTitle: 'Gece / Gündüz Modu',
-    editTitle: 'Maketi Düzenle',
-    editSub: 'Tasarımı sürükleyerek konumlandırın',
-    sizeLabel: 'Boyut',
-    angleLabel: 'Açı',
-    yawLabel: 'Yana Eğim',
-    pitchLabel: 'Yukarı-Aşağı Eğim',
-    shopLabel: '📐 FORMAT 2000×2000',
-    formatFixed: '📐 FORMAT 2000×2000',
-    formatSub: 'Etsy listelemeye uygun',
-    designBtn: '🖼 Tasarım Seç',
-    recenterBtn: '⟲ Otomatik Yerleştir',
-    applyBtn: 'Uygula',
-    modalHint: '💡 Tasarımı sürükleyerek manken üzerinde istediğiniz yere yerleştirin.',
     dlTitle: 'Ücretsiz İndirme',
-    dlSub: 'Mockup hazırlanıyor',
     dlMsg: 'Reklamı izleyin, biraz bekleyin; tasarımınız hazırlanıyor',
     adStatus: 'Biraz bekleyin, tasarımınız hazırlanıyor…',
     dlDone: 'Mockup indiriliyor…',
@@ -94,27 +76,16 @@ const TRANSLATIONS = {
     contentSub2: 'Nasıl Çalışır?',
     contentPara4: 'Süreç çok basittir: İlk olarak PNG veya JPEG tasarımınızı seçin. Yüksek çözünürlük ve şeffaf arka plan, daha keskin ve profesyonel sonuçlar elde etmenize yardımcı olur. Ardından galeriden beğendiğiniz mankeni seçin; tasarımınız seçilen tüm mankenlere otomatik olarak uygulanır. Konum ve açıyı ayarlayıp Uygula düğmesine bastıktan sonra en iyi kareyi seçerek PNG olarak indirin.',
     contentSub3: 'Ürün Görselleri İçin İpuçları',
-    contentPara5: 'Ürününüzü gerçek bir model veya manken üzerinde göstermek, alıcıların ürünü hayal etmesine yardımcı olur ve tıklama oranınızı artırır. İlk görseliniz net ve çekici olsun; yüksek çözünürlüklü görseller her zaman daha güvenilir görünür. Tasarımınızın ürünün boyutuna ve şekline uygun olduğundan emin olun ve farklı renkler için ayrı mockup hazırlayın. Doğru aydınlatma ve açı seçimiyle ürününüzün en iyi yönlerini öne çıkarabilirsiniz.',
+    contentPara5: 'Ürününüzü gerçek bir model veya manken üzerinde göstermek, alıcıların ürünü hayal etmesine yardımcı olur ve tıklama oranınızı artırır. İlk görseliniz net ve çekici olsun; yüksek çözünürlüklü görseller her zaman daha güvenilir görünür. Tasarımınızın ürünün boyutuna ve şekline uygun olduğundan emin olun ve farklı renkler için ayrı mockup ’lar hazırlayın. Doğru aydınlatma ve açı seçimiyle ürününüzün en iyi yönlerini öne çıkarabilirsiniz.',
     contentPara6: 'Mockup Studyo tamamen ücretsizdir ve reklam gelirleriyle desteklenir. Aracı rahatça kullanabilir, dilediğiniz kadar görsel oluşturabilirsiniz. Siteyle ilgili sorularınız için iletişim sayfamızdan bize ulaşabilirsiniz. İyi satışlar dileriz!'
   },
   en: {
     pageTitle: 'Mockup Studio',
     dropHint: 'Drag & drop your PNG / JPEG file here',
     uploadTitle: 'Upload File',
-    uploadSub: 'Drag your design (PNG / JPEG) here or click to select',
     selectDesign: 'Select Design',
     replaceHint: 'Click to change the design',
-    brightnessLabel: 'Brightness',
-    saturationLabel: 'Saturation',
-    sharpnessLabel: 'Sharpness',
-    contrastLabel: 'Contrast',
-    warmthLabel: 'Warmth',
-    hueLabel: 'Hue',
-    toneReset: '⟲ Reset',
     removeDesign: 'Remove Design',
-    favBtn: 'Favorite Mockups',
-    favPanelTitle: '♥ Favorite Mockups',
-    favEmpty: 'No favorite mockups yet.',
     infoTitle: '🖼 For a High-Quality Mockup',
     infoStep1: 'Choose your design as PNG or JPEG.',
     infoStep2: 'Use a file with a transparent background — the background is not removed automatically.',
@@ -122,8 +93,27 @@ const TRANSLATIONS = {
     infoStep4: 'Select any mannequin below and apply your design.',
     infoNote: '💡 The finished mockup is downloaded as a 2000×2000 px PNG.',
     galleryTitle: 'Mannequin Gallery',
-    addMannequin: '+ Add Mannequin',
     emptyState: 'No mannequin images yet.',
+    galleryAdd: '+ Add Image',
+    needDesign: 'Upload a design first, then pick a mockup.',
+    editTitle: 'Edit Mockup',
+    editSub: 'Drag the design • scroll to resize',
+    loadingText: 'Preparing mockup…',
+    sizeLabel: 'Size',
+    angleLabel: 'Angle',
+    skewXLabel: 'Side Tilt',
+    skewYLabel: 'Up Tilt',
+    modalHint: '💡 Drag the design — set Wave Intensity to 0 to print flat.',
+    waveGroupLabel: '🌊 Fabric Waves',
+    waveIntensityLabel: 'Wave Intensity',
+    waveBlurLabel: 'Wave Smoothing',
+    waveShadingLabel: 'Fold Shading',
+    toneBrightness: 'Brightness',
+    toneContrast: 'Contrast',
+    toneSaturation: 'Saturation',
+    designBtn: '🖼 Choose Design',
+    recenterBtn: '⟲ Center',
+    applyBtn: 'Apply',
     reviewBtn: '💬 Write a Review',
     reviewsTitle: '💬 User Reviews',
     reviewTitle: 'Your Rating',
@@ -134,24 +124,9 @@ const TRANSLATIONS = {
     reviewNeedStars: 'Please give at least 1 star.',
     reviewNeedText: 'Please write your thoughts.',
     reviewConfirmDelete: 'Are you sure you want to delete this review?',
-    loadingText: 'Preparing mockup…',
     closeTitle: 'Close',
     themeTitle: 'Night / Day Mode',
-    editTitle: 'Edit Mockup',
-    editSub: 'Drag the design to position it',
-    sizeLabel: 'Size',
-    angleLabel: 'Angle',
-    yawLabel: 'Side Tilt',
-    pitchLabel: 'Up-Down Tilt',
-    shopLabel: '📐 FORMAT 2000×2000',
-    formatFixed: '📐 FORMAT 2000×2000',
-    formatSub: 'Suitable for Etsy listing',
-    designBtn: '🖼 Choose Design',
-    recenterBtn: '⟲ Auto Position',
-    applyBtn: 'Apply',
-    modalHint: '💡 Drag the design onto the mannequin.',
     dlTitle: 'Free Download',
-    dlSub: 'Preparing mockup',
     dlMsg: 'Watch the ad and wait a moment — your design is being prepared',
     adStatus: 'Please wait a moment, preparing your design…',
     dlDone: 'Downloading mockup…',
@@ -181,130 +156,9 @@ let currentLang = 'en';
 /* ---------------- Yardımcılar ---------------- */
 const $ = (sel, root) => (root || document).querySelector(sel);
 const $$ = (sel, root) => Array.from((root || document).querySelectorAll(sel));
-function uid() {
-  return 'm' + Date.now().toString(36) + Math.random().toString(36).slice(2);
-}
-function fabricReady() {
-  return typeof fabric !== 'undefined' && typeof fabric.Canvas === 'function';
-}
 
 /* ---------------- Durum ---------------- */
-// Varsayılan olarak galeriye eklenecek manken görselleri (boyut ve format değiştirilmez).
-const DEFAULT_MANNEQUINS = [
-  'adfe.png',
-  'Adsırgrz tasarım.png',
-  'Adsıwerwz tasarım.png',
-  'Adsız regtasarım.png',
-  'Adsız tafrfrsarım.png',
-  'Adsız tafrfsarım.png',
-  'Adsız tarfregsarım.png',
-  'Adsız tasacvfrım.png',
-  'Adsız tasadfsrım.png',
-  'Adsız tasaefrrım.png',
-  'Adsız tasareerrım.png',
-  'Adsız tasaregerrım.png',
-  'Adsız tasarerım.png',
-  'Adsız tasarg5etım.png',
-  'Adsız tasargfhtım.png',
-  'Adsız tasargrerım.png',
-  'Adsız tasarım.png',
-  'Adsız tasasfrım.png',
-  'Adsız tasartgeım.png',
-  'Adsız tasartwrım.png',
-  'Adsız tasatg5erım.png',
-  'Adsız taswrfarım.png',
-  'Adsız tathtrsarım.png',
-  'Adsız tatyrtsarım.png',
-  'Adsız tdfosasarım.png',
-  'Adsız tdfsasarım.png',
-  'Adsız tgetasarım.png',
-  'Adsız tgregegasarım.png',
-  'asdjfsf.png',
-  'ddcscds.png',
-  'ddsc.png',
-  'dfdes.png',
-  'dfs.png',
-  'dfsekf.png',
-  'dfskgs.png',
-  'dlfskf.png',
-  'dmznfn.png',
-  'dncsd.png',
-  'dsf.png',
-  'dsfd.png',
-  'dsfdg.png',
-  'dsfds.png',
-  'dsfdsfl.png',
-  'dsfdskf.png',
-  'dsfes.png',
-  'dsfesfe.png',
-  'dsfsd.png',
-  'dsfsf.png',
-  'dsfsrf.png',
-  'dsgfdg.png',
-  'dsgffg.png',
-  'ejjfıeje.png',
-  'fdgd.png',
-  'fgklfdmgl.png',
-  'fgrd.png',
-  'fsfrgf.png',
-  'ghbrhf.png',
-  'kvdjfea.png',
-  'ldvd.png',
-  'rgtry.png',
-  'sddffgskg.png',
-  'sfgdg.png',
-  'sfgjfj.png',
-  'sfgjıdg.png',
-  'sfhsr.png',
-  'sfrf.png',
-  'vff.png',
-  'vfrsv.png',
-    'zcsd.png',
-  'zdfs.png',
-  // --- Klasöre eklenen yeni görseller ---
-  'bdfgdgr.png',
-  'dfghjklşlt.png',
-  'dgthtd.png',
-  'dkfgokreoger.png',
-  'erGJtgdtgeths.png',
-  'eryutryffoosae.png',
-  'ewujfuerg.png',
-  'fdgdfg.png',
-  'fdgfhdyf.png',
-  'fdgfhyjut.png',
-  'fgre.png',
-  'fgsthyhj.png',
-  'gfgtrjkuoı.png',
-  'ghryry.png',
-  'ghtge.png',
-  'ghyyf.png',
-  'gjnerfw3rfes.png',
-  'gtg.png',
-  'gtsrhtyjun.png',
-  'hntyjuyu.png',
-  'jgıojerıt.png',
-  'reegtrhryg.png',
-  'rejgetjgoıjteg.png',
-  'rfgerg.png',
-  'rgftghtrht.png',
-  'rgketrgke.png',
-  'rjfgerjgre.png',
-  'rtgrgerdged.png',
-  'rtgtrh.png',
-  'sdfghjk.png',
-  'sfgdg.png',
-  'sfkvrkgre.png',
-  'sfregrtd.png',
-  'tgtryt.png'
-];
-let mannequins = [];   // { id, name, src, cardEl }
-let design = null;     // { name, dataUrl, img: HTMLImageElement }
-let activeCardIndex = null;
-let activeDesignObj = null;   // Modal içinde sürüklenen tasarım objesi
-let designBaseScale = 1;      // tasarımın açılıştaki ölçeği (slider %100'ü budur)
-let engineQuad = null;        // Tişört yüzeyi (görünmez, sadece perspektif render için)
-let modalCanvas = null;
-let modalCardId = null;
+let design = null;           // { name, dataUrl, img: HTMLImageElement }
 let dlTimer = null;
 let downloading = false;     // indirme akışı sürerken buton spam koruması
 let dlCancelPending = false; // kullanıcı indirmeyi iptal etti mi
@@ -341,673 +195,63 @@ function applyStoredLang() {
   setLang(stored === 'tr' ? 'tr' : 'en');
 }
 
-/* ---------------- Manken Galerisi ---------------- */
-function updateGalleryState() {
-  const es = $('#empty-state');
-  if (es) es.style.display = mannequins.length ? 'none' : '';
-}
-
-// Kart: sadece görsel gösterir, orijinal boyut/format korunur.
-function makeCard(m) {
-  const card = document.createElement('div');
-  card.className = 'mannequin-card mannequin-clickable';
-  card.dataset.id = m.id;
-
-  const holder = document.createElement('div');
-  holder.className = 'mannequin-holder';
-
-  const img = document.createElement('img');
-  img.className = 'mannequin-img';
-  img.alt = m.name || 'Manken';
-  // Performans: galeride önce küçük thumbnail'i göster; kullanıcı maketi seçince
-  // tam çözünürlüklü orijinal render'da yüklenir. Yüklenemezse orijinale düş.
-  img.loading = 'lazy';
-  img.decoding = 'async';
-  img.fetchPriority = 'low';
-  img.src = m.thumbSrc || m.src;
-
-  // Görsel yüklenemezse: önce thumbnail yüklenememişse tam çözünürlük dene (bir kez),
-  // o da yüklenemezse konsola yaz ve kartı gizleme (kırık ikon yerine mesaj göster).
-  img.addEventListener('error', () => {
-    const full = m.src;
-    if (img.src !== full && full && !img.dataset.fellback) {
-      img.dataset.fellback = '1';
-      img.src = full;
-      return;
-    }
-    console.warn('[Manken] Görsel yüklenemedi:', m.src);
-    holder.textContent = '⚠ Görsel yüklenemedi';
-    holder.style.cssText = 'color:#f87171;font-size:.8rem;text-align:center;padding:20px;';
-  });
-  img.addEventListener('load', () => {
-    console.info('[Manken] Görsel yüklendi:', m.src);
-  });
-
-  holder.appendChild(img);
-
-  // Favori kalbi (sağ alt köşe): tıklayınca içi dolar/boşalır
-  const favBtn = document.createElement('button');
-  favBtn.type = 'button';
-  favBtn.className = 'fav-btn' + (isFavorite(m) ? ' active' : '');
-  favBtn.setAttribute('aria-label', 'Favori');
-  favBtn.innerHTML = isFavorite(m) ? '♥' : '♡';
-  favBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    toggleFavorite(m);
-  });
-  card.appendChild(favBtn);
-
-  card.appendChild(holder);
-  card.addEventListener('click', () => openModal(card, m));
-  return card;
-}
-
-function buildCard(m) {
-  return makeCard(m);
-}
-
-function renderCard(m, container) {
-  const grid = container || $('#mannequin-grid');
-  const card = buildCard(m);
-  m.cardEl = card;
-  grid.appendChild(card);
-  updateGalleryState();
-  return card;
-}
-
-function removeMannequin(id) {
-  const idx = mannequins.findIndex((m) => m.id === id);
-  if (idx === -1) return;
-  const m = mannequins[idx];
-  if (m.cardEl) m.cardEl.remove();
-  mannequins.splice(idx, 1);
-  updateGalleryState();
-}
-
-function loadMannequinSrc(src, name, container) {
-  // Aynı URL daha önce eklendiyse kopya koruması: tekrar ekleme.
-  if (seenSrcs.has(src)) {
-    console.info('[Manken] Aynı URL kopyası atlandı (loadMannequinSrc):', name, '->', src);
-    return null;
-  }
-  seenSrcs.add(src);
-  const id = uid();
-  const m = { id, name: name || '', src, cardEl: null, fav: isFavorite({ src }) };
-  mannequins.push(m);
-  renderCard(m, container);
-  return m;
-}
-
-/* ---------------- Favoriler ---------------- */
-const FAV_KEY = 'avci_favorites';
-
-function getFavorites() {
-  try {
-    const raw = localStorage.getItem(FAV_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch (e) {
-    return [];
-  }
-}
-
-function saveFavorites(list) {
-  try {
-    localStorage.setItem(FAV_KEY, JSON.stringify(list));
-  } catch (e) {
-    console.warn('[Favori] localStorage yazılamadı:', e);
-  }
-  updateFavCount();
-}
-
-// Bir kart/bileşen favori mi? src dizesine göre karşılaştır.
-function isFavorite(m) {
-  if (!m || !m.src) return false;
-  return getFavorites().indexOf(m.src) !== -1;
-}
-
-function setFavButtonState(m, btn) {
-  const fav = isFavorite(m);
-  if (btn) {
-    btn.classList.toggle('active', fav);
-    btn.innerHTML = fav ? '♥' : '♡';
-  }
-  if (m) m.fav = fav;
-}
-
-function toggleFavorite(m) {
-  let favs = getFavorites();
-  const idx = favs.indexOf(m.src);
-  if (idx === -1) favs.push(m.src);
-  else favs.splice(idx, 1);
-  saveFavorites(favs);
-
-  // Kart üzerindeki kalbi güncelle
-  if (m.cardEl) {
-    const btn = m.cardEl.querySelector('.fav-btn');
-    setFavButtonState(m, btn);
-  }
-
-  // Panel açıksa listeyi canlı yenile
-  const panel = $('#fav-panel');
-  if (panel && !panel.classList.contains('hidden')) renderFavPanel();
-}
-
-function updateFavCount() {
-  const countEl = $('#fav-count');
-  if (countEl) countEl.textContent = getFavorites().length;
-}
-
-function renderFavPanel() {
-  const body = $('#fav-panel-body');
-  if (!body) return;
-  const favs = getFavorites();
-  body.innerHTML = '';
-
-  if (!favs.length) {
-    body.innerHTML = '<div class="fav-empty" data-i18n="favEmpty">Henüz favori maket yok.</div>';
-    setLang(currentLang);
-    return;
-  }
-
-  favs.forEach((src) => {
-    // ilgili manken objesini bul (resim yolu değişebilir)
-    const m = mannequins.find((x) => x.src === src) || { id: null, src, name: '' };
-    const item = document.createElement('div');
-    item.className = 'fav-item';
-
-    const thumbWrap = document.createElement('div');
-    thumbWrap.className = 'fav-thumb';
-    const img = document.createElement('img');
-    img.loading = 'lazy';
-    img.decoding = 'async';
-    img.fetchPriority = 'low';
-    img.src = src;
-    img.alt = m.name || 'Favori maket';
-    thumbWrap.appendChild(img);
-
-    const name = document.createElement('span');
-    name.className = 'fav-item-name';
-    name.textContent = (m.name || String(src).split('/').pop() || 'Favori maket').slice(0, 60);
-
-    const rm = document.createElement('button');
-    rm.type = 'button';
-    rm.className = 'fav-remove';
-    rm.title = 'Kaldır';
-    rm.innerHTML = '✕';
-    rm.addEventListener('click', (e) => {
-      e.stopPropagation();
-      toggleFavorite(m);
-    });
-
-    // Tıklanınca: tasarım varsa modalı aç
-    item.addEventListener('click', () => {
-      toggleFavPanel(false);
-      if (m.id && mannequins.find((x) => x.id === m.id)) {
-        openModal(m.cardEl || null, m);
-      }
-    });
-
-    item.appendChild(thumbWrap);
-    item.appendChild(name);
-    item.appendChild(rm);
-    body.appendChild(item);
+function bindLangWheel() {
+  const wheel = $('#lang-wheel');
+  if (!wheel) return;
+  wheel.addEventListener('click', () => {
+    if (wheel.classList.contains('spinning')) return;
+    wheel.classList.add('spinning');
+    setTimeout(() => wheel.classList.remove('spinning'), 700);
+    setLang(currentLang === 'tr' ? 'en' : 'tr');
   });
 }
 
-function toggleFavPanel(force) {
-  const panel = $('#fav-panel');
-  if (!panel) return;
-  const shouldOpen = typeof force === 'boolean' ? force : panel.classList.contains('hidden');
-  panel.classList.toggle('hidden', !shouldOpen);
-  if (shouldOpen) renderFavPanel();
+/* ---------------- Gece / Gündüz Tema ---------------- */
+const THEME_KEY = 'mockup_theme';
+
+function applyStoredTheme() {
+  const saved = localStorage.getItem(THEME_KEY);
+  if (saved === 'night') {
+    document.body.classList.add('night-mode');
+    const icon = $('#theme-icon');
+    if (icon) icon.textContent = '☀️';
+  }
 }
 
-// Navbar'daki favori butonu + panel dışına tıklayınca kapanma
-function bindFavEvents() {
-  const btn = $('#fav-toggle-btn');
-  if (btn) {
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      toggleFavPanel();
-    });
-  }
-  document.addEventListener('click', (e) => {
-    const panel = $('#fav-panel');
-    if (!panel || panel.classList.contains('hidden')) return;
-    if (!e.target.closest('.navbar-actions')) toggleFavPanel(false);
+function bindThemeToggle() {
+  const btn = $('#theme-toggle');
+  if (!btn) return;
+  btn.addEventListener('click', () => {
+    const night = document.body.classList.toggle('night-mode');
+    localStorage.setItem(THEME_KEY, night ? 'night' : 'day');
+    const icon = $('#theme-icon');
+    if (icon) icon.textContent = night ? '☀️' : '🌙';
   });
-  updateFavCount();
-}
-
-// Tişört GÖĞÜS bölgesi analizi: en büyük ön plan bileşeninin satır profilinden
-// (doluluk + span + orta nokta) omuz hattını, eteği ve göğüs merkezini bulur.
-// Dönen değerler görsele göre normalize edilmiştir (0-1):
-//   cx, cy     -> GÖĞÜS merkezi (baskı merkezi)
-//   boxW, boxH -> göğüs bölgesi SINIRI (tasarım buraya oturtulur)
-// Geometri şüpheliyse null döner (detectProduct yedeğe düşer).
-function analyzeTorso(aw, ah, isFg, best) {
-  const x0 = best.minx, y0 = best.miny;
-  const W = best.maxx - best.minx + 1, H = best.maxy - best.miny + 1;
-  if (W < 10 || H < 20) return null;
-
-  // 1) Satır profili: span (min..max), dolu piksel sayısı ve satır ortası
-  const rowSpan = new Array(H).fill(0);
-  const rowCnt = new Array(H).fill(0);
-  const rowMid = new Array(H).fill(0);
-  for (let y = 0; y < H; y++) {
-    let mn = -1, mx = -1, cnt = 0;
-    for (let x = 0; x < W; x++) {
-      if (isFg(x0 + x, y0 + y)) {
-        if (mn < 0) mn = x;
-        mx = x; cnt++;
-      }
-    }
-    if (mn >= 0) { rowSpan[y] = mx - mn + 1; rowCnt[y] = cnt; rowMid[y] = mn + mx; }
-  }
-  let maxW = 0;
-  for (let y = 0; y < H; y++) if (rowSpan[y] > maxW) maxW = rowSpan[y];
-  if (maxW < 10) return null;
-
-  // 2) Omuz hattı: üstte span'ın ilk kez maxW'nin %55'ini geçtiği satır
-  //    (yaka/kafa/askı dar olduğundan omuzlar net biçimde "genişler")
-  let shoulderY = -1;
-  const shoulderLimit = Math.floor(H * 0.6);
-  for (let y = 0; y <= shoulderLimit; y++) {
-    if (rowSpan[y] >= maxW * 0.55) { shoulderY = y; break; }
-  }
-  if (shoulderY < 0) return null;
-
-  // 3) Etek: alttan gelen ilk "geniş ve dolu" satır (bacak/pantolon boşluklarını atla)
-  let hemY = -1;
-  for (let y = H - 1; y > shoulderY; y--) {
-    if (rowSpan[y] >= maxW * 0.4 && rowCnt[y] >= rowSpan[y] * 0.55) { hemY = y; break; }
-  }
-  if (hemY < 0) return null;
-
-  // 4) Gövde boyu sınırı: pantolon/uzun taşmaları kırp
-  const torsoH = Math.min(hemY - shoulderY, Math.round(maxW * 1.45));
-  if (torsoH < maxW * 0.4) return null;
-
-  // 5) Göğüs merkezi: omuzdan gövde boyunun ~%34'ü aşağıda (DTG standardı)
-  const chestY = shoulderY + Math.round(torsoH * 0.34);
-
-  // 6) Göğüs genişliği + merkez x: chestY çevresindeki satırların medyanı
-  const band = Math.max(1, Math.round(torsoH * 0.06));
-  const yA = Math.max(0, chestY - band), yB = Math.min(H - 1, chestY + band);
-  const widths = [], mids = [];
-  for (let y = yA; y <= yB; y++) {
-    if (rowSpan[y] > 0) widths.push(rowSpan[y]);
-    if (rowCnt[y] > 0) mids.push(rowMid[y] / 2);
-  }
-  if (widths.length < 3 || mids.length < 3) return null;
-  widths.sort((a, b) => a - b);
-  const bodyW = widths[Math.floor(widths.length / 2)];
-  if (bodyW < maxW * 0.3) return null;
-  mids.sort((a, b) => a - b);
-  const bodyCx = mids[Math.floor(mids.length / 2)];
-
-  // 7) GÖĞÜS BÖLGESİ (merkez/ölçü için) + TÜM TİŞÖRT yüzeyi (render quad için):
-  //    cx/cy, boxW/boxH = göğüs bölgesi; qcx/qcy/qw/qh = tüm tişört (görünmez
-  //    perspektif yüzeyi). Kullanıcı serbestçe yerleştirir, motor yüzeye basar.
-  const pw = Math.min(bodyW * 0.62, maxW * 0.66);
-  const ph = Math.min(pw * 1.16, torsoH * 0.55);
-  if (pw < 8 || ph < 8) return null;
-  const qTop = Math.max(0, shoulderY - Math.round(torsoH * 0.07)); // yaka payı
-  const qBot = Math.min(H - 1, shoulderY + torsoH);                // etek
-
-  return {
-    // göğüs bölgesi (skorlama / bilgi)
-    cx: Math.max(0.3, Math.min(0.7, (x0 + bodyCx) / aw)),
-    cy: Math.max(0.24, Math.min(0.78, (y0 + chestY) / ah)),
-    boxW: Math.max(0.16, Math.min(0.6, pw / aw)),
-    boxH: Math.max(0.14, Math.min(0.5, ph / ah)),
-    // tüm tişört yüzeyi (motor quad'ı)
-    qcx: Math.max(0.15, Math.min(0.85, (x0 + bodyCx) / aw)),
-    qcy: Math.max(0.12, Math.min(0.88, (y0 + (qTop + qBot) / 2) / ah)),
-    qw: Math.max(0.3, Math.min(0.9, maxW / aw)),
-    qh: Math.max(0.28, Math.min(0.85, (qBot - qTop + 1) / ah))
-  };
-}
-
-/* ---------------- Tasarımı Tüm Maketlere Uygula ---------------- */
-// Dayanıklı tişört algılama piplinesi:
-// 1) Şeffaf PNG kesimlerinde ALFA kanalı maskesi kullanılır (en güvenilir yol).
-// 2) Opak fotoğrafta: kenar medyan renginden renk-uzaklık haritası çıkarılır;
-//    Otsu + birkaç eşik denenir, her eşikteki TÜM bağlantılı bileşenler
-//    toplanır ve "tişört benzerliği" skoruyla en iyi aday seçilir
-//    (tek eşik + tek 'en büyük bileşen' hatası ortadan kalkar).
-// 3) Gövde geometrisi (analyzeTorso) çıkamazsa bileşen kutusundan güvenli
-//    göğüs tahmini yapılır; hiçbir şey bulunamazsa null döner (çağıran
-//    varsayılan göğüs kutusu kullanır).
-
-// Otsu eşikleme: uzaklık histogramı üzerinden iki sınıf varyansını maksimize eden
-// eşiği bulur. Kare (squared) uzaklık biriminde eşik döndürür.
-function otsuThreshold(dist2) {
-  const hist = new Array(256).fill(0);
-  const n = dist2.length;
-  for (let i = 0; i < n; i++) {
-    const v = Math.min(255, Math.round(Math.sqrt(dist2[i])));
-    hist[v]++;
-  }
-  let sum = 0;
-  for (let t = 0; t < 256; t++) sum += t * hist[t];
-  let sumB = 0, wB = 0, maxVar = -1, bestT = 0;
-  for (let t = 0; t < 256; t++) {
-    wB += hist[t];
-    if (!wB) continue;
-    const wF = n - wB;
-    if (!wF) break;
-    sumB += t * hist[t];
-    const mB = sumB / wB, mF = (sum - sumB) / wF;
-    const v = wB * wF * (mB - mF) * (mB - mF);
-    if (v > maxVar) { maxVar = v; bestT = t; }
-  }
-  return bestT * bestT;
-}
-
-// Bileşen "tişört benzerliği" skoru. Yüksek skor = manken/tişört görünümü.
-function scoreComponent(b, aw, ah, hasTorso) {
-  const w = b.maxx - b.minx + 1, h = b.maxy - b.miny + 1;
-  const frac = b.cnt / (aw * ah);
-  if (frac < 0.015) return -Infinity;
-  const cx = ((b.minx + b.maxx) / 2) / aw;
-  const cy = ((b.miny + b.maxy) / 2) / ah;
-  const ar = h / w;
-  let s = 0;
-  // Boyut: neredeyse tüm kareyi kaplayan bölge = arka plan, ceza
-  if (frac > 0.9) s -= 25;
-  else s += Math.min(frac / 0.3, 1) * 10;
-  // Görüntü genişliğinin önemli kısmını kaplar (tee/manken kalıbı)
-  const wF = w / aw;
-  if (wF >= 0.35) s += 6; else if (wF >= 0.2) s += 2; else s -= 6;
-  // En/boy oranı: dikey giysi ~1.1-3.5
-  if (ar >= 1.1 && ar <= 3.5) s += 8; else if (ar >= 0.8 && ar < 1.1) s += 2; else s -= 8;
-  // Yatayda ortalanma (mockup fotoğrafları genelde merkezdedir)
-  s += Math.max(0, 1 - Math.abs(cx - 0.5) / 0.5) * 6;
-  if (cy >= 0.15 && cy <= 0.85) s += 3; else s -= 6;
-  // Görüntü merkezini kaplıyor mu
-  const cxM = aw / 2, cyM = ah * 0.5;
-  if (b.minx <= cxM && b.maxx >= cxM && b.miny <= cyM && b.maxy >= cyM) s += 5;
-  // Gövde geometrisi çözülebildiyse güçlü bonus
-  if (hasTorso) s += 18;
-  return s;
-}
-
-// Verilen ikili maskeden tüm bileşenleri topla; en iyi skorluyu seç ve göğüs
-// sınırını hesapla.  { score, result:{cx,cy,boxW,boxH} } döner, sonuç yoksa null.
-function pickFromMask(aw, ah, m) {
-  const area = aw * ah;
-  const seen = new Uint8Array(area);
-  const comps = [];
-  for (let y0 = 0; y0 < ah; y0++) {
-    for (let x0 = 0; x0 < aw; x0++) {
-      if (seen[y0 * aw + x0] || !m[y0 * aw + x0]) continue;
-      const stack = [[x0, y0]];
-      seen[y0 * aw + x0] = 1;
-      let minx = x0, maxx = x0, miny = y0, maxy = y0, cnt = 0, sx = 0, sy = 0;
-      while (stack.length) {
-        const [x, y] = stack.pop();
-        cnt++; sx += x; sy += y;
-        if (x < minx) minx = x; if (x > maxx) maxx = x;
-        if (y < miny) miny = y; if (y > maxy) maxy = y;
-        if (x + 1 < aw && !seen[y * aw + (x + 1)] && m[y * aw + (x + 1)]) { seen[y * aw + (x + 1)] = 1; stack.push([x + 1, y]); }
-        if (x - 1 >= 0 && !seen[y * aw + (x - 1)] && m[y * aw + (x - 1)]) { seen[y * aw + (x - 1)] = 1; stack.push([x - 1, y]); }
-        if (y + 1 < ah && !seen[(y + 1) * aw + x] && m[(y + 1) * aw + x]) { seen[(y + 1) * aw + x] = 1; stack.push([x, y + 1]); }
-        if (y - 1 >= 0 && !seen[(y - 1) * aw + x] && m[(y - 1) * aw + x]) { seen[(y - 1) * aw + x] = 1; stack.push([x, y - 1]); }
-      }
-      if (cnt >= area * 0.004) comps.push({ cnt, minx, maxx, miny, maxy, sx, sy });
-    }
-  }
-  if (!comps.length) return null;
-  const isFg = (x, yy) => m[yy * aw + x] > 0;
-  let best = null, bestScore = -Infinity;
-  for (let i = 0; i < comps.length; i++) {
-    const b = comps[i];
-    const torso = analyzeTorso(aw, ah, isFg, b);
-    const sc = scoreComponent(b, aw, ah, !!torso);
-    if (sc > bestScore) { bestScore = sc; best = { b, torso }; }
-  }
-  if (!best || bestScore < 4) return null;
-  const b = best.b;
-  if (best.torso) return { score: bestScore, result: best.torso };
-  // Gövde geometrisi çıkamadı: bileşen kutusundan güvenli göğüs tahmini
-  const w = b.maxx - b.minx + 1, h = b.maxy - b.miny + 1;
-  const cx = ((b.minx + b.maxx) / 2) / aw;
-  const chestCy = Math.max(0.22, Math.min(0.78, (b.miny + h * 0.42) / ah));
-  const boxW = Math.min(Math.max((w / aw) * 0.55, 0.16), 0.6);
-  const boxH = Math.min(Math.max((h / ah) * 0.42, 0.14), 0.5);
-  return {
-    score: bestScore,
-    result: {
-      cx, cy: chestCy, boxW, boxH,
-      qcx: Math.max(0.15, Math.min(0.85, cx)),
-      qcy: Math.max(0.12, Math.min(0.88, chestCy)),
-      qw: Math.max(0.3, Math.min(0.9, w / aw)),
-      qh: Math.max(0.28, Math.min(0.85, h / ah))
-    }
-  };
-}
-
-function detectProduct(img, size) {
-  const w0 = img.naturalWidth || img.width || 1000;
-  const h0 = img.naturalHeight || img.height || 1000;
-  const sLimit = Math.min(size || 220, Math.max(w0, h0));
-  const r = w0 / h0;
-  let aw, ah;
-  if (r >= 1) { aw = sLimit; ah = Math.max(Math.round(sLimit / r), 8); }
-  else { ah = sLimit; aw = Math.max(Math.round(sLimit * r), 8); }
-  const c = document.createElement('canvas');
-  c.width = aw; c.height = ah;
-  const cx0 = c.getContext('2d', { willReadFrequently: true });
-  try { cx0.drawImage(img, 0, 0, aw, ah); } catch (e) { return null; }
-  let id;
-  try { id = cx0.getImageData(0, 0, aw, ah); } catch (e) { return null; }
-  const data = id.data;
-  const area = aw * ah;
-  const B = 4;
-
-  // ---- Şeffaf (kesilmiş PNG) arka plan: alfa kanalı maskesi (en güvenilir) ----
-  let edgeT = 0, edgeN = 0;
-  for (let y = 0; y < ah; y++) {
-    for (let x = 0; x < aw; x++) {
-      if (x < B || y < B || x >= aw - B || y >= ah - B) {
-        edgeN++;
-        if (data[(y * aw + x) * 4 + 3] < 120) edgeT++;
-      }
-    }
-  }
-  if (edgeN > 0 && edgeT / edgeN > 0.5) {
-    const m = new Uint8Array(area);
-    for (let p = 0; p < area; p++) m[p] = data[p * 4 + 3] > 110 ? 1 : 0;
-    const det = pickFromMask(aw, ah, m);
-    if (det) return det.result;
-    return null;
-  }
-
-  // ---- Opak fotoğraf: renk uzaklığı haritası + çoklu eşik ---- //
-  const P = (x, y) => {
-    const i = (y * aw + x) * 4;
-    return [data[i], data[i + 1], data[i + 2]];
-  };
-  // Arka plan: kenardaki piksellerin ortanca (medyan) rengi
-  const edge = [];
-  for (let y = 0; y < ah; y++) {
-    for (let x = 0; x < aw; x++) {
-      if (x < B || y < B || x >= aw - B || y >= ah - B) edge.push(P(x, y));
-    }
-  }
-  if (!edge.length) return null;
-  const med = (arr) => arr.slice().sort((a, b) => a - b)[Math.floor(arr.length / 2)];
-  const bgr = med(edge.map((p) => p[0]));
-  const bgg = med(edge.map((p) => p[1]));
-  const bgb = med(edge.map((p) => p[2]));
-
-  const dist2 = new Float32Array(area);
-  let dSum = 0;
-  for (let y = 0; y < ah; y++) {
-    for (let x = 0; x < aw; x++) {
-      const p = P(x, y);
-      const dr = p[0] - bgr, dg = p[1] - bgg, db = p[2] - bgb;
-      const d2 = dr * dr + dg * dg + db * db;
-      dist2[y * aw + x] = d2;
-      dSum += d2;
-    }
-  }
-  const meanD = dSum / area;
-  const otsu = otsuThreshold(dist2);
-
-  // Birkaç eşik denenir; en iyi "tişört benzeri" bileşen kazanır.
-  const ths = [];
-  if (isFinite(otsu) && otsu > 0) ths.push(otsu, otsu * 0.45, otsu * 0.2);
-  ths.push(Math.max(20 * 20, meanD * 1.1), Math.max(16 * 16, meanD * 0.5));
-
-  let best = null, bestScore = -Infinity;
-  for (let ti = 0; ti < ths.length; ti++) {
-    const th = ths[ti];
-    const m = new Uint8Array(area);
-    let fgCount = 0;
-    for (let p = 0; p < area; p++) {
-      if (dist2[p] > th) { m[p] = 1; fgCount++; }
-    }
-    if (fgCount < area * 0.01) continue;
-    const d = pickFromMask(aw, ah, m);
-    if (d && d.score > bestScore) { bestScore = d.score; best = d; }
-  }
-  if (best) return best.result;
-
-  // En kötü senaryo: kontrastsız arka plan, belirgin bileşen yok
-  return null;
-}
-
-// Görsel yolunu hazırla: Türkçe karakter ve boşlukları güvenli kodla.
-function mannequinPath(file) {
-  return 'görsel/' + encodeURIComponent(file);
-}
-
-// Küçük galeri önizlemesi (thumbnail) yolunu hazırla.
-// Orijinal PNG'ler birkaç MB iken thumb ('görsel/thumbs') ~30-60KB'dır;
-// galeri bunları gösterir, tam çözünürlük yalnızca render sırasında yüklenir.
-function thumbPath(file) {
-  const base = String(file).replace(/\.[^.]+$/, '');
-  return 'görsel/thumbs/' + encodeURIComponent(base + '.jpg');
-}
-
-// Görsel parmak izi: küçük 8x8 tuvale indirip gri ton dizisi üretir.
-// Aynı görselin farklı isimli kopyaları aynı parmak izini üretir.
-function computeFingerprint(img) {
-  const c = document.createElement('canvas');
-  c.width = 8;
-  c.height = 8;
-  const ctx = c.getContext('2d');
-  ctx.drawImage(img, 0, 0, 8, 8);
-  const d = ctx.getImageData(0, 0, 8, 8).data;
-  let fp = '';
-  for (let i = 0; i < d.length; i += 4) {
-    fp += Math.round(((d[i] + d[i + 1] + d[i + 2]) / 3) / 32) + ',';
-  }
-  return fp;
-}
-
-const seenFingerprints = new Set();
-// Aynı URL'ye sahip görselin ikinci kez eklenmesini engeller.
-const seenSrcs = new Set();
-
-// Yolları sırayla dener; yüklenen görsel daha önce eklendiyse (aynı görünümlü
-// kopya veya aynı URL) galeriye eklemeden atlar.
-function tryLoadMannequin(paths, name, idx, opts) {
-  if (idx >= paths.length) return;
-  const img = new Image();
-  img.onload = () => {
-    // Kanonik kimlik = tam çözünürlüklü dosya (favoriler & render bunu kullanır).
-    const canonSrc = (opts && opts.fullSrc) || img.src;
-    if (seenSrcs.has(canonSrc)) {
-      console.info('[Manken] Aynı URL kopyası atlandı:', name, '->', canonSrc);
-      updateGalleryState();
-      return;
-    }
-    seenSrcs.add(canonSrc);
-
-    let fp = '';
-    try { fp = computeFingerprint(img); } catch (e) { /* CORS vb. → kontrol yok */ }
-    if (fp && seenFingerprints.has(fp)) {
-      console.info('[Manken] Aynı görsel kopyası atlandı (fingerprint):', name);
-      updateGalleryState();
-      return;
-    }
-    if (fp) seenFingerprints.add(fp);
-
-    // İlk yol thumbnail ise galeride onu kullan; yüklenemezse (idx>0) tam çözünürlük.
-    const isThumb = !!(opts && opts.thumbSrc && idx === 0);
-    const m = {
-      id: uid(),
-      name,
-      src: canonSrc,                                // tam çözünürlük (render/favori)
-      thumbSrc: isThumb ? opts.thumbSrc : canonSrc, // galeri kartı önizlemesi
-      cardEl: null,
-      fav: isFavorite({ src: canonSrc })
-    };
-    mannequins.push(m);
-    renderCard(m);
-    updateGalleryState();
-  };
-  img.onerror = () => tryLoadMannequin(paths, name, idx + 1, opts);
-  img.src = paths[idx];
-}
-
-// Varsayılan mankenler: önce küçük thumbnail'leri yüklenir (parmak izi + hızlı galeri),
-// tam PNG yalnızca mockup render edilirken getirilir.
-function seedDefaultMannequins() {
-  DEFAULT_MANNEQUINS.forEach((file) => {
-    const fullAbs = new URL(mannequinPath(file), location.href).href;
-    const thumbAbs = new URL(thumbPath(file), location.href).href;
-    const paths = [thumbPath(file), mannequinPath(file), 'görsel/' + file];
-    tryLoadMannequin(paths, file.replace(/\.[^.]+$/, ''), 0, { fullSrc: fullAbs, thumbSrc: thumbAbs });
-  });
-  setTimeout(() => {
-    console.info('[Manken] Galeride', mannequins.length, 'kart oluşturuldu (kopyalar atlandı).');
-  }, 3000);
 }
 
 /* ---------------- Tasarım Yükleme ---------------- */
 function showDesignPreview() {
   const ph = $('#drop-placeholder');
   const prev = $('#design-preview');
+  if (!ph || !prev) return;
   ph.classList.add('hidden');
   prev.src = design.dataUrl || design.src;
   prev.classList.remove('hidden');
-  // Tasarım yüklendi; maket seçiliyse (modal açıksa) o makete bind'i güncelle
-  refreshModalDesign();
+  // Edit açıksa motor tasarımını tazele
+  if (activeMannequin) refreshModalDesign();
 }
 
 function clearDesign() {
   design = null;
-  activeDesignObj = null;
   const prev = $('#design-preview');
-  prev.classList.add('hidden');
-  if (prev.src) prev.removeAttribute('src');
+  if (prev) {
+    prev.classList.add('hidden');
+    if (prev.src) prev.removeAttribute('src');
+  }
   const ph = $('#drop-placeholder');
-  ph.classList.remove('hidden');
+  if (ph) ph.classList.remove('hidden');
   const input = $('#design-upload');
-  input.value = '';
-  // Tasarım kaldırıldı; maket seçiliyse bind'i temizle
-  refreshModalDesign();
-}
-
-// Modal açıksa, mevcut makette tasarımı yeniden bind eder (yoksa temizler).
-function refreshModalDesign() {
-  if (!modalCardId) return;
-  const mm = modalCard();
-  if (mm) initModalCanvas(mm);
-}
-
-function loadDesignSrc(src, name) {
-  const img = new Image();
-  img.onload = () => {
-    design = { name: name || 'design', src, dataUrl: src, img };
-    showDesignPreview();
-  };
-  img.onerror = () => { /* sessiz */ };
-  img.src = src;
+  if (input) input.value = '';
 }
 
 /* ---------------- Dosya Doğrulama (Güvenlik) ---------------- */
@@ -1064,6 +308,7 @@ async function handleDesignFile(file) {
 function bindUploadEvents() {
   const dropZone = $('#drop-zone');
   const fileInput = $('#design-upload');
+  if (!dropZone || !fileInput) return;
   const selectBtn = $('#drop-placeholder .primary-btn');
 
   if (selectBtn) selectBtn.addEventListener('click', () => fileInput.click());
@@ -1094,683 +339,399 @@ function bindUploadEvents() {
 
   const removeBtn = $('#remove-design');
   if (removeBtn) removeBtn.addEventListener('click', clearDesign);
-
-  const addBtn = $('#add-mannequin');
-  const manInput = $('#mannequin-upload');
-  if (addBtn && manInput) addBtn.addEventListener('click', () => manInput.click());
-  if (manInput) manInput.addEventListener('change', (e) => {
-    const files = Array.from(e.target.files || []);
-    files.forEach((f) => {
-      const err = validateImageFile(f);
-      if (err) { alert(err); return; }
-      const reader = new FileReader();
-      reader.onload = (r) => {
-        const dataUrl = r.target.result;
-        const id = uid();
-        const m = { id, name: f.name, src: dataUrl, cardEl: null };
-        mannequins.push(m);
-        renderCard(m);
-      };
-      reader.onerror = () => alert('Görsel okunamadı.');
-      reader.readAsDataURL(f);
-    });
-    e.target.value = '';
-  });
 }
 
-/* ---------------- Modal Düzenleme ---------------- */
-function modalCard() {
-  return mannequins.find((m) => m.id === modalCardId) || null;
+/* ---------------- Manken Galerisi (GPU Motor ile entegre) ----------------
+   Görseller gallery-data.js üzerinden gelir (tools/build-gallery.ps1 üretir).
+   Sonradan eklenen görseller de motor tarafından otomatik desteklenir. */
+const GALLERY_FILES = (window.GALLERY_FILES || []);
+let mannequins = []; // { id, name, src, cardEl }
+let galleryUid = 0;
+function uid() { return 'm' + (++galleryUid) + '_' + Date.now().toString(36); }
+
+function mannequinPath(file) { return 'görsel/' + encodeURIComponent(file); }
+function thumbPath(file) {
+  const base = String(file).replace(/\.[^.]+$/, '');
+  return 'görsel/thumbs/' + encodeURIComponent(base + '.jpg');
 }
 
-function printAreaRect(bg) {
-  const w = (bg.getScaledWidth && bg.getScaledWidth()) || bg.width;
-  const h = (bg.getScaledHeight && bg.getScaledHeight()) || bg.height;
-  return { x: 0, y: 0, w, h };
-}
-
-// Çerçeve yok: kesikli baskı alanı çizimi kaldırıldı (sadece görsel).
-function drawPrintArea(bg) {
-  if (!modalCanvas) return;
-  modalCanvas.getObjects().forEach((o) => {
-    if (o.id === 'printArea') modalCanvas.remove(o);
-  });
-  modalCanvas.requestRenderAll();
-}
-
-function getModalBackground() {
-  if (!modalCanvas) return null;
-  return modalCanvas.getObjects().find((o) => o.type === 'image' && o.selectable === false);
-}
-
-// Çerçeve yok: tasarım serbest hareket eder, hiçbir alana sınırlanmaz.
-function clampDesignToPrintArea() {
-  if (modalCanvas) modalCanvas.requestRenderAll();
-}
-
-function autoState() {
-  if (!modalCanvas) return;
-  modalCanvas.requestRenderAll();
-}
-
-function printArea() {
-  autoState();
-}
-
-/* ---------------- Ton Paneli (ışık/doygunluk/keskinlik/kontrast/sıcaklık/ton) ---------------- */
-const TONE_DEFAULTS = { brightness: 100, saturation: 100, sharpness: 0, contrast: 100, warmth: 0, hue: 0 };
-let toneState = { ...TONE_DEFAULTS };
-
-function toneFilterString() {
-  const t = toneState;
-  let f = 'brightness(' + t.brightness + '%) saturate(' + t.saturation + '%) contrast(' + t.contrast + '%)';
-  if (t.warmth > 0) f += ' sepia(' + Math.round(t.warmth * 0.6) + '%)';
-  if (t.hue !== 0) f += ' hue-rotate(' + t.hue + 'deg)';
-  return f;
-}
-
-// Canlı önizleme: filtre zincirini canvas kapsayıcısına uygular.
-// Keskinlik, CSS tarafında SVG konvolüsyon filtresi (mockup-sharpen) ile verilir.
-function applyTonePreview() {
-  const wrap = $('#modal-canvas-wrap');
-  if (!wrap) return;
-  const target = wrap.querySelector('.canvas-container') || $('#modal-canvas');
-  if (!target) return;
-  let f = toneFilterString();
-  if (toneState.sharpness > 0) f += ' url(#mockup-sharpen)';
-  target.style.filter = f;
-}
-
-function resetToneState() {
-  toneState = { ...TONE_DEFAULTS };
-  const keys = ['brightness', 'saturation', 'sharpness', 'contrast', 'warmth', 'hue'];
-  keys.forEach((k) => {
-    const r = $('#tone-' + k);
-    const n = $('#tone-' + k + '-num');
-    if (r) r.value = TONE_DEFAULTS[k];
-    if (n) n.value = TONE_DEFAULTS[k];
-  });
-  applyTonePreview();
-}
-
-// Keskinliği dışa aktarma görüntüsüne uygular (basit unsharp konvolüsyonu).
-function applySharpnessToCanvas(canvas, amount) {
-  const ctx = canvas.getContext('2d');
-  const w = canvas.width, h = canvas.height;
-  const src = ctx.getImageData(0, 0, w, h);
-  const out = ctx.createImageData(w, h);
-  const d = src.data, o = out.data;
-  const k = [0, -1, 0, -1, 5, -1, 0, -1, 0];
-  const a = Math.min(1, amount / 100) * 0.9;
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
-      const i = (y * w + x) * 4;
-      for (let c = 0; c < 3; c++) {
-        let sum = 0, ki = 0;
-        for (let dy = -1; dy <= 1; dy++) {
-          const yy = Math.min(h - 1, Math.max(0, y + dy));
-          for (let dx = -1; dx <= 1; dx++) {
-            const xx = Math.min(w - 1, Math.max(0, x + dx));
-            sum += d[(yy * w + xx) * 4 + c] * k[ki++];
-          }
-        }
-        const base = d[i + c];
-        o[i + c] = Math.max(0, Math.min(255, base * (1 - a) + sum * a));
-      }
-      o[i + 3] = d[i + 3];
-    }
-  }
-  ctx.putImageData(out, 0, 0);
-}
-
-function syncModalControls() {
-  if (!activeDesignObj) return;
-  const sc = $('#modal-scale');
-  const rt = $('#modal-rotate');
-  const yw = $('#modal-yaw');
-  const sv = $('#modal-scale-val');
-  const rv = $('#modal-rotate-val');
-  const yv = $('#modal-yaw-val');
-  const scNum = $('#modal-scale-num');
-  const rtNum = $('#modal-rotate-num');
-  const ywNum = $('#modal-yaw-num');
-  const pchNum = $('#modal-pitch-num');
-  if (sc && sv) {
-    // Slider görevidir: açılıştaki ölçeğe oranla yüzde
-    const base = designBaseScale || 1;
-    const pct = Math.max(10, Math.min(300, Math.round((activeDesignObj.scaleX / base) * 100)));
-    sc.value = pct; sv.textContent = pct + '%';
-    if (scNum) scNum.value = pct;
-  }
-  if (rt && rv) {
-    const r = Math.round((activeDesignObj.angle || 0) % 360);
-    rt.value = r; rv.textContent = r + '°';
-    if (rtNum) rtNum.value = r;
-  }
-  if (yw && yv) {
-    const y = activeDesignObj.yaw || 0;
-    yw.value = y; yv.textContent = y + '°';
-    if (ywNum) ywNum.value = y;
-  }
-  const pch = $('#modal-pitch');
-  const pv = $('#modal-pitch-val');
-  if (pch && pv) {
-    const p = activeDesignObj.pitch || 0;
-    pch.value = p; pv.textContent = p + '°';
-    if (pchNum) pchNum.value = p;
-  }
-}
-
-function syncModalScale() {
-  if (activeDesignObj) syncModalControls();
-}
-
-function setBlend() {
-  if (!activeDesignObj) return;
-  const b = $('#modal-blend');
-  if (b && b.value === 'multiply') {
-    activeDesignObj.globalCompositeOperation = 'multiply';
-  } else {
-    activeDesignObj.globalCompositeOperation = 'source-over';
-  }
-  if (modalCanvas) modalCanvas.requestRenderAll();
-}
-
-function collectModalState() {
-  if (!activeDesignObj) return null;
-  return {
-    scaleX: activeDesignObj.scaleX,
-    scaleY: activeDesignObj.scaleY,
-    angle: activeDesignObj.angle,
-    yaw: activeDesignObj.yaw || 0,
-    pitch: activeDesignObj.pitch || 0,
-    left: activeDesignObj.left,
-    top: activeDesignObj.top,
-    blend: $('#modal-blend') ? $('#modal-blend').value : 'source-over'
+const seenSrcs = new Set();
+function tryLoadMannequin(paths, name, idx) {
+  if (idx >= paths.length) return;
+  const img = new Image();
+  img.onload = () => {
+    if (seenSrcs.has(img.src)) { updateGalleryState(); return; }
+    seenSrcs.add(img.src);
+    const m = { id: uid(), name, src: img.src, cardEl: null };
+    mannequins.push(m);
+    renderCard(m);
+    updateGalleryState();
   };
+  img.onerror = () => tryLoadMannequin(paths, name, idx + 1);
+  img.src = paths[idx];
 }
 
-// Serbest mod: tasarım hiçbir sınıra bağlanmaz; sadece yeniden çizer.
-function clampToPrintBound() {
-  if (modalCanvas) modalCanvas.requestRenderAll();
+function seedDefaultMannequins() {
+  GALLERY_FILES.forEach((file) => {
+    // önce küçük thumbnail; yüklenemezse tam çözünürlük
+    tryLoadMannequin([thumbPath(file), mannequinPath(file)], file.replace(/\.[^.]+$/, ''), 0);
+  });
 }
 
-function initModalCanvas(m) {
-  const canvasEl = $('#modal-canvas');
+function makeCard(m) {
+  const card = document.createElement('div');
+  card.className = 'mannequin-card mannequin-clickable';
+  card.dataset.id = m.id;
+  const holder = document.createElement('div');
+  holder.className = 'mannequin-holder';
+  const img = document.createElement('img');
+  img.className = 'mannequin-img';
+  img.alt = m.name || 'Manken';
+  img.loading = 'lazy';
+  img.decoding = 'async';
+  img.src = m.src;
+  holder.appendChild(img);
+  card.appendChild(holder);
+  card.addEventListener('click', () => openModal(card, m));
+  return card;
+}
+
+function renderCard(m) {
+  const grid = $('#mannequin-grid');
+  if (!grid) return;
+  m.cardEl = makeCard(m);
+  grid.appendChild(m.cardEl);
+}
+
+function updateGalleryState() {
+  const es = $('#empty-state');
+  if (es) es.style.display = mannequins.length ? 'none' : '';
+}
+
+// Galeriye kendi görselini ekleme — motor jeneriktir, her görselde çalışır.
+function addMannequinFromFiles(files) {
+  Array.from(files || []).forEach((f) => {
+    const err = validateImageFile(f);
+    if (err) { alert(err); return; }
+    const src = URL.createObjectURL(f);
+    if (seenSrcs.has(src)) return;
+    seenSrcs.add(src);
+    const m = { id: uid(), name: f.name.replace(/\.[^.]+$/, ''), src, cardEl: null };
+    mannequins.push(m);
+    renderCard(m);
+    updateGalleryState();
+  });
+}
+
+function bindGalleryEvents() {
+  const addBtn = $('#add-mannequin');
+  const input = $('#mannequin-upload');
+  if (addBtn && input) addBtn.addEventListener('click', () => input.click());
+  if (input) input.addEventListener('change', () => {
+    addMannequinFromFiles(input.files);
+    input.value = '';
+  });
+}
+
+/* ---------------- Edit Modalı (GPU Motor) ----------------
+   Dalga bükme önizlemesi. Motor: gpu-engine.js */
+let activeMannequin = null;
+let pendingMannequinId = null; // tasarım yokken seçilen maket
+let modalTransform = null;     // { cx, cy, w, h, angle, skewX, skewY }
+let modalDefaults = null;      // açılış transformu (slider %100 = bu)
+let modalRenderPending = false;
+const imageCache = new Map();
+
+function loadImageCached(src) {
+  if (imageCache.has(src)) return Promise.resolve(imageCache.get(src));
+  return new Promise((res, rej) => {
+    const img = new Image();
+    img.onload = () => { imageCache.set(src, img); res(img); };
+    img.onerror = () => rej(new Error('gorsel-yuklenemedi'));
+    img.src = src;
+  });
+}
+
+function renderModal() {
+  if (!window.MockupEngine || !MockupEngine.canRender()) return;
+  if (modalRenderPending) return;
+  modalRenderPending = true;
+  requestAnimationFrame(() => {
+    modalRenderPending = false;
+    MockupEngine.renderPreview();
+  });
+}
+
+function designAspect() {
+  if (design && design.img) {
+    const w = design.img.naturalWidth || design.img.width || 1;
+    const h = design.img.naturalHeight || design.img.height || 1;
+    return w / h;
+  }
+  return 1;
+}
+
+// Göğüs algısına göre başlangıç yerleşimi (motor jenerik: her görselde çalışır)
+function defaultTransformFor(det, img) {
+  const chest = (det && det.chest) || { cx: 0.5, cy: 0.42, w: 0.34, h: 0.34 };
+  const natW = img.naturalWidth || 1000;
+  const natH = img.naturalHeight || 1000;
+  const w = Math.max(0.05, chest.w * 0.9);
+  const h = Math.max(0.04, w * (natW / natH) / designAspect());
+  return { cx: chest.cx, cy: chest.cy, w, h, angle: 0, skewX: 0, skewY: 0 };
+}
+
+function openModal(card, m) {
+  if (!window.MockupEngine) { alert('GPU motoru yüklenemedi.'); return; }
+  if (!design) {
+    pendingMannequinId = m.id;
+    alert((TRANSLATIONS[currentLang] || TRANSLATIONS.tr).needDesign);
+    return;
+  }
+  activeMannequin = m;
+  modalTransform = null;
+  modalDefaults = null;
+  resetModalControls();
+    $('#modal').classList.remove('hidden');
+  // Edit ekranı açıkken üst reklam banneri görünsün
+  const topAd = $('#top-ad-banner');
+  if (topAd) topAd.classList.remove('hidden');
+  // Edit ekranı açıkken sağ ve sol dikey reklam bannerlarını göster
+  const leftAd = $('#left-ad-banner');
+  const rightAd = $('#right-ad-banner');
+  if (leftAd) leftAd.classList.remove('hidden');
+  if (rightAd) rightAd.classList.remove('hidden');
+  // Yan dikey bannerlar göründüğünde sol sabit alt banner çakışmasın
+  const bottomAd = $('#bottom-ad-banner');
+  if (bottomAd) bottomAd.classList.add('hidden');
+  document.body.classList.add('top-ad-visible');
+  initModalEngine(m);
+}
+
+async function initModalEngine(m) {
+  const canvas = $('#modal-canvas');
   const wrap = $('#modal-canvas-wrap');
   const loadingEl = $('#modal-loading');
-  // Yükleme ekranı: mockup hazırlanırken kısa süre görünür.
-  const MIN_LOADING_MS = 1000;
+  const MIN_LOADING_MS = 600;
   const loadStart = Date.now();
   if (loadingEl) loadingEl.classList.remove('hidden');
   const finishLoading = () => {
     const wait = Math.max(0, MIN_LOADING_MS - (Date.now() - loadStart));
     setTimeout(() => { if (loadingEl) loadingEl.classList.add('hidden'); }, wait);
   };
-  // Görseli yükle ve canvas'a çiz
-  const img = new Image();
-  img.src = m.src;
-  img.onload = () => {
-    const natW = img.naturalWidth || img.width || 1000;
-    const natH = img.naturalHeight || img.height || 1000;
-    const MAX_W = Math.max((wrap.clientWidth || 560) - 20, 300);
-    const MAX_H = 520;
-    const scale = Math.min(MAX_W / natW, MAX_H / natH, 1);
-    const dispW = Math.max(Math.round(natW * scale), 2);
-    const dispH = Math.max(Math.round(natH * scale), 2);
-
-    if (modalCanvas) { modalCanvas.dispose(); modalCanvas = null; }
-    canvasEl.width = dispW;
-    canvasEl.height = dispH;
-    if (!fabricReady()) { finishLoading(); return; }
-    modalCanvas = new fabric.Canvas(canvasEl);
-    // Serbest mod: tasarım hiçbir sınıra bağlı değil; sadece yeniden çizer.
-    modalCanvas.on('object:moving', clampToPrintBound);
-    modalCanvas.on('object:scaling', clampToPrintBound);
-    modalCanvas.on('object:modified', clampToPrintBound);
-
-    // ---- Canlı GPU önizleme katmanı (WebGL mockup motoru) ----
-    // Fabric'in düz çiziminin ÜSTÜNE GPU (shader) sonucu bindirilir:
-    // bükme + kumaş ışık/gölgesi editte anında görünür.
-    let gpuOverlay = wrap.querySelector('#gpu-overlay');
-    if (!gpuOverlay) {
-      gpuOverlay = document.createElement('canvas');
-      gpuOverlay.id = 'gpu-overlay';
-      gpuOverlay.style.cssText = 'position:absolute;left:0;top:0;pointer-events:none;z-index:20;display:none;';
-    }
-    const gpuContainer = wrap.querySelector('.canvas-container') || wrap;
-    gpuContainer.appendChild(gpuOverlay);
-    gpuOverlay.width = dispW;
-    gpuOverlay.height = dispH;
-
-    const updateGpuPreview = (keepHidden) => {
-      try {
-        if (!window.MockupEngine) { console.warn('[GPU-YOK] MockupEngine tanımlı değil'); gpuOverlay.style.display = 'none'; return; }
-        if (keepHidden) { gpuOverlay.style.display = 'none'; return; }
-        if (!MockupEngine.canRender()) { console.warn('[GPU-YOK] canRender=false (motor bağlı değil)'); gpuOverlay.style.display = 'none'; return; }
-        if (!design || !activeDesignObj) { console.warn('[GPU-YOK] tasarım yok'); gpuOverlay.style.display = 'none'; return; }
-        if (MockupEngine.renderPreview(gpuOverlay, dispW)) {
-          gpuOverlay.style.display = 'block';
-          console.log('[STUDYO] GPU önizleme aktif ✓');
-        } else {
-          console.warn('[GPU-YOK] renderPreview false döndü');
-          gpuOverlay.style.display = 'none';
-        }
-      } catch (e) { console.error('[GPU] önizleme hatası:', e); if (gpuOverlay) gpuOverlay.style.display = 'none'; }
-    };
-    // Tasarım eklenince/değişince GPU katmanını tazele
-    modalCanvas.on('object:added', () => updateGpuPreview());
-    modalCanvas.on('object:modified', () => updateGpuPreview());
-    // Sürüklerken fabric'i göster (tutamaçlar görünsün), bırakınca GPU'ya dön
-    modalCanvas.on('mouse:down', (opt) => {
-      if (opt.target && opt.target === activeDesignObj) updateGpuPreview(true);
-    });
-    modalCanvas.on('mouse:up', () => updateGpuPreview());
-    modalCanvas.on('object:removed', () => updateGpuPreview());
-    // Slider'lar vs. requestRenderAll çağırır: GPU katmanını rAF ile kısıtla ve tazele
-    let gpuPending = false;
-    const origRenderAll = modalCanvas.requestRenderAll.bind(modalCanvas);
-    modalCanvas.requestRenderAll = function () {
-      origRenderAll();
-      if (!gpuPending && gpuOverlay.style.display !== 'none') {
-        gpuPending = true;
-        requestAnimationFrame(() => { gpuPending = false; updateGpuPreview(); });
-      }
-    };
-
-    // Mockup Motoru bağlama yardımcısı: algılanan tişört yüzeyini engine quad
-    // yapar (export perspektif warp + ışık/gölge burayı kullanır). Kullanıcıya
-    // hiçbir çerçeve gösterilmez; kullanıcı tasarımı serbestçe sürükler.
-    const mountEngine = (quad) => {
-      if (!window.MockupEngine) return;
-      const leftoverHandles = wrap.querySelector('.engine-handles');
-      if (leftoverHandles) leftoverHandles.remove();
-      MockupEngine.attach({
-        img: img, natW: natW, natH: natH,
-        dispW: dispW, dispH: dispH,
-        id: (m.id || 'model'),
-        forceQuad: true, // her açılışta taze algılama uygula (eski kayıt yok sayılır)
-        defaultQuad: [
-          { x: quad.x, y: quad.y },
-          { x: quad.x + quad.w, y: quad.y },
-          { x: quad.x + quad.w, y: quad.y + quad.h },
-          { x: quad.x, y: quad.y + quad.h }
-        ],
-        getDesign: function () {
-          if (!design || !activeDesignObj || !activeDesignObj._element) return null;
-          const o = activeDesignObj;
-          // originX/Y 'center' olduğu için left/top merkezdir; getCenterPoint
-          // her origin ayarında gerçek merkezi verir (warp kaymasını önler).
-          let ccx = o.left + (o.width * o.scaleX) / 2;
-          let ccy = o.top + (o.height * o.scaleY) / 2;
-          if (typeof o.getCenterPoint === 'function') {
-            const cp = o.getCenterPoint();
-            ccx = cp.x; ccy = cp.y;
-          }
-          return {
-            el: o._element,
-            cx: ccx,
-            cy: ccy,
-            w: o.width * o.scaleX,
-            h: o.height * o.scaleY,
-            angle: o.angle || 0,
-            yaw: o.yaw || 0,
-            pitch: o.pitch || 0
-          };
-        },
-        onQuadChange: function (qn) {
-          engineQuad = {
-            x: qn[0].x * dispW, y: qn[0].y * dispH,
-            w: (qn[1].x - qn[0].x) * dispW, h: (qn[3].y - qn[0].y) * dispH
-          };
-        }
-      });
-    };
-
-    const bg = new fabric.Image(img);
-    bg.selectable = false;
-    bg.evented = false;
-    bg.set({ left: 0, top: 0, scaleX: dispW / natW, scaleY: dispH / natH });
-    bg.crossOrigin = 'anonymous';
-    modalCanvas.add(bg);
-    modalCanvas.sendToBack(bg);
-
-    activeDesignObj = null;
-    syncModalControls();
-
-    // Tişörtü algıla -> görünmez yüzeyi (engine quad) ayarla. UI'da hiçbir
-    // çerçeve gösterilmez; kullanıcı tasarımı istediği yere koyar.
-    const det = detectProduct(img, 240);
-    let quad;
-    if (det) {
-      const qcx = (det.qcx !== undefined ? det.qcx : det.cx);
-      const qcy = (det.qcy !== undefined ? det.qcy : det.cy);
-      const qw = det.qw || Math.max(0.3, Math.min(0.9, det.boxW * 2));
-      const qh = det.qh || Math.max(0.28, Math.min(0.85, det.boxH * 2));
-      quad = {
-        x: Math.max(0, Math.min((qcx - qw / 2) * dispW, dispW - qw * dispW)),
-        y: Math.max(0, Math.min((qcy - qh / 2) * dispH, dispH - qh * dispH)),
-        w: Math.min(qw * dispW, dispW),
-        h: Math.min(qh * dispH, dispH)
-      };
-    } else {
-      quad = {
-        x: dispW * 0.08, y: dispH * 0.10,
-        w: dispW * 0.84, h: dispH * 0.72
-      };
-    }
-    engineQuad = quad;
-
-    // --- Mockup Motoru'nu bağla (perspektif + gölge + kumaş dokusu) ---
-    mountEngine(engineQuad);
-
-    if (design && design.dataUrl) {
-      // Tasarımı mankenin tam ortasına koy; kullanıcı istediği yere sürükler.
-      const fx = dispW / 2;
-      const fy = dispH / 2;
-      fabric.Image.fromURL(design.dataUrl, (obj) => {
-        if (!obj) {
-          console.error('[Modal] Tasarım fabric\'e yüklenemedi');
-          finishLoading();
-          return;
-        }
-        activeDesignObj = obj;
-        const dr = obj.height / obj.width;
-        // Açılış boyutu: canvas genişliğinin ~%40'ı (makul başlangıç).
-        const fit = Math.min(dispW * 0.40, (dispH * 0.32) / dr);
-        obj.set({
-          originX: 'center', originY: 'center',
-          left: fx,
-          top: fy,
-          scaleX: fit / obj.width,
-          scaleY: fit / obj.width,
-          angle: 0
-        });
-        designBaseScale = fit / obj.width; // slider %100'ü = bu açılış boyutu
-        obj.hasControls = true;
-        setBlend(); // kumaşa yedir (multiply doku işleme)
-        modalCanvas.add(obj);
-        modalCanvas.setActiveObject(obj);
-        syncModalControls();
-        modalCanvas.requestRenderAll();
-        finishLoading(); // yerleşim tamam, yükleme ekranını kapat
-      }, { crossOrigin: 'anonymous' });
-    } else {
-      finishLoading();
-    }
-    modalCanvas.requestRenderAll();
-  };
-  img.onerror = () => {
-    console.error('Görsel yüklenemedi:', m.src);
+  try {
+    const img = await loadImageCached(m.src);
+    const det = MockupEngine.detect(img);
+    const ok = MockupEngine.attach({ img, canvas, det });
+    if (!ok) { finishLoading(); alert('WebGL bu tarayıcıda desteklenmiyor.'); return; }
+    modalDefaults = defaultTransformFor(det, img);
+    modalTransform = Object.assign({}, modalDefaults);
+    MockupEngine.setTransform(modalTransform);
+    if (design && design.img) MockupEngine.setDesign(design.img);
+    const maxW = Math.max((wrap.clientWidth || 560) - 16, 280);
+    const maxH = 720;
+    let dw = Math.min(img.naturalWidth, maxW);
+    let dh = Math.max(2, Math.round(dw * img.naturalHeight / img.naturalWidth));
+    if (dh > maxH) { dh = maxH; dw = Math.max(2, Math.round(dh * img.naturalWidth / img.naturalHeight)); }
+    MockupEngine.setPreviewSize(dw, dh);
+    resetModalControls();
+    renderModal();
     finishLoading();
-  };
-}
-
-// Slider + sayısal giriş çiftini çift yönlü senkronize bağlar.
-function bindNumericPair(rangeId, numId, apply) {
-  const r = $(rangeId);
-  const n = $(numId);
-  if (!r) return;
-  const clamp = (v) => Math.max(Number(r.min), Math.min(Number(r.max), v));
-  const setFrom = (v) => {
-    v = clamp(v);
-    r.value = v;
-    if (n) n.value = v;
-    apply(v);
-  };
-  r.oninput = () => setFrom(Number(r.value));
-  if (n) {
-    n.oninput = () => {
-      if (n.value === '' || n.value === '-') return;
-      setFrom(Number(n.value));
-    };
-    n.onblur = () => {
-      if (n.value === '') { n.value = r.value; return; }
-      setFrom(Number(n.value));
-    };
+  } catch (e) {
+    console.error('[Modal] motor başlatılamadı:', e);
+    finishLoading();
   }
-}
-
-function bindModalControls() {
-  bindNumericPair('#modal-scale', '#modal-scale-num', (v) => {
-    if (!activeDesignObj) return;
-    const base = designBaseScale || 1;
-    activeDesignObj.scaleX = base * (v / 100);
-    activeDesignObj.scaleY = base * (v / 100);
-    const sv = $('#modal-scale-val');
-    if (sv) sv.textContent = v + '%';
-    if (modalCanvas) modalCanvas.requestRenderAll();
-  });
-  bindNumericPair('#modal-rotate', '#modal-rotate-num', (v) => {
-    if (!activeDesignObj) return;
-    activeDesignObj.angle = v;
-    const rv = $('#modal-rotate-val');
-    if (rv) rv.textContent = v + '°';
-    if (modalCanvas) modalCanvas.requestRenderAll();
-  });
-  bindNumericPair('#modal-yaw', '#modal-yaw-num', (v) => {
-    if (!activeDesignObj) return;
-    activeDesignObj.yaw = v;
-    // Canlı önizlemede dikey eksen eğmesi (skewX) ile görünür olsun.
-    activeDesignObj.set({ skewX: v });
-    const yv = $('#modal-yaw-val');
-    if (yv) yv.textContent = v + '°';
-    if (modalCanvas) modalCanvas.requestRenderAll();
-  });
-  bindNumericPair('#modal-pitch', '#modal-pitch-num', (v) => {
-    if (!activeDesignObj) return;
-    activeDesignObj.pitch = v;
-    // Canlı önizlemede yatay eksen eğmesi (skewY) ile görünür olsun.
-    activeDesignObj.set({ skewY: v });
-    const pv = $('#modal-pitch-val');
-    if (pv) pv.textContent = v + '°';
-    if (modalCanvas) modalCanvas.requestRenderAll();
-  });
-  // Ton paneli: slider + sayısal giriş çifti senkronize
-  const toneKeys = ['brightness', 'saturation', 'sharpness', 'contrast', 'warmth', 'hue'];
-  toneKeys.forEach((k) => {
-    bindNumericPair('#tone-' + k, '#tone-' + k + '-num', (v) => {
-      toneState[k] = v;
-      applyTonePreview();
-    });
-  });
-  const toneResetBtn = $('#tone-reset');
-  if (toneResetBtn) toneResetBtn.addEventListener('click', resetToneState);
-  // modal-blend HTML'de olmayabilir; varsa bağla
-  const blend = $('#modal-blend');
-  if (blend) blend.onchange = setBlend;
-  const designBtn = $('#modal-design');
-  if (designBtn) designBtn.addEventListener('click', () => {
-    const fi = $('#design-upload');
-    if (fi) fi.click();
-  });
-  const recenterBtn = $('#modal-recenter');
-  if (recenterBtn) recenterBtn.addEventListener('click', () => {
-    if (!activeDesignObj || !modalCanvas) return;
-    // Tasarımı canvas (manken) ortasına geri getir.
-    activeDesignObj.set({
-      left: modalCanvas.getWidth() * 0.5,
-      top: modalCanvas.getHeight() * 0.5
-    });
-    activeDesignObj.setCoords();
-    autoState();
-  });
-  const applyBtn = $('#modal-apply');
-  if (applyBtn) applyBtn.addEventListener('click', () => {
-    if (!design) return;
-    // Reklam + indirme akışını başlat. Modal açık kalır ki exportMockup
-    // canlı canvas'tan çizim yapabilsin; indirme bitince modal kapatılır.
-    startDownloadFlow();
-  });
-  const closeBtn = $('#modal-close');
-  if (closeBtn) closeBtn.addEventListener('click', closeModal);
-  // Arka alana tıklayınca da kapat
-  const overlay = $('#modal');
-  if (overlay) overlay.addEventListener('click', (e) => {
-    if (e.target === overlay) closeModal();
-  });
-  // ESC tuşu ile kapat
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && !$('#modal').classList.contains('hidden')) closeModal();
-  });
-}
-
-function openModal(card, m) {
-  if (!fabricReady()) return;
-  if (!design) return; // tasarım yokken edit sessizce açılmaz
-  // Her edit açılışında ton ayarlarını sıfırla.
-  resetToneState();
-  activeCardIndex = mannequins.findIndex((x) => x.id === m.id);
-  modalCardId = m.id;
-  $('#modal').classList.remove('hidden');
-  // Edit ekranı açıkken üst reklam banneri görünsün
-  const topAd = $('#top-ad-banner');
-  if (topAd) topAd.classList.remove('hidden');
-  document.body.classList.add('top-ad-visible');
-  initModalCanvas(m);
-  // Canvas init (fabric .canvas-container oluşturur) bittikten sonra ton filtresini uygula.
-  setTimeout(applyTonePreview, 60);
-  setTimeout(applyTonePreview, 1200);
 }
 
 function closeModal() {
-  if (modalCanvas) {
-    modalCanvas.dispose();
-    modalCanvas = null;
-  }
-  // Kalan canvas öğelerinden ton filtresi stilini temizle.
-  const mwrap = $('#modal-canvas-wrap');
-  if (mwrap) {
-    mwrap.querySelectorAll('.canvas-container, canvas').forEach((el) => { el.style.filter = ''; });
-  }
-  // Edit ekranı kapanınca üst reklam bannerini gizle
+  const modal = $('#modal');
+  if (modal) modal.classList.add('hidden');
   const topAd = $('#top-ad-banner');
   if (topAd) topAd.classList.add('hidden');
+  // Edit ekranı kapandığında sağ ve sol dikey reklam bannerlarını gizle
+  const leftAd = $('#left-ad-banner');
+  const rightAd = $('#right-ad-banner');
+  if (leftAd) leftAd.classList.add('hidden');
+  if (rightAd) rightAd.classList.add('hidden');
+  // Sol sabit alt banner tekrar gösterilsin
+  const bottomAd = $('#bottom-ad-banner');
+  if (bottomAd) bottomAd.classList.remove('hidden');
   document.body.classList.remove('top-ad-visible');
-  // Motor singleton'ının eski görsel/tasarım referanslarını bırak (bellek temizliği).
-  if (window.MockupEngine && typeof window.MockupEngine.detach === 'function') {
-    window.MockupEngine.detach();
-  }
-  $('#modal').classList.add('hidden');
-  activeDesignObj = null;
-  activeCardIndex = null;
-  modalCardId = null;
-  designBaseScale = 1;
-  engineQuad = null;
+  if (window.MockupEngine) MockupEngine.detach();
+  activeMannequin = null;
+  modalTransform = null;
+  modalDefaults = null;
 }
 
-/* ---------------- Dışa Aktarma ---------------- */
-// Sıra: 1) MockupEngine tam çözünürlük kompozit (perspektif warp + kumaş dokusu +
-// gölge/ışık)  2) mağaza preset boyutuna sığdır  3) PNG/JPEG olarak indir.
-async function exportMockup() {
-  const m = modalCard();
-  if (!m) return;
-
-  // --- Sabit format: Etsy listeleme için 2000×2000 PNG ---
-  const outW = 2000;
-  const outH = 2000;
-  const filetype = 'png';
-
-  // 1) Tam çözünürlük kompozit üret
-  let full = null;
-  if (window.MockupEngine && MockupEngine.canRender()) {
-    try { full = MockupEngine.render(); } catch (e) {
-      console.error('[Export] MockupEngine render hatası:', e);
-    }
-  }
-  if (!full) {
-    // Motor yoksa/başarısızsa: canlı canvas'taki arka plan + tasarım (düz bindirme)
-    const bgObj = getModalBackground();
-    const el = bgObj && bgObj.getElement ? bgObj.getElement() : null;
-    if (!el) return;
-    full = document.createElement('canvas');
-    full.width = el.naturalWidth || el.width || 1000;
-    full.height = el.naturalHeight || el.height || 1000;
-    const fx0 = full.getContext('2d');
-    fx0.fillStyle = '#ffffff';
-    fx0.fillRect(0, 0, full.width, full.height);
-    fx0.drawImage(el, 0, 0, full.width, full.height);
-    if (activeDesignObj && activeDesignObj._element) {
-      const d = activeDesignObj;
-      const dispW = modalCanvas ? modalCanvas.getWidth() : full.width;
-      const s = full.width / dispW;
-      // getCenterPoint: origin 'center' iken left/top zaten merkezdir
-      let ccx = d.left + (d.width * d.scaleX) / 2;
-      let ccy = d.top + (d.height * d.scaleY) / 2;
-      if (typeof d.getCenterPoint === 'function') {
-        const cp = d.getCenterPoint();
-        ccx = cp.x; ccy = cp.y;
-      }
-      const cx = ccx * s;
-      const cy = ccy * s;
-      const dw = d.width * d.scaleX * s;
-      const dh = d.height * d.scaleY * s;
-      fx0.save();
-      fx0.translate(cx, cy);
-      fx0.rotate(((d.angle || 0) * Math.PI) / 180);
-      if (d.globalCompositeOperation === 'multiply') fx0.globalCompositeOperation = 'multiply';
-      fx0.drawImage(d._element, -dw / 2, -dh / 2, dw, dh);
-      fx0.restore();
-    }
-  }
-
-  // 2) Mağaza preset boyutuna sığdır (oran koru, ortala, beyaz zemin)
-  const out = document.createElement('canvas');
-  out.width = outW;
-  out.height = outH;
-  const ctx = out.getContext('2d');
-  ctx.fillStyle = '#ffffff';
-  ctx.fillRect(0, 0, outW, outH);
-  const fit = Math.min(outW / full.width, outH / full.height);
-  const drawW = full.width * fit;
-  const drawH = full.height * fit;
-  // Ton paneli ayarlarını dışa aktarmada da uygula (ışık/doygunluk/kontrast/sıcaklık/ton).
-  ctx.filter = toneFilterString();
-  ctx.drawImage(full, (outW - drawW) / 2, (outH - drawH) / 2, drawW, drawH);
-  ctx.filter = 'none';
-  // Keskinlik: konvolüsyon ile uygula (ctx.filter url() her tarayıcıda desteklenmez).
-  if (toneState.sharpness > 0) {
-    try { applySharpnessToCanvas(out, toneState.sharpness); }
-    catch (e) { console.error('[Export] keskinlik uygulanamadı:', e); }
-  }
-
-  // 3) İndir: tercihen toBlob + object URL (bellek dostu, revoke edilir).
-  //    toBlob desteklenmiyorsa eski toDataURL yedek olarak kullanılır.
-  const ext = filetype === 'jpeg' ? 'jpeg' : 'png';
-  const mime = filetype === 'jpeg' ? 'image/jpeg' : 'image/png';
-  let href = null;
-  let objectUrl = null;
-  try {
-    if (typeof out.toBlob === 'function') {
-      const blob = await new Promise((res, rej) => {
-        try { out.toBlob((b) => (b ? res(b) : rej(new Error('blob-empty'))), mime); }
-        catch (e) { rej(e); }
-      });
-      objectUrl = URL.createObjectURL(blob);
-      href = objectUrl;
-    } else {
-      href = filetype === 'jpeg' ? out.toDataURL('image/jpeg', 0.92) : out.toDataURL('image/png');
-    }
-  } catch (e) {
-    // file:// ile doğrudan açıldığında tarayıcı canvas'ı güvenilmez sayıp
-    // dışa aktarmayı engeller; yerel sunucu (örn. Live Server) gerekir.
-    console.error('[Export] dışa aktarma hatası:', e);
-    if (objectUrl) URL.revokeObjectURL(objectUrl);
-    alert('İndirme tarayıcı güvenliği nedeniyle engellendi.\nLütfen projeyi yerel bir sunucuyla açın (örn. VS Code Live Server) ve tekrar deneyin.');
-    return;
-  }
-  const a = document.createElement('a');
-  a.href = href;
-  a.download = 'mockup_' + (m.name || 'model').replace(/\.[^.]+$/, '').replace(/\W+/g, '_') + '_' + outW + 'x' + outH + '.' + ext;
-  document.body.appendChild(a);
-  a.click();
-  setTimeout(() => a.remove(), 0);
-  if (objectUrl) setTimeout(() => URL.revokeObjectURL(objectUrl), 1000); // bellek temizliği
+/* --- Kontroller: slider + sayısal giriş çiftleri --- */
+function resetModalControls() {
+  const set = (rangeId, val) => {
+    const r = $(rangeId), n = $(rangeId + '-num');
+    if (r) r.value = val;
+    if (n) n.value = val;
+  };
+  set('#modal-scale', 100);
+  set('#modal-rotate', 0);
+  set('#modal-skewx', 0);
+  set('#modal-skewy', 0);
+  set('#modal-wint', 3);
+  set('#modal-wblur', 4);
+  set('#modal-wshade', 0.45);
+  set('#tone-brightness', 0);
+  set('#tone-contrast', 1);
+  set('#tone-saturation', 1);
 }
 
+function applyControls() {
+  if (!modalDefaults || !window.MockupEngine) return;
+  const sc = Number($('#modal-scale').value) || 100;
+  const w = modalDefaults.w * (sc / 100);
+  const h = w * (modalDefaults.h / modalDefaults.w);
+  const t = {
+    cx: modalTransform ? modalTransform.cx : modalDefaults.cx,
+    cy: modalTransform ? modalTransform.cy : modalDefaults.cy,
+    w, h,
+    angle: Number($('#modal-rotate').value) || 0,
+    skewX: Number($('#modal-skewx').value) || 0,
+    skewY: Number($('#modal-skewy').value) || 0
+  };
+  modalTransform = t;
+  MockupEngine.setTransform(t);
+  // Dalga efektini (kumaş) + ton ayarlarını kullanıcıya göre güncelle
+  if (MockupEngine.setParams) {
+    MockupEngine.setParams({
+      intensity: Number($('#modal-wint').value) || 0,
+      blur: Number($('#modal-wblur').value) || 0.5,
+      shading: Number($('#modal-wshade').value) || 0,
+      brightness: Number($('#tone-brightness').value) || 0,
+      contrast: Number($('#tone-contrast').value) || 1,
+      saturation: Number($('#tone-saturation').value) || 1
+    });
+  }
+  renderModal();
+}
+
+function bindSliderNum(rangeId) {
+  const r = $(rangeId), n = $(rangeId + '-num');
+  if (!r) return;
+  const min = Number(r.min), max = Number(r.max);
+  const clamp = (x) => Math.max(min, Math.min(max, x));
+  const sync = () => {
+    const v = clamp(Number(r.value));
+    r.value = v;
+    if (n) n.value = v;
+    applyControls();
+  };
+  r.addEventListener('input', sync);
+  if (n) {
+    n.addEventListener('input', () => {
+      if (n.value === '' || n.value === '-') return;
+      const v = clamp(Number(n.value));
+      n.value = v;
+      r.value = v;
+      applyControls();
+    });
+    n.addEventListener('blur', () => { if (n.value === '') n.value = min; });
+  }
+}
+
+function bindToneStrip() {
+  ['#tone-brightness', '#tone-contrast', '#tone-saturation'].forEach((id) => {
+    const r = $(id);
+    if (r) r.addEventListener('input', applyControls);
+  });
+}
+function refreshModalDesign() {
+  if (!window.MockupEngine || !activeMannequin) return;
+  const img = imageCache.get(activeMannequin.src);
+  if (!img) return;
+  if (design && design.img) MockupEngine.setDesign(design.img);
+  const det = MockupEngine.detect(img);
+  modalDefaults = defaultTransformFor(det, img);
+  modalTransform = Object.assign({}, modalDefaults);
+  MockupEngine.setTransform(modalTransform);
+  resetModalControls();
+  applyControls();
+  renderModal();
+}
+
+/* --- Edit olay bağlama --- */
+function bindModalEvents() {
+  bindSliderNum('#modal-scale');
+  bindSliderNum('#modal-rotate');
+  bindSliderNum('#modal-skewx');
+  bindSliderNum('#modal-skewy');
+  bindSliderNum('#modal-wint');
+  bindSliderNum('#modal-wblur');
+  bindSliderNum('#modal-wshade');
+  bindToneStrip();
+  const designBtn = $('#modal-design');
+  if (designBtn) designBtn.addEventListener('click', () => { const fi = $('#design-upload'); if (fi) fi.click(); });
+  const recenterBtn = $('#modal-recenter');
+  if (recenterBtn) recenterBtn.addEventListener('click', () => {
+    if (!modalDefaults) return;
+    modalTransform = Object.assign({}, modalDefaults);
+    MockupEngine.setTransform(modalTransform);
+    resetModalControls();
+    applyControls(); // dalga ayarlarını da varsayılana döndür
+    renderModal();
+  });
+  const applyBtn = $('#modal-apply');
+  if (applyBtn) applyBtn.addEventListener('click', () => { if (design && activeMannequin) startDownloadFlow(); });
+  const closeBtn = $('#modal-close');
+  if (closeBtn) closeBtn.addEventListener('click', closeModal);
+  const overlay = $('#modal');
+  if (overlay) overlay.addEventListener('click', (e) => { if (e.target === overlay) closeModal(); });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && overlay && !overlay.classList.contains('hidden')) closeModal();
+  });
+  // Canvas: sürükle-bırak yerleştirme
+  const canvas = $('#modal-canvas');
+  if (canvas) {
+    let dragging = false, lastX = 0, lastY = 0;
+    canvas.addEventListener('pointerdown', (e) => {
+      if (!modalTransform) return;
+      dragging = true; lastX = e.clientX; lastY = e.clientY;
+      try { canvas.setPointerCapture(e.pointerId); } catch (err) { /* sessiz */ }
+    });
+    canvas.addEventListener('pointermove', (e) => {
+      if (!dragging || !modalTransform) return;
+      const rect = canvas.getBoundingClientRect();
+      if (!rect.width || !rect.height) return;
+      modalTransform.cx += (e.clientX - lastX) / rect.width;
+      modalTransform.cy += (e.clientY - lastY) / rect.height;
+      lastX = e.clientX; lastY = e.clientY;
+      modalTransform.cx = Math.max(0.02, Math.min(0.98, modalTransform.cx));
+      modalTransform.cy = Math.max(0.02, Math.min(0.98, modalTransform.cy));
+      MockupEngine.setTransform(modalTransform);
+      renderModal();
+    });
+    ['pointerup', 'pointercancel', 'pointerleave'].forEach((ev) =>
+      canvas.addEventListener(ev, () => { dragging = false; }));
+    // Tekerlekle boyutlandır
+    canvas.addEventListener('wheel', (e) => {
+      if (!modalTransform || !modalDefaults) return;
+      e.preventDefault();
+      const f = e.deltaY < 0 ? 1.06 : 1 / 1.06;
+      const w = Math.max(0.04, Math.min(1.4, modalTransform.w * f));
+      modalTransform.w = w;
+      modalTransform.h = w * (modalDefaults.h / modalDefaults.w);
+      const pct = Math.max(20, Math.min(320, Math.round(w / modalDefaults.w * 100)));
+      const r = $('#modal-scale'), n = $('#modal-scale-num');
+      if (r) r.value = pct;
+      if (n) n.value = pct;
+      MockupEngine.setTransform(modalTransform);
+      renderModal();
+    }, { passive: false });
+  }
+}
+
+/* ---------------- Ücretsiz İndirme / Reklam Akışı ----------------
+   Uygula → reklam paneli + 15 sn geri sayım → indirme. */
 function closeDownloadModal() {
   stopAdPlayback();
-  $('#download-modal').classList.add('hidden');
+  const modal = $('#download-modal');
+  if (modal) modal.classList.add('hidden');
 }
 
 // Reklam geri sayımını durdurur (modal kapanırken çağrılır).
@@ -1788,17 +749,57 @@ function setAdCountdown(text) {
   if (el) el.textContent = text;
 }
 
+// Mockup üretimi: GPU motor tam çözünürlük render → 2000×2000 PNG indir.
+async function exportMockup() {
+  if (!window.MockupEngine || !MockupEngine.canRender()) {
+    console.warn('[Export] motor hazır değil');
+    return;
+  }
+  const m = activeMannequin;
+  const outW = 2000, outH = 2000;
+  const full = MockupEngine.renderFull();
+  if (!full) return;
+  const out = document.createElement('canvas');
+  out.width = outW; out.height = outH;
+  const ctx = out.getContext('2d');
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, outW, outH);
+  const fit = Math.min(outW / full.width, outH / full.height);
+  const dw = full.width * fit, dh = full.height * fit;
+  ctx.drawImage(full, (outW - dw) / 2, (outH - dh) / 2, dw, dh);
+  const name = (m && m.name ? m.name : 'mockup').replace(/\.[^.]+$/, '').replace(/\W+/g, '_');
+  let objectUrl = null;
+  try {
+    if (typeof out.toBlob !== 'function') return;
+    const blob = await new Promise((res, rej) => {
+      try { out.toBlob((b) => (b ? res(b) : rej(new Error('blob-empty'))), 'image/png'); }
+      catch (e) { rej(e); }
+    });
+    objectUrl = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = objectUrl;
+    a.download = 'mockup_' + name + '_' + outW + 'x' + outH + '.png';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => a.remove(), 0);
+    setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+  } catch (e) {
+    console.error('[Export] dışa aktarma hatası:', e);
+    alert('İndirme başarısız oldu. Sayfayı yerel bir sunucuyla (örn. Live Server) açıp tekrar deneyin.');
+  }
+}
+
 // Reklam akışı: Uygula → normal reklam paneli gösterilir → 15 sn'lik reklam
 // süresi boyunca beklenir (tasarım indirmeye hazırlanıyor) → geri sayım bitince indirir.
 function startDownloadFlow() {
-  if (!design || !modalCard()) return; // sessiz: akış yoksa başlatma
+  if (!design) return;                 // tasarım yoksa akış başlatma
   if (downloading) return;             // buton spam koruması: akış zaten sürüyor
   downloading = true;
   dlCancelPending = false;
 
   const applyBtn = $('#modal-apply');
   if (applyBtn) {
-    applyBtn.disabled = true;           // akış sürerken yeniden başlatmayı engelle
+    applyBtn.disabled = true;          // akış sürerken yeniden başlatmayı engelle
     applyBtn.classList.add('loading');
   }
 
@@ -1811,7 +812,8 @@ function startDownloadFlow() {
   // Normal reklam paneli her zaman görünür (video yok), ilerlemeyi sıfırla
   setAdProgress(0);
   setAdCountdown('15s');
-  $('#download-modal').classList.remove('hidden');
+  const modal = $('#download-modal');
+  if (modal) modal.classList.remove('hidden');
 
   // Geri sayım bitince çağrılır: indir + kapat.
   const finishAndDownload = async () => {
@@ -1820,12 +822,12 @@ function startDownloadFlow() {
     setAdProgress(1);
     if (status) status.textContent = t.dlDone || status.textContent;
     try {
-      await exportMockup(); // canlı edit canvas'ından çizim yapabilmek için modal açık kalır
+      await exportMockup(); // yeni motor hazır olduğunda mockup burada üretilir
     } catch (e) {
       console.error('[Download] dışa aktarma hatası:', e);
     }
     closeDownloadModal();
-    closeModal(); // indirme bitti, edit canvas'ı kapat
+    closeModal(); // indirme bitti, edit ekranını kapat
     finishDownloadFlow(applyBtn);
   };
 
@@ -1852,178 +854,8 @@ function finishDownloadFlow(applyBtn) {
   }
 }
 
-/* --- Yeni nesil arka plan: büyük, zarif, canlı parçalar --- */
-/* --- Mobil algılama: telefonda ağır efektleri kısarak performans sağlar.
-   Masaüstü deneyimi hiç değişmez. --- */
-const IS_MOBILE_DEVICE =
-  (typeof window !== 'undefined' &&
-    (window.matchMedia('(max-width: 860px)').matches ||
-      (navigator.maxTouchPoints > 1 && Math.min(window.innerWidth, window.innerHeight) < 820)));
-
-
-function spawnGeometricShapeLayers(container) {
-  const rand = (a, b) => a + Math.random() * (b - a);
-  container.innerHTML = '';
-
-  const pieces = IS_MOBILE_DEVICE ? [
-    // Mobilde: yalnızca birkaç küçük küre (animasyonsuz, CSS'te de kısıtlı)
-    ['bg-piece bg-piece--orb c-blue',   [220, 300]],
-    ['bg-piece bg-piece--orb c-violet', [200, 280]],
-    ['bg-piece bg-piece--orb c-teal',   [180, 260]],
-    ['bg-piece bg-piece--orb c-pink',   [170, 240]],
-    ['bg-piece bg-piece--orb c-amber',  [160, 220]],
-    ['bg-piece bg-piece--orb c-green',  [150, 210]]
-  ] : [
-    // Dev renk küreleri — HER BİRİ FARKLI RENK
-    ['bg-piece bg-piece--orb c-blue',   [440, 780]],
-    ['bg-piece bg-piece--orb c-violet', [400, 720]],
-    ['bg-piece bg-piece--orb c-pink',   [420, 760]],
-    ['bg-piece bg-piece--orb c-teal',   [380, 700]],
-    ['bg-piece bg-piece--orb c-amber',  [360, 660]],
-    ['bg-piece bg-piece--orb c-green',  [340, 640]],
-    ['bg-piece bg-piece--orb c-coral',  [320, 600]],
-    ['bg-piece bg-piece--orb c-purple', [300, 560]],
-    ['bg-piece bg-piece--orb c-cyan',   [280, 520]],
-    ['bg-piece bg-piece--orb c-orange', [260, 480]],
-    ['bg-piece bg-piece--orb c-rose',   [240, 440]],
-    ['bg-piece bg-piece--orb c-indigo', [220, 420]],
-    // Renkli şeritler — her biri farklı renk
-    ['bg-piece bg-piece--ribbon r-blue',   [700, 1100]],
-    ['bg-piece bg-piece--ribbon r-pink',   [640, 1000]],
-    ['bg-piece bg-piece--ribbon r-teal',   [600, 950]],
-    ['bg-piece bg-piece--ribbon r-orange', [560, 900]],
-    // Büyük yavaş dönen halkalar
-    ['bg-piece bg-piece--ring',         [340, 620]],
-    ['bg-piece bg-piece--ring dashed',  [280, 520]],
-    // Hafif cam paneller
-    ['bg-piece bg-piece--panel', [260, 460]],
-    ['bg-piece bg-piece--panel', [200, 380]]
-  ];
-
-  pieces.forEach(([cls, sizeRange], i) => {
-    const el = document.createElement('div');
-    el.className = cls;
-    const size = Math.round(rand(sizeRange[0], sizeRange[1]));
-    if (cls.indexOf('--ribbon') !== -1) {
-      el.style.width = size + 'px';
-      el.style.height = Math.round(size * rand(0.08, 0.16)) + 'px';
-    } else {
-      el.style.width = size + 'px';
-      el.style.height = size + 'px';
-    }
-    el.style.left = rand(-12, 78).toFixed(1) + '%';
-    el.style.top = rand(-12, 78).toFixed(1) + '%';
-    // Her parça farklı faz ve hızda başlasın
-    el.style.animationDelay = '-' + rand(0, 30).toFixed(2) + 's';
-    el.style.animationDuration = (rand(18, 34)).toFixed(1) + 's, ' + (rand(10, 18)).toFixed(1) + 's';
-    container.appendChild(el);
-  });
-}
-
-
-/* --- Şekil etkileşimi: hover parlatır, tıklayınca parçalanıp yok olur --- */
-const FRAGMENT_COLORS = [
-  'rgba(56, 189, 248, 0.9)', 'rgba(129, 140, 248, 0.9)', 'rgba(232, 121, 249, 0.9)',
-  'rgba(45, 212, 191, 0.9)', 'rgba(251, 191, 36, 0.9)', 'rgba(74, 222, 128, 0.9)',
-  'rgba(251, 113, 133, 0.9)', 'rgba(192, 132, 252, 0.9)'
-];
-
-function randomizePiecePosition(piece) {
-  piece.style.left = (Math.random() * 90 - 12).toFixed(1) + '%';
-  piece.style.top = (Math.random() * 90 - 12).toFixed(1) + '%';
-}
-
-function burstPiece(piece, cx, cy) {
-  const container = document.getElementById('geometric-bg');
-  if (!container) return;
-  const COUNT = 18;
-  for (let i = 0; i < COUNT; i++) {
-    const f = document.createElement('div');
-    f.className = 'bg-fragment';
-    const size = 6 + Math.random() * 12;
-    f.style.width = size + 'px';
-    f.style.height = size + 'px';
-    f.style.left = (cx - size / 2) + 'px';
-    f.style.top = (cy - size / 2) + 'px';
-    const ang = Math.random() * Math.PI * 2;
-    const dist = 60 + Math.random() * 130;
-    f.style.setProperty('--dx', (Math.cos(ang) * dist).toFixed(1) + 'px');
-    f.style.setProperty('--dy', (Math.sin(ang) * dist).toFixed(1) + 'px');
-    f.style.background = FRAGMENT_COLORS[Math.floor(Math.random() * FRAGMENT_COLORS.length)];
-    container.appendChild(f);
-    setTimeout(() => f.remove(), 950);
-  }
-  // Parça yok olur, birkaç saniye sonra başka yerde yeniden doğar
-  piece.style.visibility = 'hidden';
-  piece.classList.remove('bg-piece-hover');
-  setTimeout(() => {
-    randomizePiecePosition(piece);
-    piece.style.visibility = 'visible';
-  }, 3500 + Math.random() * 2500);
-}
-
-function initShapeInteractions() {
-  const container = document.getElementById('geometric-bg');
-  if (!container) return;
-
-  // Buradaki ağır hover/patlama etkileşimi (her mousemove'da elementsFromPoint)
-  // yalnızca küçük bir hız koruması olan pending throttling ile çalışır.
-  // Animasyonlar her koşulda (hareket azaltma açık olsa bile) görünür kalır.
-
-  let pending = false;
-  document.addEventListener('mousemove', (e) => {
-    if (pending) return;
-    pending = true;
-    requestAnimationFrame(() => {
-      pending = false;
-      const hit = document.elementsFromPoint(e.clientX, e.clientY)
-        .some((el) => el.classList && el.classList.contains('bg-piece'));
-      if (hit !== initShapeInteractions._over) {
-        initShapeInteractions._over = hit;
-        document.body.style.cursor = hit ? 'pointer' : '';
-      }
-      // Hover parlatması: doğrudan üstteki şekle uygula
-      $$('.bg-piece-hover').forEach((el) => el.classList.remove('bg-piece-hover'));
-      if (hit) {
-        const top = document.elementsFromPoint(e.clientX, e.clientY)
-          .find((el) => el.classList && el.classList.contains('bg-piece'));
-        if (top) top.classList.add('bg-piece-hover');
-      }
-    });
-  });
-
-  document.addEventListener('click', (e) => {
-    const piece = document.elementsFromPoint(e.clientX, e.clientY)
-      .find((el) => el.classList && el.classList.contains('bg-piece'));
-    if (piece) burstPiece(piece, e.clientX, e.clientY);
-  });
-}
-
-/* --- Dinamik Canlı Arka Plan: yalnızca yeni büyük parçalar --- */
-function createAnimatedShapes() {
-  const container = document.getElementById('geometric-bg');
-  if (!container) return;
-
-  // Yeni nesil büyük parçalar; eski canvas parçacık ağı kaldırıldı.
-  spawnGeometricShapeLayers(container);
-  initShapeInteractions();
-}
-
-
-/* ---------------- Başlatma ---------------- */
-function bindLangWheel() {
-  const wheel = $('#lang-wheel');
-  wheel.addEventListener('click', () => {
-    if (wheel.classList.contains('spinning')) return;
-    wheel.classList.add('spinning');
-    setTimeout(() => wheel.classList.remove('spinning'), 700);
-    setLang(currentLang === 'tr' ? 'en' : 'tr');
-  });
-}
-
-// Tek sefer bağlanan kalıcı olaylar (modal her açılışta yeniden bağlanmaz).
+// Tek sefer bağlanan kalıcı olaylar (reklam panelinin kapatma/iptal butonları).
 function bindStaticEvents() {
-  bindModalControls();
   const dlCancel = $('#dl-cancel');
   if (dlCancel && !dlCancel._bound) {
     dlCancel._bound = true;
@@ -2046,29 +878,6 @@ function bindStaticEvents() {
   }
 }
 
-/* ---------------- Gece / Gündüz Tema ---------------- */
-const THEME_KEY = 'mockup_theme';
-
-function applyStoredTheme() {
-  const saved = localStorage.getItem(THEME_KEY);
-  if (saved === 'night') {
-    document.body.classList.add('night-mode');
-    const icon = $('#theme-icon');
-    if (icon) icon.textContent = '☀️';
-  }
-}
-
-function bindThemeToggle() {
-  const btn = $('#theme-toggle');
-  if (!btn) return;
-  btn.addEventListener('click', () => {
-    const night = document.body.classList.toggle('night-mode');
-    localStorage.setItem(THEME_KEY, night ? 'night' : 'day');
-    const icon = $('#theme-icon');
-    if (icon) icon.textContent = night ? '☀️' : '🌙';
-  });
-}
-
 /* ---------------- Yorum / Değerlendirme Sistemi ---------------- */
 const REVIEWS_KEY = 'mockup_reviews';
 let reviewRating = 0;
@@ -2076,10 +885,6 @@ let reviewRating = 0;
 function getReviews() {
   try { return JSON.parse(localStorage.getItem(REVIEWS_KEY)) || []; }
   catch (e) { return []; }
-}
-
-function renderReviewStars(container, rating) {
-  container.textContent = '★'.repeat(rating) + '☆'.repeat(5 - rating);
 }
 
 function renderReviews() {
@@ -2178,7 +983,113 @@ function bindReviewEvents() {
   }
 }
 
-/* ---------------- Varlık Koruma (temel, istemci taraflı) ---------------- */
+/* ---------------- Otomatik Smoke Test (?smoketest=1) ----------------
+   Headless tarayıcıda motoru uçtan uca doğrular: galeri → tasarım →
+   render → renk değişimi → tasarım korunması → sürükleme. */
+function smokeLog(msg) {
+  console.log('[SMOKE] ' + msg);
+  const el = document.getElementById('smoke-log');
+  if (el) {
+    el.classList.remove('hidden');
+    const d = document.createElement('div');
+    d.textContent = msg;
+    el.appendChild(d);
+  }
+}
+
+function smokeStats(cv) {
+  const c = document.createElement('canvas');
+  const w = cv.width, h = cv.height;
+  c.width = w; c.height = h;
+  const x = c.getContext('2d');
+  x.drawImage(cv, 0, 0);
+  const d = x.getImageData(0, 0, w, h).data;
+  let sR = 0, sG = 0, sB = 0, s2 = 0, n = 0;
+  let cR = 0, cG = 0, cB = 0, cN = 0;
+  const x0 = Math.floor(w * 0.45), x1 = Math.ceil(w * 0.55);
+  const y0 = Math.floor(h * 0.40), y1 = Math.ceil(h * 0.54);
+  for (let y = 0; y < h; y += 2) {
+    for (let px = 0; px < w; px += 2) {
+      const i = (y * w + px) * 4;
+      sR += d[i]; sG += d[i + 1]; sB += d[i + 2];
+      s2 += d[i] + d[i + 1] + d[i + 2];
+      n++;
+      if (px >= x0 && px < x1 && y >= y0 && y < y1) { cR += d[i]; cG += d[i + 1]; cB += d[i + 2]; cN++; }
+    }
+  }
+  const mR = sR / n, mG = sG / n, mB = sB / n;
+  // kaba parlaklık std'si (kanal ortalaması üzerinden)
+  const meanSum = (mR + mG + mB) / 3;
+  const std = Math.sqrt(Math.max(0, s2 / (3 * n) - meanSum * meanSum));
+  return { std, mean: [mR, mG, mB], cMean: cN ? [cR / cN, cG / cN, cB / cN] : [0, 0, 0] };
+}
+
+function smokeSleep(ms) { return new Promise((r) => setTimeout(r, ms)); }
+
+async function runSmokeTest() {
+  const logs = [];
+  const log = (m) => { logs.push(m); smokeLog(m); };
+  try {
+    log('SMOKE:START');
+    // 1) galeri yüklendi mi
+    const t0 = Date.now();
+    while (!mannequins.length && Date.now() - t0 < 30000) await smokeSleep(250);
+    log(mannequins.length ? 'GALLERY_OK ' + mannequins.length : 'GALLERY_FAIL');
+    if (!mannequins.length) { log('SMOKE:DONE'); return; }
+    // 2) motor hazır mı
+    if (!window.MockupEngine) { log('ENGINE_FAIL'); log('SMOKE:DONE'); return; }
+    log('ENGINE_OK');
+    // 3) test tasarımı üret (kırmızı zemin + beyaz daire)
+    const dc = document.createElement('canvas'); dc.width = 300; dc.height = 300;
+    const dctx = dc.getContext('2d');
+    dctx.fillStyle = '#d81f1f'; dctx.fillRect(0, 0, 300, 300);
+    dctx.fillStyle = '#ffffff'; dctx.beginPath(); dctx.arc(150, 150, 80, 0, Math.PI * 2); dctx.fill();
+    const dataUrl = dc.toDataURL('image/png');
+    await new Promise((res) => {
+      const im = new Image();
+      im.onload = () => { design = { name: 'smoke', dataUrl, img: im }; res(); };
+      im.onerror = () => res();
+      im.src = dataUrl;
+    });
+    if (!design) { log('DESIGN_FAIL'); log('SMOKE:DONE'); return; }
+    log('DESIGN_OK');
+    // 4) ilk maketle edit'i aç
+    openModal(null, mannequins[0]);
+    await smokeSleep(3500);
+    const cv = document.getElementById('modal-canvas');
+    if (!cv || !cv.width) { log('MODAL_FAIL'); log('SMOKE:DONE'); return; }
+    const s1 = smokeStats(cv);
+    log('RENDER_OK std=' + s1.std.toFixed(1));
+    if (s1.std < 8) { log('RENDER_FAIL duz-goruntu'); log('SMOKE:DONE'); return; }
+    // 5) tasarım korunuyor mu: merkez kırmızı baskın kalmalı (recolor kaldırıldı)
+    const designRed = s1.cMean[0] - s1.cMean[2];
+    log((designRed > 20 ? 'DESIGN_SAFE_OK ' : 'DESIGN_SAFE_WARN ') + 'dR=' + designRed.toFixed(1));
+    // 6) tasarımı kaydır: merkez bölge değişmeli
+    if (modalTransform) {
+      modalTransform.cx = Math.min(0.98, modalTransform.cx + 0.18);
+      MockupEngine.setTransform(modalTransform);
+      renderModal();
+      await smokeSleep(800);
+      const s2 = smokeStats(cv);
+      const moved = (s2.cMean[2] - s2.cMean[0]) - (s1.cMean[2] - s1.cMean[0]);
+      log((moved > 15 ? 'MOVE_OK ' : 'MOVE_WARN ') + 'dBR=' + moved.toFixed(1));
+    }
+    closeModal();
+    log('SMOKE:DONE');
+  } catch (e) {
+    log('SMOKE_ERR ' + (e && e.message));
+    log('SMOKE:DONE');
+  } finally {
+    try {
+      fetch('http://localhost:8123/result', {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: logs.join('\n')
+      }).catch(() => {});
+    } catch (e) { /* sessiz */ }
+  }
+}
+if (location.search.indexOf('smoketest=1') >= 0) setTimeout(runSmokeTest, 600);
 function protectAssets() {
   // Sağ tık menüsü: görsel/canvas üzerinde kapat (form alanlarında serbest)
   document.addEventListener('contextmenu', (e) => {
@@ -2191,17 +1102,6 @@ function protectAssets() {
   document.addEventListener('dragstart', (e) => {
     const t = e.target;
     if (t && (t.tagName === 'IMG' || t.tagName === 'CANVAS')) e.preventDefault();
-  });
-
-  // PrintScreen caydırıcılığı: kopyalama anında canvas'ı karart (tam koruma değildir)
-  document.addEventListener('keyup', (e) => {
-    if (e.key === 'PrintScreen') {
-      const veil = document.createElement('div');
-      veil.style.cssText = 'position:fixed;inset:0;background:#000;z-index:99999;';
-      document.body.appendChild(veil);
-      setTimeout(() => veil.remove(), 120);
-      try { navigator.clipboard.writeText('Bu sitedeki görseller telif ile korunmaktadır.'); } catch (err) {}
-    }
   });
 }
 
@@ -2233,34 +1133,146 @@ function purgeLegacyServiceWorkers() {
   } catch (e) { /* sessiz */ }
 }
 
-function init() {
-  // Her adım ayrı try/catch içinde: biri patlarsa diğerleri yine çalışsın.
-  const steps = [
-    ['purgeLegacyServiceWorkers', purgeLegacyServiceWorkers],
-    ['applyStoredTheme', applyStoredTheme],
-    ['protectAssets', protectAssets],
-    ['bindThemeToggle', bindThemeToggle],
-    ['bindReviewEvents', bindReviewEvents],
-    ['renderReviews', renderReviews],
-    ['applyStoredLang', applyStoredLang],
-    ['bindLangWheel', bindLangWheel],
-    ['bindUploadEvents', bindUploadEvents],
-    ['bindStaticEvents', bindStaticEvents],
-    ['bindFavEvents', bindFavEvents],
-    ['seedDefaultMannequins', seedDefaultMannequins],
-    ['createAnimatedShapes', createAnimatedShapes]
+/* --- Yeni nesil arka plan: büyük, zarif, canlı parçalar --- */
+/* --- Mobil algılama: telefonda ağır efektleri kısarak performans sağlar.
+   Masaüstü deneyimi hiç değişmez. --- */
+const IS_MOBILE_DEVICE =
+  (typeof window !== 'undefined' &&
+    (window.matchMedia('(max-width: 860px)').matches ||
+      (navigator.maxTouchPoints > 1 && Math.min(window.innerWidth, window.innerHeight) < 820)));
+
+function spawnGeometricShapeLayers(container) {
+  const rand = (a, b) => a + Math.random() * (b - a);
+  const pieces = [
+    // Renkli küreler — her biri farklı renk
+    ['bg-piece bg-piece--orb c-blue',   [400, 700]],
+    ['bg-piece bg-piece--orb c-violet', [380, 680]],
+    ['bg-piece bg-piece--orb c-amber',  [360, 660]],
+    ['bg-piece bg-piece--orb c-green',  [340, 640]],
+    ['bg-piece bg-piece--orb c-coral',  [320, 600]],
+    ['bg-piece bg-piece--orb c-purple', [300, 560]],
+    ['bg-piece bg-piece--orb c-cyan',   [280, 520]],
+    ['bg-piece bg-piece--orb c-orange', [260, 480]],
+    ['bg-piece bg-piece--orb c-rose',   [240, 440]],
+    ['bg-piece bg-piece--orb c-indigo', [220, 420]],
+    // Renkli şeritler — her biri farklı renk
+    ['bg-piece bg-piece--ribbon r-blue',   [700, 1100]],
+    ['bg-piece bg-piece--ribbon r-pink',   [640, 1000]],
+    ['bg-piece bg-piece--ribbon r-teal',   [600, 950]],
+    ['bg-piece bg-piece--ribbon r-orange', [560, 900]],
+    // Büyük yavaş dönen halkalar
+    ['bg-piece bg-piece--ring',         [340, 620]],
+    ['bg-piece bg-piece--ring dashed',  [280, 520]],
+    // Hafif cam paneller
+    ['bg-piece bg-piece--panel', [260, 460]],
+    ['bg-piece bg-piece--panel', [200, 380]]
   ];
-  steps.forEach(([name, fn]) => {
-    try {
-      fn();
-    } catch (e) {
-      console.error('[Init] ' + name + ' hatası:', e);
+
+  pieces.forEach(([cls, sizeRange], i) => {
+    const el = document.createElement('div');
+    el.className = cls;
+    const size = Math.round(rand(sizeRange[0], sizeRange[1]));
+    if (cls.indexOf('--ribbon') !== -1) {
+      el.style.width = size + 'px';
+      el.style.height = Math.round(size * rand(0.08, 0.16)) + 'px';
+    } else {
+      el.style.width = size + 'px';
+      el.style.height = size + 'px';
     }
+    el.style.left = rand(-12, 78).toFixed(1) + '%';
+    el.style.top = rand(-12, 78).toFixed(1) + '%';
+    // Her parça farklı faz ve hızda başlasın
+    el.style.animationDelay = '-' + rand(0, 30).toFixed(2) + 's';
+    el.style.animationDuration = (rand(18, 34)).toFixed(1) + 's, ' + (rand(10, 18)).toFixed(1) + 's';
+    container.appendChild(el);
   });
 }
 
+/* --- Şekil etkileşimi: hover parlatır, tıklayınca parçalanıp yok olur --- */
+const FRAGMENT_COLORS = [
+  'rgba(56, 189, 248, 0.9)', 'rgba(129, 140, 248, 0.9)', 'rgba(232, 121, 249, 0.9)',
+  'rgba(45, 212, 191, 0.9)', 'rgba(251, 191, 36, 0.9)', 'rgba(74, 222, 128, 0.9)',
+  'rgba(251, 113, 133, 0.9)', 'rgba(192, 132, 252, 0.9)'
+];
 
-// Tıklama animasyonu: halka + renkli parçacık patlaması
+function randomizePiecePosition(piece) {
+  piece.style.left = (Math.random() * 90 - 12).toFixed(1) + '%';
+  piece.style.top = (Math.random() * 90 - 12).toFixed(1) + '%';
+}
+
+function burstPiece(piece, cx, cy) {
+  const container = document.getElementById('geometric-bg');
+  if (!container) return;
+  const COUNT = 18;
+  for (let i = 0; i < COUNT; i++) {
+    const f = document.createElement('div');
+    f.className = 'bg-fragment';
+    const size = 6 + Math.random() * 12;
+    f.style.width = size + 'px';
+    f.style.height = size + 'px';
+    f.style.left = (cx - size / 2) + 'px';
+    f.style.top = (cy - size / 2) + 'px';
+    const ang = Math.random() * Math.PI * 2;
+    const dist = 60 + Math.random() * 130;
+    f.style.setProperty('--dx', (Math.cos(ang) * dist).toFixed(1) + 'px');
+    f.style.setProperty('--dy', (Math.sin(ang) * dist).toFixed(1) + 'px');
+    f.style.background = FRAGMENT_COLORS[Math.floor(Math.random() * FRAGMENT_COLORS.length)];
+    container.appendChild(f);
+    setTimeout(() => f.remove(), 950);
+  }
+  // Parça yok olur, birkaç saniye sonra başka yerde yeniden doğar
+  piece.style.visibility = 'hidden';
+  piece.classList.remove('bg-piece-hover');
+  setTimeout(() => {
+    randomizePiecePosition(piece);
+    piece.style.visibility = 'visible';
+  }, 3500 + Math.random() * 2500);
+}
+
+function initShapeInteractions() {
+  const container = document.getElementById('geometric-bg');
+  if (!container) return;
+
+  // Buradaki ağır hover/patlama etkileşimi (her mousemove'da elementsFromPoint)
+  // yalnızca küçük bir hız koruması olan pending throttling ile çalışır.
+  let pending = false;
+  document.addEventListener('mousemove', (e) => {
+    if (pending) return;
+    pending = true;
+    requestAnimationFrame(() => {
+      pending = false;
+      const hit = document.elementsFromPoint(e.clientX, e.clientY)
+        .some((el) => el.classList && el.classList.contains('bg-piece'));
+      if (hit !== initShapeInteractions._over) {
+        initShapeInteractions._over = hit;
+        document.body.style.cursor = hit ? 'pointer' : '';
+      }
+      // Hover parlatması: doğrudan üstteki şekle uygula
+      $$('.bg-piece-hover').forEach((el) => el.classList.remove('bg-piece-hover'));
+      if (hit) {
+        const top = document.elementsFromPoint(e.clientX, e.clientY)
+          .find((el) => el.classList && el.classList.contains('bg-piece'));
+        if (top) top.classList.add('bg-piece-hover');
+      }
+    });
+  });
+
+  document.addEventListener('click', (e) => {
+    const piece = document.elementsFromPoint(e.clientX, e.clientY)
+      .find((el) => el.classList && el.classList.contains('bg-piece'));
+    if (piece) burstPiece(piece, e.clientX, e.clientY);
+  });
+}
+
+/* --- Dinamik Canlı Arka Plan --- */
+function createAnimatedShapes() {
+  const container = document.getElementById('geometric-bg');
+  if (!container) return;
+  spawnGeometricShapeLayers(container);
+  initShapeInteractions();
+}
+
+/* --- Tıklama animasyonu: halka + renkli parçacık patlaması --- */
 const CLICK_PALETTE = ['#38bdf8', '#818cf8', '#e879f9', '#2dd4bf', '#fb923c', '#ffffff'];
 document.addEventListener('click', (e) => {
   // Mobilde tıklama animasyonları kapatılır (performans) — masaüstünde aynen devam
@@ -2302,5 +1314,33 @@ document.addEventListener('click', (e) => {
   document.body.appendChild(flash);
   setTimeout(() => flash.remove(), 450);
 });
+
+/* ---------------- Başlatma ---------------- */
+function init() {
+  // Her adım ayrı try/catch içinde: biri patlarsa diğerleri yine çalışsın.
+  const steps = [
+    ['purgeLegacyServiceWorkers', purgeLegacyServiceWorkers],
+    ['applyStoredTheme', applyStoredTheme],
+    ['protectAssets', protectAssets],
+    ['bindThemeToggle', bindThemeToggle],
+    ['bindReviewEvents', bindReviewEvents],
+    ['renderReviews', renderReviews],
+    ['applyStoredLang', applyStoredLang],
+    ['bindLangWheel', bindLangWheel],
+    ['bindUploadEvents', bindUploadEvents],
+    ['bindModalEvents', bindModalEvents],
+    ['bindGalleryEvents', bindGalleryEvents],
+    ['seedDefaultMannequins', seedDefaultMannequins],
+    ['bindStaticEvents', bindStaticEvents],
+    ['createAnimatedShapes', createAnimatedShapes]
+  ];
+  steps.forEach(([name, fn]) => {
+    try {
+      fn();
+    } catch (e) {
+      console.error('[Init] ' + name + ' hatası:', e);
+    }
+  });
+}
 
 document.addEventListener('DOMContentLoaded', init);

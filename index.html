@@ -7,433 +7,17 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title data-i18n="pageTitle">MOCKUP STUDYO</title>
-    <link rel="stylesheet" href="style.css?v=76">
-    <!-- Fabric.js CDN -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+        <link rel="stylesheet" href="style.css?v=84">
   <!-- Google AdSense (onay sonrası publisher ID ekleyin) -->
   <!--
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
   <meta name="google-adsense" content="ca-pub-XXXXXXXXXXXXXXX">
   -->
-  <!-- Mockup motoru -->
-  <script>
-/* ============================================================
-   AVCI STÜDYO — WebGL (GPU) Tişört Mockup Motoru
-   - Fragment shader: kumaş luminance'ından Gaussian blur +
-     Sobel gradyanı ile DONANIM hızlandırmalı displacement
-     (pikselleşme/tırtıklanma yok — GPU linear interpolasyon)
-   - Shader içi ışık/gölge compositing: multiply (gölge) +
-     soft-light (parlama)
-   - Tasarım: fabric objesinden serbest konum/boyut/açı/skew
-     alınır; sınır yok, kullanıcı istediği yere sürükler
-   - Eski public API korunmuştur: attach / render / canRender /
-     enableCorners / getQuadJSON / downloadQuadJSON / detach
-   - Yeni: mountPreview() + renderPreview() → edit modalinde
-     canlı GPU önizleme katmanı
-   ============================================================ */
-console.log('[STUDYO] mockup-engine.js v6 (INLINE) yüklendi — WebGL GPU motoru');
-(function () {
-  'use strict';
-
-  let S = null; // aktif durum
-
-  function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
-  function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* sessiz */ } }
-
-  /* ================= SHADER KAYNAKLARI ================= */
-  var VS_SRC = [
-    'attribute vec2 a_pos;',
-    'varying vec2 v_uv;',
-    'void main() {',
-    '  v_uv = vec2(a_pos.x * 0.5 + 0.5, 0.5 - a_pos.y * 0.5);',
-    '  gl_Position = vec4(a_pos, 0.0, 1.0);',
-    '}'
-  ].join('\n');
-
-  var FS_SRC = [
-    'precision highp float;',
-    'varying vec2 v_uv;',
-    'uniform sampler2D u_shirt;',
-    'uniform sampler2D u_design;',
-    'uniform vec2  u_texel;     // 1 / tişört doku boyutu',
-    'uniform float u_A;         // genislik / yukseklik',
-    'uniform vec2  u_dcenter;   // tasarım merkezi',
-    'uniform vec2  u_dhalf;     // tasarım yarı boyutu',
-    'uniform vec2  u_rot;       // cos(a), sin(a)',
-    'uniform vec2  u_skew;      // tan(skewX), tan(skewY)',
-    'uniform float u_intensity;',
-    'uniform float u_blur;',
-    'uniform float u_shading;',
-    'uniform float u_mode;      // 0 düz, 1 multiply+softlight, 2 sadece multiply',
-    '',
-    'float lumAt(vec2 uv) {',
-    '  vec3 c = texture2D(u_shirt, uv).rgb;',
-    '  return dot(c, vec3(0.299, 0.587, 0.114));',
-    '}',
-    '/* Gaussian (1-2-1 x 1-2-1) luminance: mikro iplik parazitini eler,',
-    '   sadece ana kumaş dalgalarını/kıvrımlarını referans alır */',
-    'float lumBlur(vec2 uv, float r) {',
-    '  vec2 o = u_texel * r;',
-    '  float s = 0.0;',
-    '  s += lumAt(uv + vec2(-o.x, -o.y)) * 1.0;',
-    '  s += lumAt(uv + vec2( 0.0, -o.y)) * 2.0;',
-    '  s += lumAt(uv + vec2( o.x, -o.y)) * 1.0;',
-    '  s += lumAt(uv + vec2(-o.x,  0.0)) * 2.0;',
-    '  s += lumAt(uv)                    * 4.0;',
-    '  s += lumAt(uv + vec2( o.x,  0.0)) * 2.0;',
-    '  s += lumAt(uv + vec2(-o.x,  o.y)) * 1.0;',
-    '  s += lumAt(uv + vec2( 0.0,  o.y)) * 2.0;',
-    '  s += lumAt(uv + vec2( o.x,  o.y)) * 1.0;',
-    '  return s / 16.0;',
-    '}',
-    '',
-    'void main() {',
-    '  vec4 shirt = texture2D(u_shirt, v_uv);',
-    '',
-    '  /* 1) BLUR LU LUMINANCE + SOBEL GRADYAN (GPU da) */',
-    '  float r = max(u_blur, 0.5);',
-    '  float gStep = r * 2.0;',
-    '  vec2 o = u_texel * gStep;',
-    '  float lL = lumBlur(v_uv - vec2(o.x, 0.0), r);',
-    '  float lR = lumBlur(v_uv + vec2(o.x, 0.0), r);',
-    '  float lT = lumBlur(v_uv - vec2(0.0, o.y), r);',
-    '  float lB = lumBlur(v_uv + vec2(0.0, o.y), r);',
-    '  vec2 grad = vec2(lR - lL, lB - lT);',
-    '  float lum = lumBlur(v_uv, r);',
-    '',
-    '  /* 2) PURUZSUZ DISPLACEMENT (donanim linear interpolasyonu) */',
-    '  vec2 disp = grad * u_intensity * u_texel * 32.0;',
-    '  float dLen = length(disp);',
-    '  float dCap = u_intensity * 2.0 * u_texel.x;',
-    '  disp /= 1.0 + dLen / max(dCap, 0.000001); // yumuşak tavan',
-    '',
-    '  /* 3) TASARIM KOORDINAT DONUSUMU (serbest konum + açı + skew) */',
-    '  vec2 pA = vec2(v_uv.x * u_A, v_uv.y) + vec2(disp.x * u_A, disp.y);',
-    '  vec2 q = pA - u_dcenter;',
-    '  q.x -= q.y * u_skew.x;',
-    '  q.y -= q.x * u_skew.y;',
-    '  vec2 rq = vec2(u_rot.x * q.x + u_rot.y * q.y, -u_rot.y * q.x + u_rot.x * q.y);',
-    '  vec2 local = rq / u_dhalf + 0.5;',
-    '',
-    '  /* 4) kenarda yumuşak sönümleme (testere/kırılma yok) */',
-    '  vec2 ef = smoothstep(0.0, 0.01, local) * (1.0 - smoothstep(0.99, 1.0, local));',
-    '  float edge = ef.x * ef.y;',
-    '',
-    '  vec2 duv = clamp(local, 0.0, 1.0);',
-    '  vec4 design = texture2D(u_design, duv);',
-    '  float da = design.a * edge;',
-    '  if (da < 0.003) { gl_FragColor = shirt; return; }',
-    '',
-    '  /* 5) ISIK / GOLGE COMPOSITING (shader ici) */',
-    '  vec3 dc = design.rgb;',
-    '  float shadeMul = 1.0 - u_shading * (1.0 - clamp(lum * 1.15, 0.0, 1.0));',
-    '  vec3 shaded = dc * shadeMul;',
-    '  float hi = clamp((lum - 0.62) / 0.38, 0.0, 1.0);',
-    '  shaded += shaded * hi * u_shading * 0.5;',
-    '  if (u_mode > 1.5)      shaded = dc * shadeMul;',
-    '  else if (u_mode < 0.5) shaded = dc;',
-    '',
-    '  /* 6) TASARIMI KUMASA GOM */',
-    '  gl_FragColor = vec4(mix(shirt.rgb, shaded, da), shirt.a);',
-    '}'
-  ].join('\n');
-
-  /* ================= GPU BAGLAMI (tekil, yeniden kullanilir) ================= */
-  var E = null; // { canvas, gl, U, shirtTex, designTex, designKey }
-
-  function buildEngine() {
-    if (E) return E;
-    var canvas = document.createElement('canvas');
-    var gl = canvas.getContext('webgl', { preserveDrawingBuffer: true, antialias: true })
-          || canvas.getContext('experimental-webgl', { preserveDrawingBuffer: true });
-    if (!gl) return null;
-    function shader(type, src) {
-      var s = gl.createShader(type);
-      gl.shaderSource(s, src);
-      gl.compileShader(s);
-      if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
-        console.error('[MockupEngine] Shader derlenemedi:', gl.getShaderInfoLog(s));
-        return null;
-      }
-      return s;
-    }
-    var vs = shader(gl.VERTEX_SHADER, VS_SRC);
-    var fs = shader(gl.FRAGMENT_SHADER, FS_SRC);
-    if (!vs || !fs) return null;
-    var prog = gl.createProgram();
-    gl.attachShader(prog, vs); gl.attachShader(prog, fs);
-    gl.linkProgram(prog);
-    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
-      console.error('[MockupEngine] Program link hatası:', gl.getProgramInfoLog(prog));
-      return null;
-    }
-    gl.useProgram(prog);
-    var buf = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
-    var aPos = gl.getAttribLocation(prog, 'a_pos');
-    gl.enableVertexAttribArray(aPos);
-    gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
-    var U = {};
-    ['u_shirt', 'u_design', 'u_texel', 'u_A', 'u_dcenter', 'u_dhalf', 'u_rot',
-     'u_skew', 'u_intensity', 'u_blur', 'u_shading', 'u_mode'].forEach(function (n) {
-      U[n] = gl.getUniformLocation(prog, n);
-    });
-    E = { canvas: canvas, gl: gl, U: U, shirtTex: null, designTex: null, designEl: null };
-    return E;
-  }
-
-  function destroyTextures() {
-    if (!E) return;
-    if (E.shirtTex) { E.gl.deleteTexture(E.shirtTex); E.shirtTex = null; }
-    if (E.designTex) { E.gl.deleteTexture(E.designTex); E.designTex = null; }
-    E.designEl = null;
-  }
-
-  // Büyük fotoğrafları GPU'ya göndermeden önce kaliteli biçimde küçült
-  // (sessiz texImage2D hatalarını ve pikselliği engeller)
-  function prepare(src, maxSide) {
-    var w = src.naturalWidth || src.width, h = src.naturalHeight || src.height;
-    var k = Math.min(1, maxSide / Math.max(w, h));
-    var c = document.createElement('canvas');
-    c.width = Math.max(2, Math.round(w * k));
-    c.height = Math.max(2, Math.round(h * k));
-    var cx = c.getContext('2d');
-    cx.imageSmoothingEnabled = true;
-    cx.imageSmoothingQuality = 'high';
-    cx.drawImage(src, 0, 0, c.width, c.height);
-    return c;
-  }
-
-  function makeTex(unit, src) {
-    var gl = E.gl;
-    var t = gl.createTexture();
-    gl.activeTexture(gl.TEXTURE0 + unit);
-    gl.bindTexture(gl.TEXTURE_2D, t);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, src);
-    return t;
-  }
-
-  /* ================= RENDER ================= */
-  // Sabit motor ayarları (kullanıcıya ayar yükü yok — otomatik optimum)
-  var ENGINE_SETTINGS = { intensity: 12, blur: 3, shading: 0.70, mode: 1 };
-
-  // w,h: hedef çıktı piksel boyutu. Tasarım getDesign() üzerinden ekran
-  // koordinatlarında gelir; tam çözünürlükte oransal olarak ölçeklenir.
-  function drawToGL(w, h) {
-    if (!S || !S.shirtPrepared || !buildEngine()) return false;
-    var gl = E.gl, U = E.U;
-    if (E.canvas.width !== Math.round(w) || E.canvas.height !== Math.round(h)) {
-      E.canvas.width = Math.max(2, Math.round(w));
-      E.canvas.height = Math.max(2, Math.round(h));
-    }
-    gl.viewport(0, 0, E.canvas.width, E.canvas.height);
-
-    if (!E.shirtTex) E.shirtTex = makeTex(0, S.shirtPrepared);
-
-    var d = S.getDesign ? S.getDesign() : null;
-    var hasDesign = !!(d && d.el && d.w > 0 && d.h > 0);
-    if (hasDesign && E.designEl !== d.el) {
-      if (E.designTex) E.gl.deleteTexture(E.designTex);
-      E.designTex = makeTex(1, prepare(d.el, 2048));
-      E.designEl = d.el;
-    }
-
-    gl.uniform1i(U.u_shirt, 0);
-    gl.uniform1i(U.u_design, 1);
-    gl.uniform2f(U.u_texel, 1 / S.shirtPrepared.width, 1 / S.shirtPrepared.height);
-    gl.uniform1f(U.u_A, w / h);
-
-    // Tasarım yerleşimi: ekran pikseli (px,py) -> (px/h, py/h).
-    // getDesign() ekran (dispW x dispH) koordinatı verir; s = çözünürlük ölçeği.
-    var s = w / S.dispW;
-    if (hasDesign) {
-      var ang = ((d.angle || 0) * Math.PI) / 180;
-      gl.uniform2f(U.u_dcenter, (d.cx * s) / h, (d.cy * s) / h);
-      gl.uniform2f(U.u_dhalf, (d.w * s) / (2 * h), (d.h * s) / (2 * h));
-      gl.uniform2f(U.u_rot, Math.cos(ang), Math.sin(ang));
-      gl.uniform2f(U.u_skew, Math.tan(((d.yaw || 0) * Math.PI) / 180),
-                            Math.tan(((d.pitch || 0) * Math.PI) / 180));
-    } else {
-      // tasarım yok: görünmez yerleşim
-      gl.uniform2f(U.u_dcenter, -10, -10);
-      gl.uniform2f(U.u_dhalf, 0.0001, 0.0001);
-      gl.uniform2f(U.u_rot, 1, 0);
-      gl.uniform2f(U.u_skew, 0, 0);
-    }
-
-    gl.uniform1f(U.u_intensity, ENGINE_SETTINGS.intensity);
-    gl.uniform1f(U.u_blur, ENGINE_SETTINGS.blur);
-    gl.uniform1f(U.u_shading, ENGINE_SETTINGS.shading);
-    // fabric "multiply" harmanı seçiliyse shader multiply-only moduna geçer
-    gl.uniform1f(U.u_mode, hasDesign && d.blend === 1 ? 2 : ENGINE_SETTINGS.mode);
-
-    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-    return true;
-  }
-
-  function copyTo2D(w, h) {
-    var c = document.createElement('canvas');
-    c.width = Math.max(2, Math.round(w));
-    c.height = Math.max(2, Math.round(h));
-    c.getContext('2d').drawImage(E.canvas, 0, 0, c.width, c.height);
-    return c;
-  }
-
-  /* ================= DURUM / attach ================= */
-  function attach(opts) {
-    if (!opts || !opts.img || !opts.wrap) return;
-    let quad = null;
-    // forceQuad: çağıran taraf her açılışta taze algılama uygular; kayıtlı
-    // quad yok sayılır ve algılanan quad ile üzerine yazılır.
-    if (!opts.forceQuad) {
-      try {
-        const saved = lsGet('avci_quad_' + opts.id);
-        if (saved) {
-          const arr = JSON.parse(saved);
-          if (Array.isArray(arr) && arr.length === 4) quad = arr;
-        }
-      } catch (e) { /* sessiz */ }
-    }
-    if (!quad) {
-      quad = opts.defaultQuad.map(function (p) {
-        return { x: p.x / opts.dispW, y: p.y / opts.dispH };
-      });
-    }
-    destroyTextures(); // yeni tişört: eski GPU dokularını bırak
-    S = {
-      img: opts.img,
-      // GPU'ya göndermeden önce kaliteli küçültme (MAX_TEXTURE_SIZE güvencesi)
-      shirtPrepared: prepare(opts.img, 1800),
-      natW: opts.natW, natH: opts.natH,
-      dispW: opts.dispW, dispH: opts.dispH,
-      id: opts.id || 'model', quad: quad,
-      wrap: opts.wrap, getDesign: opts.getDesign || null,
-      onQuadChange: opts.onQuadChange || null,
-      editing: false
-    };
-    if (opts.forceQuad) lsSet('avci_quad_' + S.id, JSON.stringify(S.quad));
-    if (S.editing || opts.wrap.querySelector('.engine-handles')) buildHandles();
-  }
-
-  /* ---------- tam çözünürlük render (dışa aktarma) ---------- */
-  function canRender() {
-    return !!(S && S.shirtPrepared && buildEngine());
-  }
-  function render() {
-    if (!canRender()) return null;
-    // tasarım yerleşimi ekran (dispW) koordinatındandır -> natW'ye ölçekle
-    if (!drawToGL(S.natW, S.natH)) return null;
-    return copyTo2D(S.natW, S.natH);
-  }
-
-  /* ---------- canlı önizleme (edit modaline GPU katmanı) ---------- */
-  // hedef 2D canvas'a GPU çıktısını çizer; her tasarım değişiminde çağır.
-  function renderPreview(targetCanvas, maxW) {
-    if (!S || !S.shirtPrepared || !buildEngine()) return false;
-    var k = Math.min(1, (maxW || 900) / S.natW);
-    var w = Math.round(S.natW * k), h = Math.round(S.natH * k);
-    if (!drawToGL(w, h)) return false;
-    targetCanvas.width = w; targetCanvas.height = h;
-    targetCanvas.getContext('2d').drawImage(E.canvas, 0, 0);
-    return true;
-  }
-
-  /* ---------- admin: sürüklenebilir 4 köşe anchor (JSON için) ---------- */
-  function buildHandles() {
-    if (!S || !S.wrap) return;
-    let box = S.wrap.querySelector('.engine-handles');
-    if (box) box.remove();
-    box = document.createElement('div');
-    box.className = 'engine-handles';
-    box.style.cssText = 'position:absolute;inset:0;pointer-events:none;z-index:30;';
-    for (let i = 0; i < 4; i++) {
-      (function (i) {
-        const h = document.createElement('div');
-        h.className = 'engine-handle';
-        h.style.cssText = 'position:absolute;width:14px;height:14px;margin:-7px 0 0 -7px;' +
-          'background:rgba(255,80,80,.85);border:2px solid #fff;border-radius:50%;' +
-          'pointer-events:auto;cursor:move;';
-        h.style.left = (S.quad[i].x * S.dispW) + 'px';
-        h.style.top = (S.quad[i].y * S.dispH) + 'px';
-        h.addEventListener('pointerdown', function (e) {
-          e.preventDefault();
-          h.setPointerCapture(e.pointerId);
-          function move(ev) {
-            const r = S.wrap.getBoundingClientRect();
-            let nx = (ev.clientX - r.left) / S.dispW;
-            let ny = (ev.clientY - r.top) / S.dispH;
-            nx = Math.max(0, Math.min(1, nx));
-            ny = Math.max(0, Math.min(1, ny));
-            S.quad[i].x = nx; S.quad[i].y = ny;
-            h.style.left = (nx * S.dispW) + 'px';
-            h.style.top = (ny * S.dispH) + 'px';
-            lsSet('avci_quad_' + S.id, JSON.stringify(S.quad));
-            if (S.onQuadChange) S.onQuadChange(S.quad);
-          }
-          function up() {
-            h.removeEventListener('pointermove', move);
-            h.removeEventListener('pointerup', up);
-          }
-          h.addEventListener('pointermove', move);
-          h.addEventListener('pointerup', up);
-        });
-        box.appendChild(h);
-      })(i);
-    }
-    S.wrap.appendChild(box);
-  }
-  function enableCorners(on) {
-    if (!S) return;
-    S.editing = on;
-    let box = S.wrap.querySelector('.engine-handles');
-    if (on) {
-      if (!box) buildHandles();
-      else box.style.display = '';
-    } else if (box) box.style.display = 'none';
-  }
-  /* ---------- JSON dışa aktarma ---------- */
-  function getQuadJSON() {
-    if (!S) return null;
-    return {
-      id: S.id,
-      corners: S.quad.map(function (p) {
-        return { x: Math.round(p.x * S.natW), y: Math.round(p.y * S.natH) };
-      })
-    };
-  }
-  function downloadQuadJSON() {
-    const data = getQuadJSON();
-    if (!data) return;
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'avci-sablon-' + (data.id || 'model') + '.json';
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
-    a.remove();
-  }
-
-  /* ---------- temizlik ---------- */
-  function detach() { destroyTextures(); S = null; }
-
-  window.MockupEngine = {
-    attach: attach, render: render, canRender: canRender,
-    enableCorners: enableCorners, getQuadJSON: getQuadJSON,
-    downloadQuadJSON: downloadQuadJSON, detach: detach,
-    mountPreview: renderPreview, renderPreview: renderPreview
-  };
-})();
-
-
-</script>
-  <script src="main.js?v=68" defer></script>
+  <!-- Mockup motoru: eski motor kodları tamamen kaldırıldı — sıfırdan yazılacak -->
+  <!-- Galeri verisi + GPU motor + uygulama (sıra önemli) -->
+  <script src="gallery-data.js?v=1" defer></script>
+  <script src="gpu-engine.js?v=3" defer></script>
+    <script src="main.js?v=76" defer></script>
 </head>
 <body>
   <!-- Hareketli geometrik şekil katmanı -->
@@ -468,18 +52,6 @@ console.log('[STUDYO] mockup-engine.js v6 (INLINE) yüklendi — WebGL GPU motor
           <span id="theme-icon">🌙</span>
         </button>
         <button type="button" id="review-open-btn" class="review-open-btn" title="Yorum Yap" data-i18n="reviewBtn" data-i18n-title="reviewBtn">💬 Yorum Yap</button>
-        <button type="button" id="fav-toggle-btn" class="fav-toggle-btn" title="Favori Maketler / Favorites">
-          <span class="fav-toggle-heart">♡</span>
-          <span class="fav-toggle-label" data-i18n="favBtn">Favori Maketler</span>
-          <span class="fav-toggle-count" id="fav-count">0</span>
-        </button>
-        <!-- Aşağı açılan favori panel -->
-        <div id="fav-panel" class="fav-panel hidden">
-          <div class="fav-panel-header">
-            <span data-i18n="favPanelTitle">♥ Favori Maketler</span>
-          </div>
-          <div id="fav-panel-body" class="fav-panel-body"></div>
-        </div>
       </div>
       <div class="lang-wheel" id="lang-wheel" title="Dili değiştir / Change language">
         <span class="lang-wheel-ring"></span>
@@ -525,20 +97,16 @@ console.log('[STUDYO] mockup-engine.js v6 (INLINE) yüklendi — WebGL GPU motor
       </div>
     </section>
 
-    <!-- Alt Alan: Manken Galerisi -->
+    <!-- Alt Alan: Manken Galerisi (görseller kaldırıldı — motor ve edit ile birlikte yeniden kurulacak) -->
     <section class="gallery">
       <div class="gallery-seam" aria-hidden="true"></div>
       <div class="gallery-header">
         <h3 data-i18n="galleryTitle">Manken Galerisi</h3>
+        <button id="add-mannequin" class="secondary-btn gallery-add" data-i18n="galleryAdd">+ Manken Ekle</button>
       </div>
-            <div id="mannequin-grid" class="mannequin-grid">
-        <div id="empty-state" class="empty-state" data-i18n="emptyState">
-          
-        </div>
-        <!-- Statik kart şablonu (JS tarafından klonlanır, sadece görsel gösterilir) -->
-        <div class="mannequin-card mannequin-clickable hidden" data-template="mannequin-card">
-          <div class="mannequin-holder"><img class="mannequin-img" src="" alt="" loading="lazy" decoding="async"></div>
-        </div>
+      <input type="file" id="mannequin-upload" class="hidden-input" accept="image/png, image/jpeg, image/webp" multiple>
+      <div id="mannequin-grid" class="mannequin-grid">
+        <div id="empty-state" class="empty-state" data-i18n="emptyState"></div>
       </div>
     </section>
 
@@ -599,7 +167,7 @@ console.log('[STUDYO] mockup-engine.js v6 (INLINE) yüklendi — WebGL GPU motor
     </div>
   </div>
 
-      <!-- Alt Footer: Yasal Bağlantılar -->
+  <!-- Alt Footer: Yasal Bağlantılar -->
   <footer id="legal-footer" class="legal-footer">
     <div class="legal-content">
       <div class="legal-copy">© 2026 Mockup Studio. Tüm hakları saklıdır.</div>
@@ -613,20 +181,20 @@ console.log('[STUDYO] mockup-engine.js v6 (INLINE) yüklendi — WebGL GPU motor
     </div>
   </footer>
 
-  <!-- Model Düzenleme Modalı -->
+  <!-- Model Düzenleme Modalı (GPU Motor: dalga bükme) -->
   <div id="modal" class="modal-overlay hidden">
-    <div class="modal-box">
+    <div class="modal-box edit-box">
       <div class="modal-header">
         <div class="modal-title-wrap">
-          <h3 data-i18n="editTitle">Edit Mockup</h3>
-          <span class="modal-subtitle" data-i18n="editSub">Drag the design to position it</span>
+          <h3 data-i18n="editTitle">Maketi Düzenle</h3>
+          <span class="modal-subtitle" data-i18n="editSub">Tasarımı sürükleyin • tekerlekle boyutlandırın</span>
         </div>
         <button id="modal-close" class="remove-btn modal-close-btn" title="Kapat" data-i18n-title="closeTitle">✕</button>
       </div>
       <div class="modal-body">
         <div id="modal-canvas-wrap" class="modal-canvas-wrap">
           <canvas id="modal-canvas"></canvas>
-          <!-- Yükleme ekranı: mockup hazırlanırken kısa süre görünür -->
+          <!-- Yükleme ekranı: motor hazırlanırken görünür -->
           <div id="modal-loading" class="modal-loading hidden">
             <div class="modal-loading-spinner"></div>
             <div class="modal-loading-text" data-i18n="loadingText">Mockup hazırlanıyor…</div>
@@ -635,89 +203,98 @@ console.log('[STUDYO] mockup-engine.js v6 (INLINE) yüklendi — WebGL GPU motor
         <div class="modal-controls">
           <div class="control-group">
             <div class="control-label">
-              <span data-i18n="sizeLabel">Size</span>
-              <span class="range-val" id="modal-scale-val">%100</span>
+              <span data-i18n="sizeLabel">Boyut</span>
             </div>
-            <input type="range" id="modal-scale" min="10" max="300" value="100">
-            <input type="number" class="num-input" id="modal-scale-num" min="10" max="300" step="1" value="100">
+            <div class="slider-row">
+              <input type="range" class="ctrl-range" id="modal-scale" min="20" max="320" value="100">
+              <input type="number" class="num-input" id="modal-scale-num" min="20" max="320" step="1" value="100">
+            </div>
           </div>
           <div class="control-group">
             <div class="control-label">
-              <span data-i18n="angleLabel">Angle</span>
-              <span class="range-val" id="modal-rotate-val">0°</span>
+              <span data-i18n="angleLabel">Açı</span>
             </div>
-            <input type="range" id="modal-rotate" min="-180" max="180" value="0">
-            <input type="number" class="num-input" id="modal-rotate-num" min="-180" max="180" step="1" value="0">
+            <div class="slider-row">
+              <input type="range" class="ctrl-range" id="modal-rotate" min="-180" max="180" value="0">
+              <input type="number" class="num-input" id="modal-rotate-num" min="-180" max="180" step="1" value="0">
+            </div>
           </div>
           <div class="control-group">
             <div class="control-label">
-              <span data-i18n="yawLabel">Yana Eğim</span>
-              <span class="range-val" id="modal-yaw-val">0°</span>
+              <span data-i18n="skewXLabel">Yana Eğim</span>
             </div>
-            <input type="range" id="modal-yaw" min="-60" max="60" value="0">
-            <input type="number" class="num-input" id="modal-yaw-num" min="-60" max="60" step="1" value="0">
-          </div>
-<div class="control-group">
-            <div class="control-label">
-              <span data-i18n="pitchLabel">Yukarı-Aşağı Eğim</span>
-              <span class="range-val" id="modal-pitch-val">0°</span>
+            <div class="slider-row">
+              <input type="range" class="ctrl-range" id="modal-skewx" min="-45" max="45" value="0">
+              <input type="number" class="num-input" id="modal-skewx-num" min="-45" max="45" step="1" value="0">
             </div>
-            <input type="range" id="modal-pitch" min="-60" max="60" value="0">
-            <input type="number" class="num-input" id="modal-pitch-num" min="-60" max="60" step="1" value="0">
           </div>
           <div class="control-group">
             <div class="control-label">
-              <span data-i18n="shopLabel">📐 FORMAT 2000×2000</span>
+              <span data-i18n="skewYLabel">Yukarı Eğim</span>
             </div>
-            <div class="format-fixed" data-i18n="formatFixed">📐 FORMAT 2000×2000</div>
-            <div class="format-sub" data-i18n="formatSub">Etsy listelemeye uygun</div>
+            <div class="slider-row">
+              <input type="range" class="ctrl-range" id="modal-skewy" min="-45" max="45" value="0">
+              <input type="number" class="num-input" id="modal-skewy-num" min="-45" max="45" step="1" value="0">
+            </div>
+          </div>
+          <div class="control-group control-divider" data-divider-label data-i18n="waveGroupLabel">🌊 Kumaş Dalgası</div>
+          <div class="control-group">
+            <div class="control-label">
+              <span data-i18n="waveIntensityLabel">Dalga Yoğunluğu</span>
+            </div>
+            <div class="slider-row">
+              <input type="range" class="ctrl-range" id="modal-wint" min="0" max="15" step="0.5" value="3">
+              <input type="number" class="num-input" id="modal-wint-num" min="0" max="15" step="0.5" value="3">
+            </div>
+          </div>
+          <div class="control-group">
+            <div class="control-label">
+              <span data-i18n="waveBlurLabel">Dalga Yumuşatma</span>
+            </div>
+            <div class="slider-row">
+              <input type="range" class="ctrl-range" id="modal-wblur" min="0.5" max="20" step="0.5" value="4">
+              <input type="number" class="num-input" id="modal-wblur-num" min="0.5" max="20" step="0.5" value="4">
+            </div>
+          </div>
+          <div class="control-group">
+            <div class="control-label">
+              <span data-i18n="waveShadingLabel">Kıvrım Gölgesi</span>
+            </div>
+            <div class="slider-row">
+              <input type="range" class="ctrl-range" id="modal-wshade" min="0" max="1" step="0.05" value="0.45">
+              <input type="number" class="num-input" id="modal-wshade-num" min="0" max="1" step="0.05" value="0.45">
+            </div>
           </div>
           <div class="modal-hint" data-i18n="modalHint">
-            💡 Drag the design onto the mannequin.
+            💡 Tasarımı sürükleyin; dalgalar tasarımı kumaşa işler ve kumaş dokusunu korur.
           </div>
           <div class="modal-actions">
-            <button id="modal-design" class="secondary-btn" data-i18n="designBtn">🖼 Choose Design</button>
-            <button id="modal-recenter" class="secondary-btn" data-i18n="recenterBtn">⟲ Auto Position</button>
-            <button id="modal-apply" class="primary-btn" data-i18n="applyBtn">Apply</button>
+            <button id="modal-design" class="secondary-btn" data-i18n="designBtn">🖼 Tasarım Seç</button>
+            <button id="modal-recenter" class="secondary-btn" data-i18n="recenterBtn">⟲ Ortala</button>
+            <button id="modal-apply" class="primary-btn" data-i18n="applyBtn">Uygula</button>
           </div>
         </div>
       </div>
-      <!-- İnce Ton Paneli: ışık / doygunluk / keskinlik / kontrast / sıcaklık / ton -->
-      <div id="tone-panel" class="tone-panel">
+      <!-- Alt Ton Şeridi: parlaklık / kontrast / doygunluk (sadece kaydırmalı) -->
+      <div class="tone-strip">
         <div class="tone-item">
-          <label data-i18n="brightnessLabel">Işık</label>
-          <input type="range" id="tone-brightness" min="0" max="200" value="100">
-          <input type="number" class="num-input tone-num" id="tone-brightness-num" min="0" max="200" step="1" value="100">
+          <span class="tone-label" data-i18n="toneBrightness">Parlaklık</span>
+          <input type="range" id="tone-brightness" class="tone-range" min="-1" max="1" step="0.01" value="0">
         </div>
         <div class="tone-item">
-          <label data-i18n="saturationLabel">Doygunluk</label>
-          <input type="range" id="tone-saturation" min="0" max="200" value="100">
-          <input type="number" class="num-input tone-num" id="tone-saturation-num" min="0" max="200" step="1" value="100">
+          <span class="tone-label" data-i18n="toneContrast">Kontrast</span>
+          <input type="range" id="tone-contrast" class="tone-range" min="0.5" max="1.5" step="0.01" value="1">
         </div>
         <div class="tone-item">
-          <label data-i18n="sharpnessLabel">Keskinlik</label>
-          <input type="range" id="tone-sharpness" min="0" max="100" value="0">
-          <input type="number" class="num-input tone-num" id="tone-sharpness-num" min="0" max="100" step="1" value="0">
+          <span class="tone-label" data-i18n="toneSaturation">Doygunluk</span>
+          <input type="range" id="tone-saturation" class="tone-range" min="0" max="2" step="0.01" value="1">
         </div>
-        <div class="tone-item">
-          <label data-i18n="contrastLabel">Kontrast</label>
-          <input type="range" id="tone-contrast" min="0" max="200" value="100">
-          <input type="number" class="num-input tone-num" id="tone-contrast-num" min="0" max="200" step="1" value="100">
-        </div>
-        <div class="tone-item">
-          <label data-i18n="warmthLabel">Sıcaklık</label>
-          <input type="range" id="tone-warmth" min="0" max="100" value="0">
-          <input type="number" class="num-input tone-num" id="tone-warmth-num" min="0" max="100" step="1" value="0">
-        </div>
-        <div class="tone-item">
-          <label data-i18n="hueLabel">Ton</label>
-          <input type="range" id="tone-hue" min="-180" max="180" value="0">
-          <input type="number" class="num-input tone-num" id="tone-hue-num" min="-180" max="180" step="1" value="0">
-        </div>
-        <button id="tone-reset" class="secondary-btn tone-reset" data-i18n="toneReset">⟲ Sıfırla</button>
       </div>
     </div>
   </div>
+
+  <!-- Otomatik test çıktısı (?smoketest=1) -->
+  <div id="smoke-log" class="smoke-log hidden"></div>
 
   <!-- Edit Modalı Açıkken Görünen Üst Reklam Banneri (Adsterra 320x50) -->
   <div id="top-ad-banner" class="top-ad-banner hidden" role="complementary" aria-label="Advertisement">
@@ -752,6 +329,43 @@ console.log('[STUDYO] mockup-engine.js v6 (INLINE) yüklendi — WebGL GPU motor
         };
       </script>
       <script src="https://www.highrevenueformat.com/1a49f286f28e80ef24e08cfb9c7b4644/invoke.js"></script>
+    </div>
+  </div>
+
+  <!-- Edit Modalı Açıkken Görünen Dikey (Vertical) Reklam Bannerları (Adsterra 160x600) -->
+  <!-- Sol Dikey Banner -->
+  <div id="left-ad-banner" class="side-ad-banner left-ad-banner hidden" role="complementary" aria-label="Advertisement">
+    <span class="side-ad-label">AD</span>
+    <div class="side-ad-slot">
+      <!-- Adsterra 160x600 Dikey Banner -->
+      <script>
+        atOptions = {
+          'key' : 'e7c3a9f1b5d24860e9c4a7f1b3d5e6c8',
+          'format' : 'iframe',
+          'height' : 600,
+          'width' : 160,
+          'params' : {}
+        };
+      </script>
+      <script src="https://www.highrevenueformat.com/e7c3a9f1b5d24860e9c4a7f1b3d5e6c8/invoke.js"></script>
+    </div>
+  </div>
+
+  <!-- Sağ Dikey Banner -->
+  <div id="right-ad-banner" class="side-ad-banner right-ad-banner hidden" role="complementary" aria-label="Advertisement">
+    <span class="side-ad-label">AD</span>
+    <div class="side-ad-slot">
+      <!-- Adsterra 160x600 Dikey Banner -->
+      <script>
+        atOptions = {
+          'key' : 'f8d4b0e2c6a35971f0d5b8e2c4d6f8a0',
+          'format' : 'iframe',
+          'height' : 600,
+          'width' : 160,
+          'params' : {}
+        };
+      </script>
+      <script src="https://www.highrevenueformat.com/f8d4b0e2c6a35971f0d5b8e2c4d6f8a0/invoke.js"></script>
     </div>
   </div>
 
@@ -831,23 +445,5 @@ console.log('[STUDYO] mockup-engine.js v6 (INLINE) yüklendi — WebGL GPU motor
     </div>
   </div>
 
-  <!-- Kumaş Kıvrım ve Mikro Doku için SVG Filtresi -->
-  <svg style="position: absolute; width: 0; height: 0; pointer-events: none;">
-    <defs>
-      <filter id="fabric-displacement">
-        <!-- Mikro kumaş dokusu pürüzleri oluşturmak için turbulence -->
-        <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="2" result="noise" />
-        <!-- Tasarımı dalgalandırarak pürüzlü kumaş kenarları ve yüzey hissi verir -->
-        <feDisplacementMap in="SourceGraphic" in2="noise" scale="3.5" xChannelSelector="R" yChannelSelector="G" />
-      </filter>
-      <!-- Keskinlik önizleme filtresi (ton paneli) -->
-      <filter id="mockup-sharpen">
-        <feConvolveMatrix order="3" preserveAlpha="true"
-          kernelMatrix="0 -1 0 -1 5 -1 0 -1 0"/>
-      </filter>
-    </defs>
-  </svg>
-
-<div id="gpu-version-badge" style="position:fixed;bottom:6px;right:8px;z-index:99999;background:#6d28d9;color:#fff;font:600 11px sans-serif;padding:4px 10px;border-radius:6px;pointer-events:none;">v6-GPU-INLINE</div>
 </body>
 </html>
