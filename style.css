@@ -893,7 +893,9 @@ body.night-mode .content-paragraph { color: #cbd5e1; }
 
 /* ---------- Edit Modalı (GPU Motor) ---------- */
 #modal > .modal-box.edit-box {
-  width: min(1440px, 97vw);
+  /* Sol/sağ dikey reklam bannerları (160px + 10px boşluk) edit modaline çarpmasın:
+     modal, bannerlar hariç kalan alana sığar */
+  width: min(1150px, calc(100vw - 380px));
   max-height: 94vh;
 }
 .modal-body {
