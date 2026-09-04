@@ -356,6 +356,73 @@ function thumbPath(file) {
 }
 
 const seenSrcs = new Set();
+
+/* ---------------- Favoriler (kalp) ----------------
+   Favori maketler localStorage'da saklanır (görsel kaynağı bazlı). */
+const FAV_KEY = 'mockupstudio.favs';
+let favSet = new Set();
+try { favSet = new Set(JSON.parse(localStorage.getItem(FAV_KEY) || '[]')); } catch (e) { favSet = new Set(); }
+function saveFavs() { try { localStorage.setItem(FAV_KEY, JSON.stringify([...favSet])); } catch (e) { /* yoksay */ } }
+function isFav(m) { return favSet.has(m.src); }
+function toggleFav(m, btn) {
+  if (favSet.has(m.src)) favSet.delete(m.src); else favSet.add(m.src);
+  saveFavs();
+  btn.classList.toggle('active', favSet.has(m.src));
+  btn.textContent = favSet.has(m.src) ? '❤' : '♡';
+  renderFavPanel();
+}
+
+/* --- Favori paneli (navbar şeridindeki buton) --- */
+function favMannequins() { return mannequins.filter((m) => favSet.has(m.src)); }
+function updateFavCount() {
+  const c = $('#fav-open-count');
+  if (c) c.textContent = String(favSet.size);
+  const btn = $('#fav-open-btn');
+  if (btn) btn.classList.toggle('has-favs', favSet.size > 0);
+}
+function renderFavPanel() {
+  updateFavCount();
+  const panel = $('#fav-panel'), grid = $('#fav-panel-grid'), empty = $('#fav-panel-empty');
+  if (!panel || !grid) return;
+  grid.innerHTML = '';
+  const list = favMannequins();
+  if (empty) empty.style.display = list.length ? 'none' : '';
+  list.forEach((m) => {
+    const item = document.createElement('div');
+    item.className = 'fav-item';
+    const img = document.createElement('img');
+    img.src = m.src; img.alt = m.name || 'Manken'; img.loading = 'lazy'; img.decoding = 'async';
+    img.title = 'Edit ekranını aç';
+    img.addEventListener('click', () => {
+      panel.classList.add('hidden');
+      openModal(m.cardEl, m);
+    });
+    const rm = document.createElement('button');
+    rm.type = 'button'; rm.className = 'fav-item-remove'; rm.textContent = '✕'; rm.title = 'Favoriden çıkar';
+    rm.addEventListener('click', (e) => {
+      e.stopPropagation();
+      favSet.delete(m.src); saveFavs(); renderFavPanel();
+      if (m.cardEl) {
+        const h = m.cardEl.querySelector('.fav-heart');
+        if (h) { h.classList.remove('active'); h.textContent = '♡'; }
+      }
+    });
+    item.appendChild(img); item.appendChild(rm);
+    grid.appendChild(item);
+  });
+}
+function bindFavPanelEvents() {
+  const btn = $('#fav-open-btn'), panel = $('#fav-panel');
+  if (!btn || !panel) return;
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    panel.classList.toggle('hidden');
+    if (!panel.classList.contains('hidden')) renderFavPanel();
+  });
+  panel.addEventListener('click', (e) => e.stopPropagation());
+  document.addEventListener('click', () => panel.classList.add('hidden'));
+}
+
 function tryLoadMannequin(paths, name, idx) {
   if (idx >= paths.length) return;
   const img = new Image();
@@ -365,6 +432,7 @@ function tryLoadMannequin(paths, name, idx) {
     const m = { id: uid(), name, src: img.src, cardEl: null };
     mannequins.push(m);
     renderCard(m);
+    renderFavPanel();
     updateGalleryState();
   };
   img.onerror = () => tryLoadMannequin(paths, name, idx + 1);
@@ -392,6 +460,15 @@ function makeCard(m) {
   img.src = m.src;
   holder.appendChild(img);
   card.appendChild(holder);
+  // Sağ alt köşe favori kalbi
+  const favBtn = document.createElement('button');
+  favBtn.type = 'button';
+  favBtn.className = 'fav-heart' + (isFav(m) ? ' active' : '');
+  favBtn.textContent = isFav(m) ? '❤' : '♡';
+  favBtn.title = 'Favorilere ekle / çıkar';
+  favBtn.setAttribute('aria-label', 'Favori');
+  favBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleFav(m, favBtn); });
+  card.appendChild(favBtn);
   card.addEventListener('click', () => openModal(card, m));
   return card;
 }
@@ -419,6 +496,7 @@ function addMannequinFromFiles(files) {
     const m = { id: uid(), name: f.name.replace(/\.[^.]+$/, ''), src, cardEl: null };
     mannequins.push(m);
     renderCard(m);
+    renderFavPanel();
     updateGalleryState();
   });
 }
@@ -476,7 +554,7 @@ function defaultTransformFor(det, img) {
   const chest = (det && det.chest) || { cx: 0.5, cy: 0.42, w: 0.34, h: 0.34 };
   const natW = img.naturalWidth || 1000;
   const natH = img.naturalHeight || 1000;
-  const w = Math.max(0.05, chest.w * 0.9);
+  const w = Math.max(0.05, chest.w * 1.12); // tasarım açılışta biraz daha büyük (%25) yerleşsin
   const h = Math.max(0.04, w * (natW / natH) / designAspect());
   return { cx: chest.cx, cy: chest.cy, w, h, angle: 0, skewX: 0, skewY: 0 };
 }
@@ -484,8 +562,8 @@ function defaultTransformFor(det, img) {
 function openModal(card, m) {
   if (!window.MockupEngine) { alert('GPU motoru yüklenemedi.'); return; }
   if (!design) {
+    // Tasarım yokken maket seçilirse sessizce hatırla; tasarım yüklenince edit otomatik açılır
     pendingMannequinId = m.id;
-    alert((TRANSLATIONS[currentLang] || TRANSLATIONS.tr).needDesign);
     return;
   }
   activeMannequin = m;
@@ -529,7 +607,7 @@ async function initModalEngine(m) {
     MockupEngine.setTransform(modalTransform);
     if (design && design.img) MockupEngine.setDesign(design.img);
     const maxW = Math.max((wrap.clientWidth || 560) - 16, 280);
-    const maxH = 720;
+    const maxH = 860; // görsel edit modalinde daha büyük açılsın
     let dw = Math.min(img.naturalWidth, maxW);
     let dh = Math.max(2, Math.round(dw * img.naturalHeight / img.naturalWidth));
     if (dh > maxH) { dh = maxH; dw = Math.max(2, Math.round(dh * img.naturalWidth / img.naturalHeight)); }
@@ -1330,7 +1408,9 @@ function init() {
     ['bindUploadEvents', bindUploadEvents],
     ['bindModalEvents', bindModalEvents],
     ['bindGalleryEvents', bindGalleryEvents],
+    ['bindFavPanelEvents', bindFavPanelEvents],
     ['seedDefaultMannequins', seedDefaultMannequins],
+    ['renderFavPanel', renderFavPanel],
     ['bindStaticEvents', bindStaticEvents],
     ['createAnimatedShapes', createAnimatedShapes]
   ];

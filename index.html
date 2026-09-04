@@ -7,7 +7,7 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title data-i18n="pageTitle">MOCKUP STUDYO</title>
-        <link rel="stylesheet" href="style.css?v=84">
+        <link rel="stylesheet" href="style.css?v=87">
   <!-- Google AdSense (onay sonrası publisher ID ekleyin) -->
   <!--
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
@@ -17,7 +17,7 @@
   <!-- Galeri verisi + GPU motor + uygulama (sıra önemli) -->
   <script src="gallery-data.js?v=1" defer></script>
   <script src="gpu-engine.js?v=3" defer></script>
-    <script src="main.js?v=76" defer></script>
+  <script src="main.js?v=91" defer></script>
 </head>
 <body>
   <!-- Hareketli geometrik şekil katmanı -->
@@ -48,6 +48,11 @@
       </span> <span>MOCKUP</span> <span class="logo-accent">STUDYO</span></div>
         <div class="header-badges">
       <div class="navbar-actions">
+        <button type="button" id="fav-open-btn" class="fav-open-btn" title="Favori Maketler">
+          <span class="fav-open-heart">♡</span>
+          <span class="fav-open-label">Favoriler</span>
+          <span id="fav-open-count" class="fav-open-count">0</span>
+        </button>
         <button type="button" id="theme-toggle" class="theme-toggle" title="Gece / Gündüz Modu" data-i18n-title="themeTitle">
           <span id="theme-icon">🌙</span>
         </button>
@@ -59,6 +64,13 @@
       </div>
     </div>
   </header>
+
+  <!-- Favori Maketler Açılır Paneli -->
+  <div id="fav-panel" class="fav-panel hidden" role="dialog" aria-label="Favori Maketler">
+    <div class="fav-panel-title">❤ Favori Maketler</div>
+    <div id="fav-panel-grid" class="fav-panel-grid"></div>
+    <div id="fav-panel-empty" class="fav-panel-empty">Henüz favori yok — galerideki kartların sağ altındaki kalbe dokun.</div>
+  </div>
 
   <main class="app-container">
 
@@ -102,9 +114,7 @@
       <div class="gallery-seam" aria-hidden="true"></div>
       <div class="gallery-header">
         <h3 data-i18n="galleryTitle">Manken Galerisi</h3>
-        <button id="add-mannequin" class="secondary-btn gallery-add" data-i18n="galleryAdd">+ Manken Ekle</button>
       </div>
-      <input type="file" id="mannequin-upload" class="hidden-input" accept="image/png, image/jpeg, image/webp" multiple>
       <div id="mannequin-grid" class="mannequin-grid">
         <div id="empty-state" class="empty-state" data-i18n="emptyState"></div>
       </div>
@@ -337,17 +347,17 @@
   <div id="left-ad-banner" class="side-ad-banner left-ad-banner hidden" role="complementary" aria-label="Advertisement">
     <span class="side-ad-label">AD</span>
     <div class="side-ad-slot">
-      <!-- Adsterra 160x600 Dikey Banner -->
+      <!-- Adsterra 160x300 Dikey Banner (çalışan birim anahtarı) -->
       <script>
         atOptions = {
-          'key' : 'e7c3a9f1b5d24860e9c4a7f1b3d5e6c8',
+          'key' : '4db2c2b82a68dabc4d6f1820d7d6fe5e',
           'format' : 'iframe',
-          'height' : 600,
+          'height' : 300,
           'width' : 160,
           'params' : {}
         };
       </script>
-      <script src="https://www.highrevenueformat.com/e7c3a9f1b5d24860e9c4a7f1b3d5e6c8/invoke.js"></script>
+      <script src="https://www.highrevenueformat.com/4db2c2b82a68dabc4d6f1820d7d6fe5e/invoke.js"></script>
     </div>
   </div>
 
@@ -355,17 +365,17 @@
   <div id="right-ad-banner" class="side-ad-banner right-ad-banner hidden" role="complementary" aria-label="Advertisement">
     <span class="side-ad-label">AD</span>
     <div class="side-ad-slot">
-      <!-- Adsterra 160x600 Dikey Banner -->
+      <!-- Adsterra 160x300 Dikey Banner (çalışan birim anahtarı) -->
       <script>
         atOptions = {
-          'key' : 'f8d4b0e2c6a35971f0d5b8e2c4d6f8a0',
+          'key' : '4db2c2b82a68dabc4d6f1820d7d6fe5e',
           'format' : 'iframe',
-          'height' : 600,
+          'height' : 300,
           'width' : 160,
           'params' : {}
         };
       </script>
-      <script src="https://www.highrevenueformat.com/f8d4b0e2c6a35971f0d5b8e2c4d6f8a0/invoke.js"></script>
+      <script src="https://www.highrevenueformat.com/4db2c2b82a68dabc4d6f1820d7d6fe5e/invoke.js"></script>
     </div>
   </div>
 
