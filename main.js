@@ -537,7 +537,118 @@ function renderModal() {
   requestAnimationFrame(() => {
     modalRenderPending = false;
     MockupEngine.renderPreview();
+    updateTransformOverlay();
   });
+}
+
+/* --- Tasarım üzerinde etkileşimli kutu (kesikli çizgi + köşe + döndürme) --- */
+function ensureTransformOverlay() {
+  const wrap = $('#modal-canvas-wrap');
+  if (!wrap || $('#transform-overlay')) return $('#transform-overlay');
+  const ov = document.createElement('div');
+  ov.id = 'transform-overlay';
+  ov.className = 'transform-overlay';
+  ['tl', 'tr', 'bl', 'br'].forEach((c) => {
+    const h = document.createElement('div');
+    h.className = 'to-handle to-' + c;
+    ov.appendChild(h);
+  });
+  const rot = document.createElement('div');
+  rot.className = 'to-rotate';
+  rot.title = 'Döndür';
+  ov.appendChild(rot);
+  wrap.appendChild(ov);
+  bindTransformOverlay(ov);
+  window.addEventListener('resize', () => updateTransformOverlay());
+  return ov;
+}
+
+function updateTransformOverlay() {
+  const ov = $('#transform-overlay');
+  const canvas = $('#modal-canvas');
+  const wrap = $('#modal-canvas-wrap');
+  if (!ov || !canvas || !wrap || !modalTransform) {
+    if (ov) ov.style.display = 'none';
+    return;
+  }
+  const w = canvas.clientWidth, h = canvas.clientHeight;
+  if (!w || !h) { ov.style.display = 'none'; return; }
+  const dw = modalTransform.w * w, dh = modalTransform.h * h;
+  ov.style.display = 'block';
+  ov.style.width = dw + 'px';
+  ov.style.height = dh + 'px';
+  ov.style.left = (canvas.offsetLeft + modalTransform.cx * w - dw / 2) + 'px';
+  ov.style.top = (canvas.offsetTop + modalTransform.cy * h - dh / 2) + 'px';
+  ov.style.transform = 'rotate(' + (modalTransform.angle || 0) + 'deg)';
+}
+
+function setScaleUI(w) {
+  if (!modalDefaults) return;
+  const pct = Math.max(20, Math.min(320, Math.round(w / modalDefaults.w * 100)));
+  const r = $('#modal-scale'), n = $('#modal-scale-num');
+  if (r) r.value = pct;
+  if (n) n.value = pct;
+}
+function setRotateUI(deg) {
+  const r = $('#modal-rotate'), n = $('#modal-rotate-num');
+  if (r) r.value = deg;
+  if (n) n.value = deg;
+}
+
+function bindTransformOverlay(ov) {
+  let mode = null, start = null;
+  ov.addEventListener('pointerdown', (e) => {
+    if (!modalTransform) return;
+    const canvas = $('#modal-canvas');
+    if (!canvas) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const t = e.target.closest('.to-handle, .to-rotate');
+    const rect = canvas.getBoundingClientRect();
+    start = {
+      x: e.clientX, y: e.clientY,
+      cx: modalTransform.cx, cy: modalTransform.cy,
+      w: modalTransform.w, angle: modalTransform.angle || 0,
+      cpx: rect.left + modalTransform.cx * rect.width,
+      cpy: rect.top + modalTransform.cy * rect.height,
+      rw: rect.width, rh: rect.height,
+      rot0: Math.atan2(e.clientY - (rect.top + modalTransform.cy * rect.height),
+                       e.clientX - (rect.left + modalTransform.cx * rect.width))
+            - (modalTransform.angle || 0) * Math.PI / 180
+    };
+    mode = t ? (t.classList.contains('to-rotate') ? 'rotate' : 'resize') : 'move';
+    try { ov.setPointerCapture(e.pointerId); } catch (err) { /* sessiz */ }
+  });
+  ov.addEventListener('pointermove', (e) => {
+    if (!mode || !modalTransform || !start) return;
+    if (mode === 'move') {
+      // Ekran delta'sını tasarımın döndürülmüş yerel eksenine çevir
+      const dx = e.clientX - start.x, dy = e.clientY - start.y;
+      const a = start.angle * Math.PI / 180;
+      const lx = dx * Math.cos(a) + dy * Math.sin(a);
+      const ly = -dx * Math.sin(a) + dy * Math.cos(a);
+      modalTransform.cx = Math.max(0.02, Math.min(0.98, start.cx + lx / start.rw));
+      modalTransform.cy = Math.max(0.02, Math.min(0.98, start.cy + ly / start.rh));
+    } else if (mode === 'resize') {
+      // Merkeze uzaklığın döndürülmüş x eksenine izdüşümü = yeni yarı genişlik
+      const a = start.angle * Math.PI / 180;
+      const vx = e.clientX - start.cpx, vy = e.clientY - start.cpy;
+      const proj = Math.abs(vx * Math.cos(a) + vy * Math.sin(a));
+      const w = Math.max(0.03, Math.min(1.4, (2 * proj) / start.rw));
+      modalTransform.w = w;
+      if (modalDefaults) modalTransform.h = w * (modalDefaults.h / modalDefaults.w);
+      setScaleUI(w);
+    } else { // rotate
+      const a0 = Math.atan2(e.clientY - start.cpy, e.clientX - start.cpx);
+      const deg = Math.max(-180, Math.min(180, Math.round((a0 - start.rot0) * 180 / Math.PI)));
+      modalTransform.angle = deg;
+      setRotateUI(deg);
+    }
+    MockupEngine.setTransform(modalTransform);
+    renderModal();
+  });
+  ['pointerup', 'pointercancel'].forEach((ev) =>
+    ov.addEventListener(ev, () => { mode = null; start = null; }));
 }
 
 function designAspect() {
@@ -613,6 +724,8 @@ async function initModalEngine(m) {
     if (dh > maxH) { dh = maxH; dw = Math.max(2, Math.round(dh * img.naturalWidth / img.naturalHeight)); }
     MockupEngine.setPreviewSize(dw, dh);
     resetModalControls();
+    applyControls(); // her açılışta motor parametrelerini de varsayılana sıfırla
+    ensureTransformOverlay();
     renderModal();
     finishLoading();
   } catch (e) {
@@ -658,6 +771,8 @@ function resetModalControls() {
   set('#tone-brightness', 0);
   set('#tone-contrast', 1);
   set('#tone-saturation', 1);
+  set('#tone-warmth', 0);
+  set('#tone-hue', 0);
 }
 
 function applyControls() {
@@ -683,7 +798,9 @@ function applyControls() {
       shading: Number($('#modal-wshade').value) || 0,
       brightness: Number($('#tone-brightness').value) || 0,
       contrast: Number($('#tone-contrast').value) || 1,
-      saturation: Number($('#tone-saturation').value) || 1
+      saturation: Number($('#tone-saturation').value) || 1,
+      warmth: Number($('#tone-warmth').value) || 0,
+      hue: Number($('#tone-hue').value) || 0
     });
   }
   renderModal();
@@ -714,7 +831,8 @@ function bindSliderNum(rangeId) {
 }
 
 function bindToneStrip() {
-  ['#tone-brightness', '#tone-contrast', '#tone-saturation'].forEach((id) => {
+  ['#tone-brightness', '#tone-contrast', '#tone-saturation',
+   '#tone-warmth', '#tone-hue'].forEach((id) => {
     const r = $(id);
     if (r) r.addEventListener('input', applyControls);
   });
@@ -1278,34 +1396,7 @@ function randomizePiecePosition(piece) {
   piece.style.top = (Math.random() * 90 - 12).toFixed(1) + '%';
 }
 
-function burstPiece(piece, cx, cy) {
-  const container = document.getElementById('geometric-bg');
-  if (!container) return;
-  const COUNT = 18;
-  for (let i = 0; i < COUNT; i++) {
-    const f = document.createElement('div');
-    f.className = 'bg-fragment';
-    const size = 6 + Math.random() * 12;
-    f.style.width = size + 'px';
-    f.style.height = size + 'px';
-    f.style.left = (cx - size / 2) + 'px';
-    f.style.top = (cy - size / 2) + 'px';
-    const ang = Math.random() * Math.PI * 2;
-    const dist = 60 + Math.random() * 130;
-    f.style.setProperty('--dx', (Math.cos(ang) * dist).toFixed(1) + 'px');
-    f.style.setProperty('--dy', (Math.sin(ang) * dist).toFixed(1) + 'px');
-    f.style.background = FRAGMENT_COLORS[Math.floor(Math.random() * FRAGMENT_COLORS.length)];
-    container.appendChild(f);
-    setTimeout(() => f.remove(), 950);
-  }
-  // Parça yok olur, birkaç saniye sonra başka yerde yeniden doğar
-  piece.style.visibility = 'hidden';
-  piece.classList.remove('bg-piece-hover');
-  setTimeout(() => {
-    randomizePiecePosition(piece);
-    piece.style.visibility = 'visible';
-  }, 3500 + Math.random() * 2500);
-}
+// burstPiece kaldırıldı — arka plan şekilleri artık tıklamayla parçalanmıyor.
 
 function initShapeInteractions() {
   const container = document.getElementById('geometric-bg');
@@ -1335,11 +1426,7 @@ function initShapeInteractions() {
     });
   });
 
-  document.addEventListener('click', (e) => {
-    const piece = document.elementsFromPoint(e.clientX, e.clientY)
-      .find((el) => el.classList && el.classList.contains('bg-piece'));
-    if (piece) burstPiece(piece, e.clientX, e.clientY);
-  });
+  // Not: eski "patlama" etkileşimi (burstPiece) kaldırıldı — şekillere tıklamak artık sakin.
 }
 
 /* --- Dinamik Canlı Arka Plan --- */
@@ -1350,47 +1437,20 @@ function createAnimatedShapes() {
   initShapeInteractions();
 }
 
-/* --- Tıklama animasyonu: halka + renkli parçacık patlaması --- */
-const CLICK_PALETTE = ['#38bdf8', '#818cf8', '#e879f9', '#2dd4bf', '#fb923c', '#ffffff'];
+/* --- Tıklama animasyonu: su damlası gibi genişleyen dalga halkaları --- */
 document.addEventListener('click', (e) => {
   // Mobilde tıklama animasyonları kapatılır (performans) — masaüstünde aynen devam
   if (IS_MOBILE_DEVICE) return;
-  // 1) Genişleyen halka
-  const ripple = document.createElement('div');
-  ripple.className = 'click-ripple';
-  ripple.style.left = e.clientX + 'px';
-  ripple.style.top = e.clientY + 'px';
-  document.body.appendChild(ripple);
-  setTimeout(() => ripple.remove(), 600);
-
-  // 2) Rastgele renklerle parçacık patlaması
-  const N = 10;
-  for (let i = 0; i < N; i++) {
-    const p = document.createElement('div');
-    p.className = 'click-particle';
-    const angle = (Math.PI * 2 * i) / N + Math.random() * 0.5;
-    const dist = 45 + Math.random() * 50;
-    p.style.left = e.clientX + 'px';
-    p.style.top = e.clientY + 'px';
-    p.style.background = CLICK_PALETTE[Math.floor(Math.random() * CLICK_PALETTE.length)];
-    p.style.boxShadow = '0 0 8px ' + CLICK_PALETTE[Math.floor(Math.random() * CLICK_PALETTE.length)];
-    p.style.setProperty('--dx', Math.cos(angle) * dist + 'px');
-    p.style.setProperty('--dy', Math.sin(angle) * dist + 'px');
-    p.style.animationDuration = (0.5 + Math.random() * 0.35).toFixed(2) + 's';
-    document.body.appendChild(p);
-    setTimeout(() => p.remove(), 900);
+  // 3 halkalı yumuşak dalga: sırayla genişleyip kaybolan ince çemberler
+  for (let i = 0; i < 3; i++) {
+    const w = document.createElement('div');
+    w.className = 'click-wave';
+    w.style.left = e.clientX + 'px';
+    w.style.top = e.clientY + 'px';
+    w.style.animationDelay = (i * 0.12) + 's';
+    document.body.appendChild(w);
+    setTimeout(() => w.remove(), 1100);
   }
-
-  // 3) Anlık parlama (flash)
-  const flash = document.createElement('div');
-  flash.style.cssText =
-    'position:fixed;left:' + e.clientX + 'px;top:' + e.clientY + 'px;' +
-    'width:70px;height:70px;border-radius:50%;pointer-events:none;z-index:9998;zoom:1;' +
-    'transform:translate(-50%,-50%);' +
-    'background:radial-gradient(circle, rgba(255,255,255,0.5) 0%, rgba(56,189,248,0.25) 40%, transparent 70%);' +
-    'animation:clickRipple 0.4s ease-out forwards;';
-  document.body.appendChild(flash);
-  setTimeout(() => flash.remove(), 450);
 });
 
 /* ---------------- Başlatma ---------------- */

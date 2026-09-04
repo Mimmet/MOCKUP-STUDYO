@@ -7,7 +7,7 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title data-i18n="pageTitle">MOCKUP STUDYO</title>
-        <link rel="stylesheet" href="style.css?v=89">
+        <link rel="stylesheet" href="style.css?v=92">
   <!-- Google AdSense (onay sonrası publisher ID ekleyin) -->
   <!--
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
@@ -16,8 +16,8 @@
   <!-- Mockup motoru: eski motor kodları tamamen kaldırıldı — sıfırdan yazılacak -->
   <!-- Galeri verisi + GPU motor + uygulama (sıra önemli) -->
   <script src="gallery-data.js?v=1" defer></script>
-  <script src="gpu-engine.js?v=3" defer></script>
-  <script src="main.js?v=91" defer></script>
+  <script src="gpu-engine.js?v=4" defer></script>
+  <script src="main.js?v=96" defer></script>
 </head>
 <body>
   <!-- Hareketli geometrik şekil katmanı -->
@@ -298,6 +298,14 @@
         <div class="tone-item">
           <span class="tone-label" data-i18n="toneSaturation">Doygunluk</span>
           <input type="range" id="tone-saturation" class="tone-range" min="0" max="2" step="0.01" value="1">
+        </div>
+        <div class="tone-item">
+          <span class="tone-label">Sıcaklık</span>
+          <input type="range" id="tone-warmth" class="tone-range" min="-1" max="1" step="0.01" value="0">
+        </div>
+        <div class="tone-item">
+          <span class="tone-label">Renk Tonu</span>
+          <input type="range" id="tone-hue" class="tone-range" min="-180" max="180" step="1" value="0">
         </div>
       </div>
     </div>

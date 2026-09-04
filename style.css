@@ -19,8 +19,7 @@ body > .top-ad-banner,
 body > .left-ad-banner,
 body > .right-ad-banner,
 body > .modal-overlay,
-body > .click-ripple,
-body > .click-particle,
+body > .click-wave,
 body > .review-modal-overlay,
 body > svg,
 body > script {
@@ -1095,6 +1094,54 @@ body.night-mode .content-paragraph { color: #cbd5e1; }
 }
 
 
+/* ---------- Tasarım Seçim Kutusu (kesikli çizgi + köşeler + döndürme) ---------- */
+.transform-overlay {
+  position: absolute;
+  z-index: 20;
+  box-sizing: border-box;
+  border: 1.5px dashed #38bdf8;
+  background: rgba(56, 189, 248, 0.05);
+  cursor: move;
+  pointer-events: auto;
+}
+.to-handle {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: #38bdf8;
+  border: 2px solid #0f172a;
+  border-radius: 3px;
+  box-sizing: border-box;
+}
+.to-tl { left: -6px; top: -6px; cursor: nwse-resize; }
+.to-tr { right: -6px; top: -6px; cursor: nesw-resize; }
+.to-bl { left: -6px; bottom: -6px; cursor: nesw-resize; }
+.to-br { right: -6px; bottom: -6px; cursor: nwse-resize; }
+.to-rotate {
+  position: absolute;
+  left: 50%;
+  top: -32px;
+  width: 18px;
+  height: 18px;
+  margin-left: -9px;
+  border-radius: 50%;
+  background: #38bdf8;
+  border: 2px solid #0f172a;
+  box-sizing: border-box;
+  cursor: grab;
+}
+.to-rotate:active { cursor: grabbing; }
+.to-rotate::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 16px;
+  width: 1.5px;
+  height: 14px;
+  background: #38bdf8;
+  transform: translateX(-50%);
+}
+
 /* ---------- Favori Butonu (navbar şeridi) + Açılır Panel ---------- */
 .fav-open-btn {
   display: inline-flex;
@@ -1902,40 +1949,29 @@ body::after {
   100% { transform: scale(1); color: #f8fafc; }
 }
 
-/* ---------- Tıklama Animasyonu (Ripple + Parçacıklar) ---------- */
-.click-ripple {
+/* ---------- Tıklama Animasyonu (Zarif Su Dalgası) ---------- */
+.click-wave {
   position: fixed;
   width: 14px;
   height: 14px;
   border-radius: 50%;
   pointer-events: none;
   z-index: 9999;
-  transform: translate(-50%, -50%);
-  background: radial-gradient(circle, rgba(56, 189, 248, 0.55) 0%, rgba(56, 189, 248, 0.2) 45%, transparent 70%);
-  animation: clickRipple 0.55s ease-out forwards;
+  transform: translate(-50%, -50%) scale(0);
+  border: 1.5px solid rgba(56, 189, 248, 0.5);
+  background: transparent;
+  opacity: 0;
+  animation: clickWave 0.8s cubic-bezier(0.25, 0.6, 0.35, 1) forwards;
 }
 
-@keyframes clickRipple {
-  from { width: 14px; height: 14px; opacity: 1; }
-  to   { width: 130px; height: 130px; opacity: 0; }
+@keyframes clickWave {
+  0%   { transform: translate(-50%, -50%) scale(0.25); opacity: 0; }
+  20%  { opacity: 0.55; }
+  100% { transform: translate(-50%, -50%) scale(4.5);  opacity: 0; }
 }
 
-.click-particle {
-  position: fixed;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  pointer-events: none;
-  z-index: 9999;
-  background: #38bdf8;
-  box-shadow: 0 0 8px rgba(56, 189, 248, 0.8);
-  animation: clickParticle 0.65s ease-out forwards;
-}
-
-@keyframes clickParticle {
-  from { transform: translate(0, 0) scale(1); opacity: 1; }
-  to   { transform: translate(var(--dx), var(--dy)) scale(0); opacity: 0; }
-}
+.click-wave:nth-of-type(2) { border-color: rgba(148, 163, 184, 0.35); }
+.click-wave:nth-of-type(3) { border-color: rgba(56, 189, 248, 0.22); }
 
 
 /* --- Animasyonlu Geometrik Arka Plan --- */
@@ -2362,8 +2398,7 @@ input:checked + .slider.round:before {
   }
 
   /* Tıklama/dokunma animasyonları JS'te zaten kapalı; garantisi olarak CSS de gizler */
-  .click-ripple,
-  .click-particle {
+  .click-wave {
     display: none !important;
   }
 

@@ -43,6 +43,9 @@ console.log('[STUDYO] gpu-engine.js v1 (YENI GPU MOTOR) yüklendi');
     'uniform float u_brightness;',  // ton: parlaklık (-1..1)
     'uniform float u_contrast;',    // ton: kontrast (0.5..1.5)
     'uniform float u_saturation;',  // ton: doygunluk (0..2)
+    'uniform float u_warmth;',      // ton: sıcaklık (-1 soğuk .. 1 sıcak)
+    'uniform float u_hue;',         // ton: renk tonu kaydırma (radyan)
+    'uniform float u_fade;',        // ton: soluklaştırma (0..0.5)
     'uniform vec2  u_dcenter;',     // tasarım merkezi (normalize)
     'uniform vec2  u_dhalf;',       // tasarım yarı boyutu (normalize)
     'uniform vec2  u_rot;',         // cos(a), sin(a)',
@@ -137,6 +140,14 @@ console.log('[STUDYO] gpu-engine.js v1 (YENI GPU MOTOR) yüklendi');
     '  outC = (outC - 0.5) * u_contrast + 0.5;',
     '  float outLum = dot(outC, vec3(0.299, 0.587, 0.114));',
     '  outC = mix(vec3(outLum), outC, u_saturation);',
+    '  /* 8b) sıcaklık: kırmızı/mavi dengesi */',
+    '  outC += u_warmth * vec3(0.07, 0.015, -0.06);',
+    '  /* 8c) renk tonu kaydırma (hue rotate) */',
+    '  vec3 kAxis = vec3(0.57735);',
+    '  float ca = cos(u_hue); float sa = sin(u_hue);',
+    '  outC = outC * ca + cross(kAxis, outC) * sa + kAxis * dot(kAxis, outC) * (1.0 - ca);',
+    '  /* 8d) soluklaştırma (siyahları kaldır / pastelleştir) */',
+    '  outC = mix(outC, vec3(0.82), u_fade);',
     '  outC = clamp(outC, 0.0, 1.0);',
     '  gl_FragColor = vec4(outC, S.a);',
     '}'
@@ -189,7 +200,7 @@ console.log('[STUDYO] gpu-engine.js v1 (YENI GPU MOTOR) yüklendi');
     gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
     var locs = {};
     ['u_shirt','u_design','u_texel','u_A','u_recolor','u_tint','u_baseLum',
-     'u_intensity','u_blur','u_shading','u_brightness','u_contrast','u_saturation','u_dcenter','u_dhalf','u_rot','u_skew'
+     'u_intensity','u_blur','u_shading','u_brightness','u_contrast','u_saturation','u_warmth','u_hue','u_fade','u_dcenter','u_dhalf','u_rot','u_skew'
     ].forEach(function (n) { locs[n] = gl.getUniformLocation(prog, n); });
     E = { canvas: canvas, gl: gl, prog: prog, locs: locs, buf: buf,
           texShirt: null, texDesign: null, designKey: '' };
@@ -563,6 +574,9 @@ console.log('[STUDYO] gpu-engine.js v1 (YENI GPU MOTOR) yüklendi');
     gl.uniform1f(L.u_brightness, p.brightness || 0);
     gl.uniform1f(L.u_contrast, p.contrast || 1);
     gl.uniform1f(L.u_saturation, p.saturation || 1);
+    gl.uniform1f(L.u_warmth, p.warmth || 0);
+    gl.uniform1f(L.u_hue, (p.hue || 0) * Math.PI / 180);
+    gl.uniform1f(L.u_fade, p.fade || 0);
     gl.uniform2f(L.u_dcenter, t.cx, t.cy);
     gl.uniform2f(L.u_dhalf, t.w / 2, t.h / 2);
     var rad = (t.angle || 0) * Math.PI / 180;
