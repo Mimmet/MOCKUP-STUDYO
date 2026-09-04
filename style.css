@@ -1225,8 +1225,20 @@ body.night-mode .fav-panel { background: linear-gradient(180deg, rgba(6, 10, 22,
   border: 1px solid rgba(148, 163, 184, 0.4);
   border-radius: 50%;
   cursor: pointer;
-  transition: transform 0.15s ease, background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  transition: transform 0.15s ease, background 0.15s ease, color 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
   backdrop-filter: blur(4px);
+  opacity: 0;
+  pointer-events: none;
+}
+.mannequin-card:hover .fav-heart,
+.fav-heart:focus-visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+/* Favoriliyse kalp her zaman görünür kalsın */
+.fav-heart.active {
+  opacity: 1;
+  pointer-events: auto;
 }
 .fav-heart:hover {
   transform: scale(1.12);
