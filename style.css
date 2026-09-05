@@ -2761,6 +2761,73 @@ body.night-mode .privacy-policy-text {
   .upload-title { font-size: 1.5rem; }
 }
 
+/* ============================================================
+   MOBİL ENGELLEME EKRANI
+   Site bilgisayara yöneliktir; mobilde tam ekran uyarı gösterilir.
+   Masaüstünde hiç görünmez.
+   ============================================================ */
+.mobile-blocker {
+  display: none; /* masaüstü: görünmez */
+}
+
+@media (max-width: 860px) {
+  .mobile-blocker {
+    display: flex;
+    position: fixed;
+    inset: 0;
+    z-index: 99999; /* her şeyin üstünde (navbar:100, banner:150, modal:200) */
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: #0f172a;
+  }
+  .mobile-blocker-box {
+    max-width: 420px;
+    width: 100%;
+    text-align: center;
+    padding: 32px 24px;
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 18px;
+    box-shadow: 0 20px 60px rgba(2, 8, 23, 0.6);
+  }
+  .mobile-blocker-icon {
+    font-size: 3rem;
+    line-height: 1;
+    margin-bottom: 16px;
+  }
+  .mobile-blocker-title {
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: #f8fafc;
+    margin-bottom: 14px;
+  }
+  .mobile-blocker-text {
+    font-size: 0.98rem;
+    line-height: 1.6;
+    color: #cbd5e1;
+    margin-bottom: 12px;
+  }
+  .mobile-blocker-text-en {
+    font-size: 0.82rem;
+    line-height: 1.55;
+    color: #64748b;
+    margin-bottom: 0;
+  }
+}
+
+/* Dokunmatik + küçük ekranlı cihazlarda (CSS media yakalayamazsa) JS yedek devreye girer */
+.mobile-blocker.force-show {
+  display: flex !important;
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: #0f172a;
+}
+
 .legal-content {
   display: flex;
   align-items: center;

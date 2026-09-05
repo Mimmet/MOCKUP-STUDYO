@@ -7,7 +7,7 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title data-i18n="pageTitle">MOCKUP STUDYO</title>
-        <link rel="stylesheet" href="style.css?v=93">
+        <link rel="stylesheet" href="style.css?v=94">
   <!-- Google AdSense (onay sonrası publisher ID ekleyin) -->
   <!--
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
@@ -462,6 +462,40 @@
       </div>
     </div>
   </div>
+
+  <!-- Mobil cihaz uyarısı: site yalnızca bilgisayardan kullanılabilir -->
+  <div id="mobile-blocker" class="mobile-blocker" aria-role="dialog" aria-label="Bilgisayardan açın">
+    <div class="mobile-blocker-box">
+      <div class="mobile-blocker-icon">💻</div>
+      <h2 class="mobile-blocker-title">Bilgisayardan Açın</h2>
+      <p class="mobile-blocker-text">
+        MOCKUP STUDYO yalnızca masaüstü bilgisayarda çalışmaktadır.<br>
+        Lütfen siteyi bir bilgisayarda açın.
+      </p>
+      <p class="mobile-blocker-text-en">
+        This site works on desktop computers only.<br>
+        Please open it on a computer.
+      </p>
+    </div>
+  </div>
+
+  <script>
+    /* Mobil engelleme yedeği: CSS media query'e ek olarak dokunmatik +
+       küçük ekranlı cihazlarda da tam ekran uyarıyı garanti eder.
+       Pencere boyutu değişirse (yönlendirme değişimi vb.) dinamik güncellenir. */
+    (function () {
+      var b = document.getElementById('mobile-blocker');
+      if (!b) return;
+      function update() {
+        var isMobile = window.matchMedia('(max-width: 860px)').matches ||
+          (navigator.maxTouchPoints > 1 && Math.min(window.innerWidth, window.innerHeight) < 820);
+        b.classList.toggle('force-show', isMobile);
+      }
+      update();
+      window.addEventListener('resize', update);
+      window.addEventListener('orientationchange', update);
+    })();
+  </script>
 
 </body>
 </html>
